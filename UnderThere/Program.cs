@@ -332,22 +332,17 @@ namespace UnderThere
             List<UTitem> toRemove = new List<UTitem>();
             foreach (var item in Items)
             {
-                if (item.formID != null && item.formID.Length == 8)
-                {
-                    item.formID = item.formID.Substring(2, 6);
-                }
-                string itemKey = item.formID + ":" + item.source;
-                if (FormKey.TryFactory(itemKey, out var formKey) && formKey.IsNull == false)
+                if (FormKey.TryFactory(item.FormKey, out var formKey) && !formKey.IsNull)
                 {
                     // If conversion successful
                     if (!lk.TryResolve<IArmorGetter>(formKey, out var origItem))
                     {
-                        Console.WriteLine("Could not find item with formKey " + itemKey);
+                        Console.WriteLine("Could not find item with formKey " + formKey);
                         toRemove.Add(item);
                     }
                     else
                     {
-                        item.FormKey = formKey;
+                        item.FormKeyObject = formKey;
                         Armor ModdedItem = (Armor)origItem.DeepCopy();
                         ModdedItem.Name = item.Name;
                         item.FormLink = ModdedItem;
@@ -355,12 +350,12 @@ namespace UnderThere
                 }
                 else
                 {
-                    Console.WriteLine("Could not load item " + item.Name + ". Could not create a formKey from plugin " + item.source + " and formID " + item.formID + ".");
+                    Console.WriteLine($"Could not load item {item.Name}. Could not create a formKey: {item.FormKey}.");
                     toRemove.Add(item);
                 }
             }
 
-            foreach(UTitem i in toRemove)
+            foreach (UTitem i in toRemove)
             {
                 Items.Remove(i);
             }
@@ -445,17 +440,15 @@ namespace UnderThere
     public class UTitem
     {
         public string Name { get; set; }
-        public string source { get; set; }
-        public string formID { get; set; }
-        public FormKey FormKey { get; set; }
+        public string FormKey { get; set; }
+        public FormKey FormKeyObject { get; set; }
         public FormLink<Armor> FormLink { get; set; }
 
         public UTitem()
         {
             Name = "";
-            source = "";
-            formID = "";
-            FormKey = new FormKey();
+            FormKey = "";
+            FormKeyObject = new FormKey();
             FormLink = new FormLink<Armor>();
         }
     }
