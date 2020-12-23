@@ -143,102 +143,102 @@
         {
             "Name": "Default Underwear - Top",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE004820"
+            "FormID": "FE000820"
         },
         {
             "Name": "Default Underwear - Bottom",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE004821"
+            "FormID": "FE000821"
         },
         {
             "Name": "Poor Underwear - Top - 1",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE004833"
+            "FormID": "FE000833"
         },
         {
             "Name": "Poor Underwear - Bottom - 1",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE00481F"
+            "FormID": "FE00081F"
         },
         {
             "Name": "Poor Underwear - Top - 2",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE004834"
+            "FormID": "FE000834"
         },
         {
             "Name": "Poor Underwear - Bottom - 2",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE00481E"
+            "FormID": "FE00081E"
         },
         {
             "Name": "Poor Underwear - Top - 3",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE004835"
+            "FormID": "FE000835"
         },
         {
             "Name": "Poor Underwear - Bottom - 3",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE004823"
+            "FormID": "FE000823"
         },
         {
             "Name": "Medium Underwear - Top - 1",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE004836"
+            "FormID": "FE000836"
         },
         {
             "Name": "Medium Underwear - Bottom - 1",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE004824"
+            "FormID": "FE000824"
         },
         {
             "Name": "Medium Underwear - Top - 2",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE004837"
+            "FormID": "FE000837"
         },
         {
             "Name": "Medium Underwear - Bottom - 2",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE004825"
+            "FormID": "FE000825"
         },
         {
             "Name": "Medium Underwear - Top - 3",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE004838"
+            "FormID": "FE000838"
         },
         {
             "Name": "Medium Underwear - Bottom - 3",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE004826"
+            "FormID": "FE000826"
         },
         {
             "Name": "Rich Underwear - Top - 1",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE004839"
+            "FormID": "FE000839"
         },
         {
             "Name": "Rich Underwear - Bottom - 1",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE004827"
+            "FormID": "FE000827"
         },
         {
             "Name": "Rich Underwear - Top - 2",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE00483A"
+            "FormID": "FE00083A"
         },
         {
             "Name": "Rich Underwear - Bottom - 2",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE004828"
+            "FormID": "FE000828"
         },
         {
             "Name": "Rich Underwear - Top - 3",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE00483B"
+            "FormID": "FE00083B"
         },
         {
             "Name": "Rich Underwear - Bottom - 3",
             "Source": "underwearforeveryone.esp",
-            "FormID": "FE004829"
+            "FormID": "FE000829"
         }      
     ]
 }
