@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "UnderThere": {
-      "commandName": "Project",
-      "commandLineArgs": "run-patcher --GameRelease SkyrimSE --DataFolderPath \"Z:\\Synthesis Development\\Testing Environment\\Data\" --LoadOrderFilePath \"Z:\\Synthesis Development\\Testing Environment\\Plugins.txt\" --OutputPath \"Z:\\Synthesis Development\\Testing Environment\\Output\\UnderThere.esp\""
-    }
-  }
-}
