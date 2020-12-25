@@ -5,8 +5,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Mutagen.Bethesda" Version="0.22.1" />
-        <PackageReference Include="Mutagen.Bethesda.Synthesis" Version="0.12.2" />
+        <PackageReference Include="Mutagen.Bethesda" Version="0.22.4" />
+        <PackageReference Include="Mutagen.Bethesda.Synthesis" Version="0.12.4" />
         <PackageReference Include="GitInfo" Version="2.1.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

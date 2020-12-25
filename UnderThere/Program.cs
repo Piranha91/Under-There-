@@ -30,10 +30,8 @@ namespace UnderThere
 
         public static void RunPatch(SynthesisState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            //var loadOrder = LoadOrder.Import<SkyrimMod>(GameRelease.SkyrimSE);
-            //ILinkCache<SkyrimMod> loadOrderLinkCache = state.LoadOrder.create
-
-            var settingsPath = Path.Combine(state.ExtraSettingsDataPath, "UnderThereConfig.json");
+            //var settingsPath = Path.Combine(state.ExtraSettingsDataPath, "UnderThereConfig.json");
+            var settingsPath = "Data\\UnderThereConfig.json";
 
             UTconfig settings = new UTconfig();
 
@@ -49,7 +47,7 @@ namespace UnderThere
                 return;
             }
 
-            createItems(settings.Items, state.LinkCache);
+            createItems(settings.Items, settings.bMakeItemsEquippable, settings.Slots, state.LinkCache, state.PatchMod);
 
             Dictionary<string, List<string>> ClassLookupFailures = new Dictionary<string, List<string>>();
             string gender = "";
@@ -69,10 +67,18 @@ namespace UnderThere
                         if (npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Female))
                         {
                             gender = "female";
+                            if (settings.bPatchFemales == false)
+                            {
+                                continue;
+                            }
                         }
                         else
                         {
                             gender = "male";
+                            if (settings.bPatchMales == false)
+                            {
+                                continue;
+                            }
                         }
 
                         // Get NPC's current outfit
@@ -82,19 +88,21 @@ namespace UnderThere
                             string chosenItemSet = chooseItemSet(gender, assignmentClass, settings.Assignments);
 
                             // check if the given outfit + itemset combination has already been assigned
-                            FormLink<Outfit> chosenOutfit = getModifiedOutfitKey(gender, chosenItemSet, NPCoutfit.FormKey, OutfitMap);
-                            if (chosenOutfit.FormKey == NPCoutfit.FormKey) // getModifiedOutfitKey returns the original outfit formlink if it can't find a modified one in the mapping
+                            FormKey chosenOutfit = getModifiedOutfit(gender, chosenItemSet, NPCoutfit.FormKey, OutfitMap);
+                            if (chosenOutfit == NPCoutfit.FormKey) // getModifiedOutfitKey returns the original outfit formlink if it can't find a modified one in the mapping
                             {
-                                Outfit newOutfit = createModifiedOutfit(gender, chosenItemSet, NPCoutfit, settings, OutfitMap);
-                                moddedNPC.DefaultOutfit = newOutfit.FormKey;
+                                chosenOutfit = createModifiedOutfit(gender, chosenItemSet, NPCoutfit, settings, OutfitMap, state.PatchMod);
+                                moddedNPC.DefaultOutfit = chosenOutfit;
                             }
                             else
                             {
-                                moddedNPC.DefaultOutfit = chosenOutfit.FormKey;
+                                moddedNPC.DefaultOutfit = chosenOutfit;
                             }
+
+                            Console.WriteLine($"{moddedNPC.Name} ({moddedNPC.EditorID}) was assigned outfit {chosenOutfit.ToString()}");
                         }
                     }
-                }   
+                }
             }
 
             if (ClassLookupFailures.Count > 0)
@@ -105,18 +113,34 @@ namespace UnderThere
                     Console.WriteLine(nC + ":");
                     foreach (string label in ClassLookupFailures[nC])
                     {
-                        Console.WriteLine(label);
+                        Console.WriteLine("\t" + label);
                     }
                     Console.WriteLine();
                 }
             }
 
-            int debug = 0;
+            // add flags to all Body Armor Addons to prevent clipping
+            foreach (var AA in state.LoadOrder.PriorityOrder.WinningOverrides<IArmorAddonGetter>())
+            {
+                if (AA.BodyTemplate != null && AA.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Body))
+                {
+                    var editedAA = state.PatchMod.ArmorAddons.GetOrAddAsOverride(AA);
+                    if (editedAA.BodyTemplate != null)
+                    {
+                        editedAA.BodyTemplate.FirstPersonFlags |= UTslots.mapIntToSlot(settings.Slots.Bottom);
+                        editedAA.BodyTemplate.FirstPersonFlags |= UTslots.mapIntToSlot(settings.Slots.Top);
+                    }
+                }
+            }
+
+            Console.WriteLine("\nEnjoy the underwear. Goodbye.");
         }
 
-        public static Outfit createModifiedOutfit(string gender, string itemSet, IOutfitGetter origOutfit, UTconfig config, OutfitMapping map)
+        public static FormKey createModifiedOutfit(string gender, string itemSet, IOutfitGetter origOutfit, UTconfig config, OutfitMapping map, ISkyrimMod PatchMod)
         {
-            Outfit moddedOutfit = (Outfit)origOutfit.DeepCopy();
+            var moddedOutfit = PatchMod.Outfits.AddNew(); // Create new record, /w new FormKey
+            moddedOutfit.DeepCopyIn(origOutfit);
+
             List<UTitemset> availableSets = new List<UTitemset>();
             List<string> chosenItems = new List<string>();
 
@@ -124,11 +148,15 @@ namespace UnderThere
             {
                 case "male":
                     availableSets = config.Sets.Male;
+                    moddedOutfit.EditorID += "_M";
                     break;
                 case "female":
                     availableSets = config.Sets.Female;
+                    moddedOutfit.EditorID += "_F";
                     break;
             }
+
+            moddedOutfit.EditorID += "_" + itemSet;
             
             foreach (UTitemset set in availableSets)
             {
@@ -145,7 +173,7 @@ namespace UnderThere
                 {
                     if (uTitem.Name == item && moddedOutfit.Items != null)
                     {
-                        moddedOutfit.Items.Add(uTitem.FormLink);
+                        moddedOutfit.Items.Add(uTitem.FormKeyObject);
                         break;
                     }
                 }
@@ -166,7 +194,6 @@ namespace UnderThere
             NewOutfitContainer NOC = new NewOutfitContainer();
             NOC.itemSet = itemSet;
             NOC.FormKey = moddedOutfit.FormKey;
-            NOC.FormLink = moddedOutfit;
             
             if (mapping.ContainsKey(origOutfit.FormKey))
             {
@@ -177,10 +204,10 @@ namespace UnderThere
                 mapping.Add(origOutfit.FormKey, new List<NewOutfitContainer>() { NOC });
             }
 
-            return moddedOutfit;
+            return moddedOutfit.FormKey;
         }
 
-        public static FormLink<Outfit> getModifiedOutfitKey(string gender, string itemSet, FormKey origFormKey, OutfitMapping map)
+        public static FormKey getModifiedOutfit(string gender, string itemSet, FormKey origFormKey, OutfitMapping map)
         {
             Dictionary<FormKey, List<NewOutfitContainer>> toSearch = new Dictionary<FormKey, List<NewOutfitContainer>>();
 
@@ -200,12 +227,12 @@ namespace UnderThere
                 {
                     if (NOC.itemSet == itemSet)
                     {
-                        return NOC.FormLink;
+                        return NOC.FormKey;
                     }
                 }
             }
 
-            return new FormLink<Outfit>(origFormKey);
+            return origFormKey;
         }
 
         public static string chooseItemSet(string gender, string classAssignment, UTassignmentContainer Assignments)
@@ -327,7 +354,7 @@ namespace UnderThere
             return true;
         }
 
-        public static void createItems(List<UTitem> Items, ILinkCache lk)
+        public static void createItems(List<UTitem> Items, bool bMakeItemsEquipable, UTslots slots, ILinkCache lk, ISkyrimMod PatchMod)
         {
             List<UTitem> toRemove = new List<UTitem>();
             foreach (var item in Items)
@@ -343,9 +370,64 @@ namespace UnderThere
                     else
                     {
                         item.FormKeyObject = formKey;
-                        Armor ModdedItem = (Armor)origItem.DeepCopy();
-                        ModdedItem.Name = item.Name;
-                        item.FormLink = ModdedItem;
+
+                        var moddedItem = PatchMod.Armors.AddNew(); // Create new record, /w new FormKey
+                        moddedItem.DeepCopyIn(origItem); // Copy some data from another record
+                        moddedItem.Name = item.DispName;
+                        item.FormKeyObject = moddedItem.FormKey;
+
+                        if (bMakeItemsEquipable == false)
+                        {
+                            moddedItem.MajorFlags |= Armor.MajorFlag.NonPlayable;
+                        }
+
+                        // set slots in armor
+                        if (moddedItem.BodyTemplate != null)
+                        {
+                            moddedItem.BodyTemplate.FirstPersonFlags = new BipedObjectFlag();
+                            switch(item.Type)
+                            {
+                                case "Bottom":
+                                    moddedItem.BodyTemplate.FirstPersonFlags |= UTslots.mapIntToSlot(slots.Bottom);
+                                    break;
+                                case "Top":
+                                    moddedItem.BodyTemplate.FirstPersonFlags |= UTslots.mapIntToSlot(slots.Top);
+                                    break;
+                            }
+                        }
+
+                        // set slots in armor addon
+                        List<IFormLink<IArmorAddonGetter>> newAAs = new List<IFormLink<IArmorAddonGetter>>();
+                        foreach (IFormLink<IArmorAddonGetter> aa in moddedItem.Armature)
+                        {
+                            var newAA = PatchMod.ArmorAddons.AddNew();
+                            
+                            if (lk.TryResolve<IArmorAddonGetter>(aa.FormKey, out var origAA))
+                            {
+                                newAA.DeepCopyIn(origAA);
+                                if (newAA.BodyTemplate != null)
+                                {
+                                    newAA.BodyTemplate.FirstPersonFlags = new BipedObjectFlag();
+
+                                    switch (item.Type)
+                                    {
+                                        case "Bottom":
+                                            newAA.BodyTemplate.FirstPersonFlags |= UTslots.mapIntToSlot(slots.Bottom);
+                                            break;
+                                        case "Top":
+                                            newAA.BodyTemplate.FirstPersonFlags |= UTslots.mapIntToSlot(slots.Top);
+                                            break;
+                                    }
+                                }
+                                newAAs.Add(newAA);
+                            }
+                        }
+
+                        moddedItem.Armature.Clear();
+                        foreach (IFormLink<IArmorAddonGetter> nAA in newAAs)
+                        {
+                            moddedItem.Armature.Add(nAA);
+                        }
                     }                  
                 }
                 else
@@ -364,6 +446,9 @@ namespace UnderThere
 
     public class UTconfig
     {
+        public bool bPatchMales { get; set; }
+        public bool bPatchFemales { get; set; }
+        public bool bMakeItemsEquippable { get; set; }
         public bool bAssignByClass {get; set;}
         public UTslots Slots { get; set; }
         public List<string> PatchableRaces { get; set; }
@@ -393,6 +478,44 @@ namespace UnderThere
         {
             Bottom = 0;
             Top = 0;
+        }
+
+        public static BipedObjectFlag mapIntToSlot(int iFlag)
+        {
+            switch(iFlag)
+            {
+                case 30: return (BipedObjectFlag)0x00000001;
+                case 31: return (BipedObjectFlag)0x00000002;
+                case 32: return (BipedObjectFlag)0x00000004;
+                case 33: return (BipedObjectFlag)0x00000008;
+                case 34: return (BipedObjectFlag)0x00000010;
+                case 35: return (BipedObjectFlag)0x00000020;
+                case 36: return (BipedObjectFlag)0x00000040;
+                case 37: return (BipedObjectFlag)0x00000080;
+                case 38: return (BipedObjectFlag)0x00000100;
+                case 39: return (BipedObjectFlag)0x00000200;
+                case 40: return (BipedObjectFlag)0x00000400;
+                case 41: return (BipedObjectFlag)0x00000800;
+                case 42: return (BipedObjectFlag)0x00001000;
+                case 43: return (BipedObjectFlag)0x00002000;
+                case 44: return (BipedObjectFlag)0x00004000;
+                case 45: return (BipedObjectFlag)0x00008000;
+                case 46: return (BipedObjectFlag)0x00010000;
+                case 47: return (BipedObjectFlag)0x00020000;
+                case 48: return (BipedObjectFlag)0x00040000;
+                case 49: return (BipedObjectFlag)0x00080000;
+                case 50: return (BipedObjectFlag)0x00100000;
+                case 51: return (BipedObjectFlag)0x00200000;
+                case 52: return (BipedObjectFlag)0x00400000;
+                case 53: return (BipedObjectFlag)0x00800000;
+                case 54: return (BipedObjectFlag)0x01000000;
+                case 55: return (BipedObjectFlag)0x02000000;
+                case 56: return (BipedObjectFlag)0x04000000;
+                case 57: return (BipedObjectFlag)0x08000000;
+                case 58: return (BipedObjectFlag)0x10000000;
+                case 59: return (BipedObjectFlag)0x20000000;
+                default: return new BipedObjectFlag();
+            }
         }
     }
 
@@ -440,16 +563,18 @@ namespace UnderThere
     public class UTitem
     {
         public string Name { get; set; }
+        public string DispName { get; set; }
+        public string Type { get; set; }
         public string FormKey { get; set; }
         public FormKey FormKeyObject { get; set; }
-        public FormLink<Armor> FormLink { get; set; }
 
         public UTitem()
         {
             Name = "";
+            DispName = "Undergarments";
+            Type = "";
             FormKey = "";
             FormKeyObject = new FormKey();
-            FormLink = new FormLink<Armor>();
         }
     }
 
@@ -467,6 +592,7 @@ namespace UnderThere
     public class UTitemset
     {
         public string Name { get; set; }
+        
         public List<string> Members { get; set; }
 
         public UTitemset()
@@ -493,13 +619,10 @@ namespace UnderThere
         public string itemSet { get; set; }
         public FormKey FormKey { get; set; }
 
-        public FormLink<Outfit> FormLink { get; set; }
-
         public NewOutfitContainer()
         {
             itemSet = "";
             FormKey = new FormKey();
-            FormLink = new FormLink<Outfit>();
         }
     }
 
