@@ -54,6 +54,12 @@ namespace UnderThere
 
             foreach (var npc in state.LoadOrder.PriorityOrder.WinningOverrides<INpcGetter>())
             {
+                //check if NPC has a template
+                if (npc.Template.TryResolve<INpcSpawnGetter>(state.LinkCache, out var npcTemplate) && npcTemplate != null)
+                {
+
+                }
+
                 // check if NPC race is patchable
                 if (npc.Race.TryResolve<IRaceGetter>(state.LinkCache, out var NPCrace) && npc != null && NPCrace.EditorID != null && settings.PatchableRaces.Contains(NPCrace.EditorID))
                 {
@@ -134,6 +140,13 @@ namespace UnderThere
             }
 
             Console.WriteLine("\nEnjoy the underwear. Goodbye.");
+        }
+
+        public static string getAssignmentForTemplatedNPC(INpcSpawnGetter template)
+        {
+
+
+            return "";
         }
 
         public static FormKey createModifiedOutfit(string gender, string itemSet, IOutfitGetter origOutfit, UTconfig config, OutfitMapping map, ISkyrimMod PatchMod)
@@ -356,6 +369,9 @@ namespace UnderThere
 
         public static void createItems(List<UTitem> Items, bool bMakeItemsEquipable, UTslots slots, ILinkCache lk, ISkyrimMod PatchMod)
         {
+            var ufeKey = ModKey.FromNameAndExtension("underwearforeveryone.esp");
+            var recordsToDup = new HashSet<FormLinkInformation>();
+
             List<UTitem> toRemove = new List<UTitem>();
             foreach (var item in Items)
             {
@@ -428,6 +444,36 @@ namespace UnderThere
                         {
                             moddedItem.Armature.Add(nAA);
                         }
+
+                        //copy any remaining records from the source mod
+                        foreach (var link in moddedItem.ContainedFormLinks)
+                        {
+                            // Only if from UFE
+                            if (link.FormKey.ModKey == ufeKey)
+                            {
+                                recordsToDup.Add(link);
+                            }
+                        }
+
+                        var deleteMeEventually = (ILinkCache<ISkyrimMod>)lk; // will be moved to lk directly in next Mutagen version.
+                        var duplicated = recordsToDup
+                            .Select(toDup =>
+                            {
+                                if (!deleteMeEventually.TryResolveContext(toDup.FormKey, toDup.Type, out var existingContext))
+                                {
+                                    throw new ArgumentException($"Couldn't find {toDup.FormKey}?");
+                                }
+                                return (OldFormKey: toDup.FormKey, Duplicate: existingContext.DuplicateIntoAsNewRecord(PatchMod));
+                            })
+                            .ToList();
+
+                        // Remap form links in each record to point to the duplicated versions
+                        var remap = duplicated.ToDictionary(x => x.OldFormKey, x => x.Duplicate.FormKey);
+                        foreach (var dup in duplicated)
+                        {
+                            dup.Duplicate.RemapLinks(remap);
+                        }
+                        //
                     }                  
                 }
                 else
