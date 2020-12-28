@@ -369,7 +369,6 @@ namespace UnderThere
 
         public static void createItems(List<UTitem> Items, bool bMakeItemsEquipable, UTslots slots, ILinkCache lk, ISkyrimMod PatchMod)
         {
-            var ufeKey = ModKey.FromNameAndExtension("underwearforeveryone.esp");
             var recordsToDup = new HashSet<FormLinkInformation>();
 
             List<UTitem> toRemove = new List<UTitem>();
@@ -446,34 +445,15 @@ namespace UnderThere
                         }
 
                         //copy any remaining records from the source mod
+                        recordsToDup.Add(moddedItem.ToFormLinkInformation());
                         foreach (var link in moddedItem.ContainedFormLinks)
                         {
-                            // Only if from UFE
-                            if (link.FormKey.ModKey == ufeKey)
+                            // Only if from source mod
+                            if (link.FormKey.ModKey == origItem.FormKey.ModKey)
                             {
                                 recordsToDup.Add(link);
                             }
                         }
-
-                        var deleteMeEventually = (ILinkCache<ISkyrimMod>)lk; // will be moved to lk directly in next Mutagen version.
-                        var duplicated = recordsToDup
-                            .Select(toDup =>
-                            {
-                                if (!deleteMeEventually.TryResolveContext(toDup.FormKey, toDup.Type, out var existingContext))
-                                {
-                                    throw new ArgumentException($"Couldn't find {toDup.FormKey}?");
-                                }
-                                return (OldFormKey: toDup.FormKey, Duplicate: existingContext.DuplicateIntoAsNewRecord(PatchMod));
-                            })
-                            .ToList();
-
-                        // Remap form links in each record to point to the duplicated versions
-                        var remap = duplicated.ToDictionary(x => x.OldFormKey, x => x.Duplicate.FormKey);
-                        foreach (var dup in duplicated)
-                        {
-                            dup.Duplicate.RemapLinks(remap);
-                        }
-                        //
                     }                  
                 }
                 else
@@ -487,6 +467,26 @@ namespace UnderThere
             {
                 Items.Remove(i);
             }
+
+            var deleteMeEventually = (ILinkCache<ISkyrimMod>)lk; // will be moved to lk directly in next Mutagen version.
+            var duplicated = recordsToDup
+                .Select(toDup =>
+                {
+                    if (!deleteMeEventually.TryResolveContext(toDup.FormKey, toDup.Type, out var existingContext))
+                    {
+                        throw new ArgumentException($"Couldn't find {toDup.FormKey}?");
+                    }
+                    return (OldFormKey: toDup.FormKey, Duplicate: existingContext.DuplicateIntoAsNewRecord(PatchMod));
+                })
+                .ToList();
+
+            // Remap form links in each record to point to the duplicated versions
+            var remap = duplicated.ToDictionary(x => x.OldFormKey, x => x.Duplicate.FormKey);
+            foreach (var dup in duplicated)
+            {
+                dup.Duplicate.RemapLinks(remap);
+            }
+            
         }
     }
 
