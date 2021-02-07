@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Linq;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Synthesis;
@@ -12,23 +13,21 @@ namespace UnderThere
 {
     public class Program
     {
-        public static int Main(string[] args)
+        public static Task<int> Main(string[] args)
         {
-            return SynthesisPipeline.Instance.Patch<ISkyrimMod, ISkyrimModGetter>(
-                args: args,
-                patcher: RunPatch,
-                userPreferences: new UserPreferences()
+            return SynthesisPipeline.Instance
+                .AddPatch<ISkyrimMod, ISkyrimModGetter>(RunPatch)
+                .Run(args, new RunPreferences()
                 {
                     ActionsForEmptyArgs = new RunDefaultPatcher()
                     {
-                        IdentifyingModKey = "UnderThere.esp",
-                        TargetRelease = GameRelease.SkyrimSE,
-                        BlockAutomaticExit = true,
+                        //IdentifyingModKey = "FoodRemover.esp",
+                        TargetRelease = GameRelease.SkyrimSE
                     }
                 });
         }
 
-        public static void RunPatch(SynthesisState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             //var settingsPath = Path.Combine(state.ExtraSettingsDataPath, "UnderThereConfig.json");
             var settingsPath = "Data\\UnderThereConfig.json";
@@ -46,22 +45,39 @@ namespace UnderThere
                 Console.ReadLine();
                 return;
             }
-
-            createItems(settings.Items, settings.bMakeItemsEquippable, settings.Slots, state.LinkCache, state.PatchMod);
+            
+            createItems(settings.Sets, settings.bMakeItemsEquippable, settings.Slots, state.LinkCache, state.PatchMod);
 
             Dictionary<string, List<string>> ClassLookupFailures = new Dictionary<string, List<string>>();
             string gender = "";
-
+            /*
             foreach (var npc in state.LoadOrder.PriorityOrder.WinningOverrides<INpcGetter>())
             {
+                // Use Traits: determines race and sex
+                // Use Inventory: determines outfit
+
+
+                //1: Check if NPC has a template
+                //  If no, process the NPC directly
+                //  If yes, 
+                //      check if the NPC inherits traits
+                //          If no, check if the NPC's race is patchable
+                //              If yes, handle outfit distribution directly via patcher
+                //              If no, don't patch this NPC
+                //          If yes, check if the template's race is patchable and continue if not (this may possibly be fallible if the template is a levelled list that contains both patchable and non-patchable races. Current strategy is to patch if ANY of the templates are patchable).
+                //              Handle outfit distribution via SPID
+                //      check if the NPC inherits inventory
+                //          If no, patch the current NPC's outfit
+                
                 //check if NPC has a template
                 if (npc.Template.TryResolve<INpcSpawnGetter>(state.LinkCache, out var npcTemplate) && npcTemplate != null)
                 {
-
+                    List<NewOutfitContainer> Assignments = new List<NewOutfitContainer>();
+                    getAssignmentForTemplatedNPC(npcTemplate, Assignments, state.LinkCache, ClassLookupFailures, settings);
                 }
 
                 // check if NPC race is patchable
-                if (npc.Race.TryResolve<IRaceGetter>(state.LinkCache, out var NPCrace) && npc != null && NPCrace.EditorID != null && settings.PatchableRaces.Contains(NPCrace.EditorID))
+                else if (npc.Race.TryResolve<IRaceGetter>(state.LinkCache, out var NPCrace) && npc != null && NPCrace.EditorID != null && settings.PatchableRaces.Contains(NPCrace.EditorID))
                 {
                     var moddedNPC = state.PatchMod.Npcs.GetOrAddAsOverride(npc);
                     // check which ClassDefinition this NPC belongs to
@@ -105,7 +121,7 @@ namespace UnderThere
                                 moddedNPC.DefaultOutfit = chosenOutfit;
                             }
 
-                            Console.WriteLine($"{moddedNPC.Name} ({moddedNPC.EditorID}) was assigned outfit {chosenOutfit.ToString()}");
+                            //Console.WriteLine($"{moddedNPC.Name} ({moddedNPC.EditorID}) was assigned outfit {chosenOutfit.ToString()}");
                         }
                     }
                 }
@@ -133,22 +149,48 @@ namespace UnderThere
                     var editedAA = state.PatchMod.ArmorAddons.GetOrAddAsOverride(AA);
                     if (editedAA.BodyTemplate != null)
                     {
-                        editedAA.BodyTemplate.FirstPersonFlags |= UTslots.mapIntToSlot(settings.Slots.Bottom);
-                        editedAA.BodyTemplate.FirstPersonFlags |= UTslots.mapIntToSlot(settings.Slots.Top);
+                        editedAA.BodyTemplate.FirstPersonFlags |= mapIntToSlot(settings.Slots.Bottom);
+                        editedAA.BodyTemplate.FirstPersonFlags |= mapIntToSlot(settings.Slots.Top);
                     }
                 }
             }
 
+            */
+
             Console.WriteLine("\nEnjoy the underwear. Goodbye.");
         }
 
-        public static string getAssignmentForTemplatedNPC(INpcSpawnGetter template)
+        public static void getAssignmentForTemplatedNPC(INpcSpawnGetter template, List<NewOutfitContainer> assignments, ILinkCache lk, Dictionary<string, List<string>> ClassLookupFailures, UTconfig settings)
         {
+            // if leveled list entry is an NPC
+            if (lk.TryResolve<INpcGetter>(template.FormKey, out var npcTemplate) && npcTemplate != null && (npcTemplate.Race.TryResolve<IRaceGetter>(lk, out var NPCrace) && NPCrace != null && NPCrace.EditorID != null && settings.PatchableRaces.Contains(NPCrace.EditorID)))
+            {
+                // check if NPC inherits inventory
 
+                if (npcTemplate.Class.TryResolve<IClassGetter>(lk, out var NPCclass) && NPCclass != null && NPCclass.EditorID != null)
+                {
+                    NewOutfitContainer NOC = new NewOutfitContainer();
+                    string assignmentClass = GetClassDef(NPCclass.EditorID, settings.ClassDefinitions, settings.bAssignByClass, npcTemplate, ClassLookupFailures);
 
-            return "";
+                }
+                int debug1 = 0;
+            }
+            // if leveled list entry is another leveled list
+            else if (lk.TryResolve<ILeveledNpcGetter>(template.FormKey, out var lvlListTemplate) && lvlListTemplate != null && lvlListTemplate.Entries != null)
+            {
+                foreach (ILeveledNpcEntryGetter lvn in lvlListTemplate.Entries)
+                {
+                    if (lvn.Data != null && lk.TryResolve<INpcSpawnGetter>(lvn.Data.Reference.FormKey, out var subRef) && subRef != null)
+                    {
+                        getAssignmentForTemplatedNPC(subRef, assignments, lk, ClassLookupFailures, settings);
+                    }
+                }
+            }
+
+            return;
         }
 
+        /*
         public static FormKey createModifiedOutfit(string gender, string itemSet, IOutfitGetter origOutfit, UTconfig config, OutfitMapping map, ISkyrimMod PatchMod)
         {
             var moddedOutfit = PatchMod.Outfits.AddNew(); // Create new record, /w new FormKey
@@ -218,7 +260,7 @@ namespace UnderThere
             }
 
             return moddedOutfit.FormKey;
-        }
+        }*/
 
         public static FormKey getModifiedOutfit(string gender, string itemSet, FormKey origFormKey, OutfitMapping map)
         {
@@ -359,113 +401,48 @@ namespace UnderThere
                 return false;
             }
 
-            if (settings.Items == null)
-            {
-                return false;
-            }
-
             return true;
         }
 
-        public static void createItems(List<UTitem> Items, bool bMakeItemsEquipable, UTslots slots, ILinkCache lk, ISkyrimMod PatchMod)
+        public static void deepCopyItems(List<UTSet> Sets, ILinkCache lk, ISkyrimMod PatchMod)
         {
+            List<UTSet> toRemove = new List<UTSet>();
             var recordsToDup = new HashSet<FormLinkInformation>();
 
-            List<UTitem> toRemove = new List<UTitem>();
-            foreach (var item in Items)
+            List<FormKey> extraArmors = new List<FormKey>(); // these extra armors will be removed at the end of the function when their armor addons have been duplicated. 
+
+            foreach (var Set in Sets)
             {
-                if (FormKey.TryFactory(item.FormKey, out var formKey) && !formKey.IsNull)
+                for (int i = 0; i < Set.Items.Count; i++) 
                 {
-                    // If conversion successful
-                    if (!lk.TryResolve<IArmorGetter>(formKey, out var origItem))
+                    var item = Set.Items[i];
+                    if (FormKey.TryFactory(item, out var origFormKey) && !origFormKey.IsNull)
                     {
-                        Console.WriteLine("Could not find item with formKey " + formKey);
-                        toRemove.Add(item);
+                        if (!lk.TryResolve<IArmorGetter>(origFormKey, out var origItem))
+                        {
+                            Console.WriteLine("Could not find item with formKey " + origFormKey);
+                            toRemove.Add(Set); // remove this set from the list
+                            break;
+                        }
+
+                        foreach (FormLinkInformation FLI in origItem.ContainedFormLinks)
+                        {
+                            recordsToDup.Add(FLI);
+                        }
+
+                        recordsToDup.Add(origItem.ToFormLinkInformation());
+                        
+                        if (i > 0)
+                        {
+                            extraArmors.Add(origFormKey);
+                        }
                     }
-                    else
-                    {
-                        item.FormKeyObject = formKey;
-
-                        var moddedItem = PatchMod.Armors.AddNew(); // Create new record, /w new FormKey
-                        moddedItem.DeepCopyIn(origItem); // Copy some data from another record
-                        moddedItem.Name = item.DispName;
-                        item.FormKeyObject = moddedItem.FormKey;
-
-                        if (bMakeItemsEquipable == false)
-                        {
-                            moddedItem.MajorFlags |= Armor.MajorFlag.NonPlayable;
-                        }
-
-                        // set slots in armor
-                        if (moddedItem.BodyTemplate != null)
-                        {
-                            moddedItem.BodyTemplate.FirstPersonFlags = new BipedObjectFlag();
-                            switch(item.Type)
-                            {
-                                case "Bottom":
-                                    moddedItem.BodyTemplate.FirstPersonFlags |= UTslots.mapIntToSlot(slots.Bottom);
-                                    break;
-                                case "Top":
-                                    moddedItem.BodyTemplate.FirstPersonFlags |= UTslots.mapIntToSlot(slots.Top);
-                                    break;
-                            }
-                        }
-
-                        // set slots in armor addon
-                        List<IFormLink<IArmorAddonGetter>> newAAs = new List<IFormLink<IArmorAddonGetter>>();
-                        foreach (IFormLink<IArmorAddonGetter> aa in moddedItem.Armature)
-                        {
-                            var newAA = PatchMod.ArmorAddons.AddNew();
-                            
-                            if (lk.TryResolve<IArmorAddonGetter>(aa.FormKey, out var origAA))
-                            {
-                                newAA.DeepCopyIn(origAA);
-                                if (newAA.BodyTemplate != null)
-                                {
-                                    newAA.BodyTemplate.FirstPersonFlags = new BipedObjectFlag();
-
-                                    switch (item.Type)
-                                    {
-                                        case "Bottom":
-                                            newAA.BodyTemplate.FirstPersonFlags |= UTslots.mapIntToSlot(slots.Bottom);
-                                            break;
-                                        case "Top":
-                                            newAA.BodyTemplate.FirstPersonFlags |= UTslots.mapIntToSlot(slots.Top);
-                                            break;
-                                    }
-                                }
-                                newAAs.Add(newAA);
-                            }
-                        }
-
-                        moddedItem.Armature.Clear();
-                        foreach (IFormLink<IArmorAddonGetter> nAA in newAAs)
-                        {
-                            moddedItem.Armature.Add(nAA);
-                        }
-
-                        //copy any remaining records from the source mod
-                        recordsToDup.Add(moddedItem.ToFormLinkInformation());
-                        foreach (var link in moddedItem.ContainedFormLinks)
-                        {
-                            // Only if from source mod
-                            if (link.FormKey.ModKey == origItem.FormKey.ModKey)
-                            {
-                                recordsToDup.Add(link);
-                            }
-                        }
-                    }                  
-                }
-                else
-                {
-                    Console.WriteLine($"Could not load item {item.Name}. Could not create a formKey: {item.FormKey}.");
-                    toRemove.Add(item);
                 }
             }
 
-            foreach (UTitem i in toRemove)
+            foreach (UTSet i in toRemove)
             {
-                Items.Remove(i);
+                Sets.Remove(i);
             }
 
             var deleteMeEventually = (ILinkCache<ISkyrimMod>)lk; // will be moved to lk directly in next Mutagen version.
@@ -486,49 +463,131 @@ namespace UnderThere
             {
                 dup.Duplicate.RemapLinks(remap);
             }
-            
+
+            // remap Set formlinks to the duplicated ones
+            // note: Only the first armor in the set needs to be remapped - the rest will have their armatures added to the first armor
+            foreach (UTSet set in Sets)
+            {
+                FormKey.TryFactory(set.Items[0], out var itemFormKey);
+                set.FormKeyObject = remap[itemFormKey];
+
+                // store additional armor addons
+                for (int i = 1; i < set.Items.Count; i++)
+                {
+                    string additionalArmorFormKeyString = set.Items[i];
+                    if (FormKey.TryFactory(additionalArmorFormKeyString, out var origArmorFormKey) && !origArmorFormKey.IsNull)
+                    {
+                        if (remap.ContainsKey(origArmorFormKey) && lk.TryResolve<IArmorGetter>(remap[origArmorFormKey], out var additionalArmor)) // should always be true but checking just in case
+                        {
+                            foreach (IFormLink<IArmorAddonGetter> additionalARMA_FL in additionalArmor.Armature)
+                            {
+                                set.AdditionalAAs.Add(additionalARMA_FL);
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach (FormKey extra in extraArmors)
+            {
+                if (remap != null && remap.ContainsKey(extra))
+                {
+                    PatchMod.Remove(remap[extra]);
+                }
+            }
+
         }
-    }
 
-    public class UTconfig
-    {
-        public bool bPatchMales { get; set; }
-        public bool bPatchFemales { get; set; }
-        public bool bMakeItemsEquippable { get; set; }
-        public bool bAssignByClass {get; set;}
-        public UTslots Slots { get; set; }
-        public List<string> PatchableRaces { get; set; }
-        public UTclassDef ClassDefinitions { get; set; }
-        public UTassignmentContainer Assignments { get; set; }
-        public UTsetsByGender Sets { get; set; }
-        public List<UTitem> Items { get; set; }
 
-        public UTconfig()
+
+        public static void createItems(List<UTSet> Sets, bool bMakeItemsEquipable, List<int> slots, ILinkCache lk, ISkyrimMod PatchMod)
         {
-            bAssignByClass = false;
-            Slots = new UTslots();
-            PatchableRaces = new List<string>();
-            ClassDefinitions = new UTclassDef();
-            Assignments = new UTassignmentContainer();
-            Sets = new UTsetsByGender();
-            Items = new List<UTitem>();
-        }
-    }
+            deepCopyItems(Sets, lk, PatchMod); // copy all armor records along with their linked subrecords into PatchMod to get rid of dependencies on the original plugins. Sets[i].FormKeyObject will now point to the new FormKey in PatchMod
 
-    public class UTslots
-    {
-        public int Bottom { get; set; }
-        public int Top { get; set; }
+            List<UTSet> toRemove = new List<UTSet>();
 
-        public UTslots()
-        {
-            Bottom = 0;
-            Top = 0;
+            foreach (var Set in Sets)
+            {
+                // Get the first armor in the set. 
+                if (lk.TryResolve<IArmor>(Set.FormKeyObject, out var moddedItem))
+                {
+                    // set slots in armor
+                    if (moddedItem != null && moddedItem.BodyTemplate != null)
+                    {
+                        foreach (int slot in slots)
+                        {
+                            moddedItem.BodyTemplate.FirstPersonFlags |= mapIntToSlot(slot);
+                        }
+                        moddedItem.Name = Set.DispName;
+                        moddedItem.EditorID = Set.Name;
+                        moddedItem.Weight = Set.Weight;
+                        moddedItem.Value = Convert.ToUInt32(Set.Value);
+                        if (bMakeItemsEquipable == false)
+                        {
+                           moddedItem.MajorFlags |= Armor.MajorFlag.NonPlayable;
+                        }
+
+                        // if there is more than one item in the set, copy the rest as additional armor addons
+                        foreach (IFormLink < IArmorAddonGetter> additionalARMA_FL in Set.AdditionalAAs)
+                        {
+                            moddedItem.Armature.Add(additionalARMA_FL);
+                        }
+
+                        /*
+                        if (Set.Items.Count > 1)
+                        {
+                            for (int i = 1; i < Set.Items.Count; i++)
+                            {
+                                if (FormKey.TryFactory(Set.Items[i], out var additionalFormKey) && !additionalFormKey.IsNull)
+                                {
+                                    if (!lk.TryResolve<IArmorGetter>(additionalFormKey, out var additionalItem))
+                                    {
+                                        Console.WriteLine("Could not find item with formKey " + additionalFormKey);
+                                        toRemove.Add(Set); // remove this set from the list
+                                        break;
+                                    }
+
+                                    foreach (IFormLink<IArmorAddonGetter> additionalARMAtemplateGetter in additionalItem.Armature)
+                                    {
+                                        moddedItem.Armature.Add(additionalARMAtemplateGetter);
+                                    }
+                                }
+                            }
+                        }*/
+
+                        // set armor addon slots
+                        foreach (var aaInList in moddedItem.Armature)
+                        {
+                            if (!lk.TryResolve<IArmorAddonGetter>(aaInList.FormKey, out var AAhandle) || AAhandle == null || AAhandle.BodyTemplate == null)
+                            {
+                                continue;
+                            }
+
+                            var AA = PatchMod.ArmorAddons.GetOrAddAsOverride(AAhandle);
+                            if (AA.BodyTemplate == null)
+                            {
+                                continue;
+                            }
+
+                            foreach (int slot in slots)
+                            {
+                                AA.BodyTemplate.FirstPersonFlags |= mapIntToSlot(slot);
+                            }
+                        }
+                    }
+                }
+            }
+              
+
+            foreach (UTSet i in toRemove)
+            {
+                Sets.Remove(i);
+            }        
         }
 
         public static BipedObjectFlag mapIntToSlot(int iFlag)
         {
-            switch(iFlag)
+            switch (iFlag)
             {
                 case 30: return (BipedObjectFlag)0x00000001;
                 case 31: return (BipedObjectFlag)0x00000002;
@@ -562,6 +621,32 @@ namespace UnderThere
                 case 59: return (BipedObjectFlag)0x20000000;
                 default: return new BipedObjectFlag();
             }
+        }
+    }
+
+
+   
+
+    public class UTconfig
+    {
+        public bool bPatchMales { get; set; }
+        public bool bPatchFemales { get; set; }
+        public bool bMakeItemsEquippable { get; set; }
+        public bool bAssignByClass {get; set;}
+        public List<int> Slots { get; set; }
+        public List<string> PatchableRaces { get; set; }
+        public UTclassDef ClassDefinitions { get; set; }
+        public UTassignmentContainer Assignments { get; set; }
+        public List<UTSet> Sets { get; set; }
+
+        public UTconfig()
+        {
+            bAssignByClass = false;
+            Slots = new List<int>();
+            PatchableRaces = new List<string>();
+            ClassDefinitions = new UTclassDef();
+            Assignments = new UTassignmentContainer();
+            Sets = new List<UTSet>();
         }
     }
 
@@ -606,33 +691,26 @@ namespace UnderThere
         }
     }
 
-    public class UTitem
+    public class UTSet
     {
         public string Name { get; set; }
         public string DispName { get; set; }
-        public string Type { get; set; }
-        public string FormKey { get; set; }
+        public float Weight { get; set; }
+        public float Value { get; set; }
+        public List<string> Items { get; set; }
         public FormKey FormKeyObject { get; set; }
 
-        public UTitem()
+        public List<IFormLink<IArmorAddonGetter>> AdditionalAAs { get; set; }
+
+        public UTSet()
         {
             Name = "";
             DispName = "Undergarments";
-            Type = "";
-            FormKey = "";
+            Weight = 0;
+            Value = 0;
+            Items = new List<string>();
             FormKeyObject = new FormKey();
-        }
-    }
-
-    public class UTsetsByGender
-    {
-        public List<UTitemset> Male { get; set; }
-        public List<UTitemset> Female { get; set; }
-
-        public UTsetsByGender()
-        {
-            Male = new List<UTitemset>();
-            Female = new List<UTitemset>();
+            AdditionalAAs = new List<IFormLink<IArmorAddonGetter>>();
         }
     }
     public class UTitemset
@@ -671,5 +749,4 @@ namespace UnderThere
             FormKey = new FormKey();
         }
     }
-
 }

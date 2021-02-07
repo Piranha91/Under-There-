@@ -3,11 +3,7 @@
     "bPatchFemales": true,
     "bMakeItemsEquippable": false,
     "bAssignByClass": true,
-    "Slots":
-    {
-        "bottom": 49,
-        "top": 56
-    },
+    "Slots": [49, 56],
     "PatchableRaces":[
         "HighElfRace",
         "ArgonianRace",
@@ -55,213 +51,77 @@
             "Rich": ["Rich Variant 1", "Rich Variant 2", "Rich Variant 3"]
         }
     },
-    "Sets": 
-    {
-        "Male":[
-            {
-                "Name": "Default Variant",
-                "members": ["Default Underwear - Bottom"]
-            },
-            {
-                "Name": "Poor Variant 1",
-                "members": ["Poor Underwear - Bottom - 1"]
-            },
-            {
-                "Name": "Poor Variant 2",
-                "members": ["Poor Underwear - Bottom - 2"]
-            },
-            {
-                "Name": "Poor Variant 3",
-                "members": ["Poor Underwear - Bottom - 3"]
-            },
-            {
-                "Name": "Medium Variant 1",
-                "members": ["Medium Underwear - Bottom - 1"]
-            },
-            {
-                "Name": "Medium Variant 2",
-                "members": ["Medium Underwear - Bottom - 2"]
-            },
-            {
-                "Name": "Medium Variant 3",
-                "members": ["Medium Underwear - Bottom - 3"]
-            },
-            {
-                "Name": "Rich Variant 1",
-                "members": ["Rich Underwear - Bottom - 1"]
-            },
-            {
-                "Name": "Rich Variant 2",
-                "members": ["Rich Underwear - Bottom - 2"]
-            },
-            {
-                "Name": "Rich Variant 3",
-                "members": ["Rich Underwear - Bottom - 3"]
-            }
-        ],
-        "Female":[
-            {
-                "Name": "Default Variant",
-                "members": ["Default Underwear - Top", "Default Underwear - Bottom"]
-            },
-            {
-                "Name": "Poor Variant 1",
-                "members": ["Poor Underwear - Top - 1", "Poor Underwear - Bottom - 1"]
-            },
-            {
-                "Name": "Poor Variant 2",
-                "members": ["Poor Underwear - Top - 2", "Poor Underwear - Bottom - 2"]
-            },
-            {
-                "Name": "Poor Variant 3",
-                "members": ["Poor Underwear - Top - 3", "Poor Underwear - Bottom - 3"]
-            },
-            {
-                "Name": "Medium Variant 1",
-                "members": ["Medium Underwear - Top - 1", "Medium Underwear - Bottom - 1"]
-            },
-            {
-                "Name": "Medium Variant 2",
-                "members": ["Medium Underwear - Top - 2", "Medium Underwear - Bottom - 2"]
-            },
-            {
-                "Name": "Medium Variant 3",
-                "members": ["Medium Underwear - Top - 3", "Medium Underwear - Bottom - 3"]
-            },
-            {
-                "Name": "Rich Variant 1",
-                "members": ["Rich Underwear - Top - 1", "Rich Underwear - Bottom - 1"]
-            },
-            {
-                "Name": "Rich Variant 2",
-                "members": ["Rich Underwear - Top - 2", "Rich Underwear - Bottom - 2"]
-            },
-            {
-                "Name": "Rich Variant 3",
-                "members": ["Rich Underwear - Top - 3", "Rich Underwear - Bottom - 3"]
-            }
-        ]
-    },
-    "Items": [
+    "Sets":
+    [
         {
-            "Name": "Default Underwear - Top",
-            "DispName": "Undergarment (Top)",
-            "Type": "Top",
-            "FormKey": "000820:underwearforeveryone.esp"
+            "Name": "Default Variant",
+            "DispName": "Undergarment",
+            "Weight": 1,
+            "Value": 5,
+            "Items": ["000821:underwearforeveryone.esp", "000820:underwearforeveryone.esp"]
         },
         {
-            "Name": "Default Underwear - Bottom",
-            "DispName": "Undergarment (Bottom)",
-            "Type": "Bottom",
-            "FormKey": "000821:underwearforeveryone.esp"
+            "Name": "Poor Variant 1",
+            "DispName": "Cheap Undergarment",
+            "Weight": 1,
+            "Value": 5,
+            "Items": ["00081F:underwearforeveryone.esp", "000833:underwearforeveryone.esp"]
         },
         {
-            "Name": "Poor Underwear - Top - 1",
-            "DispName": "Cheap Undergarment (Top)",
-            "Type": "Top",
-            "FormKey": "000833:underwearforeveryone.esp"
+            "Name": "Poor Variant 2",
+            "DispName": "Cheap Undergarment",
+            "Weight": 1,
+            "Value": 5,
+            "Items": ["00081E:underwearforeveryone.esp", "000834:underwearforeveryone.esp"]
         },
         {
-            "Name": "Poor Underwear - Bottom - 1",
-            "DispName": "Cheap Undergarment (Bottom)",
-            "Type": "Bottom",
-            "FormKey": "00081F:underwearforeveryone.esp"
+            "Name": "Poor Variant 3",
+            "DispName": "Cheap Undergarment",
+            "Weight": 1,
+            "Value": 5,
+            "Items": ["000823:underwearforeveryone.esp", "000835:underwearforeveryone.esp"]
         },
         {
-            "Name": "Poor Underwear - Top - 2",
-            "DispName": "Cheap Undergarment (Top)",
-            "Type": "Top",
-            "FormKey": "000834:underwearforeveryone.esp"
+            "Name": "Medium Variant 1",
+            "DispName": "Undergarment",
+            "Weight": 1,
+            "Value": 25,
+            "Items": ["000824:underwearforeveryone.esp", "000836:underwearforeveryone.esp"]
         },
         {
-            "Name": "Poor Underwear - Bottom - 2",
-            "DispName": "Cheap Undergarment (Bottom)",
-            "Type": "Bottom",
-            "FormKey": "00081E:underwearforeveryone.esp"
+            "Name": "Medium Variant 2",
+            "DispName": "Undergarment",
+            "Weight": 1,
+            "Value": 25,
+            "Items": ["000825:underwearforeveryone.esp", "000837:underwearforeveryone.esp"]
         },
         {
-            "Name": "Poor Underwear - Top - 3",
-            "DispName": "Cheap Undergarment (Top)",
-            "Type": "Top",
-            "FormKey": "000835:underwearforeveryone.esp"
+            "Name": "Medium Variant 3",
+            "DispName": "Undergarment",
+            "Weight": 1,
+            "Value": 25,
+            "Items": ["000826:underwearforeveryone.esp", "000838:underwearforeveryone.esp"]
         },
         {
-            "Name": "Poor Underwear - Bottom - 3",
-            "DispName": "Cheap Undergarment (Bottom)",
-            "Type": "Bottom",
-            "FormKey": "000823:underwearforeveryone.esp"
+            "Name": "Rich Variant 1",
+            "DispName": "Fine Undergarment",
+            "Weight": 1,
+            "Value": 50,
+            "Items": ["000827:underwearforeveryone.esp", "000839:underwearforeveryone.esp"]
         },
         {
-            "Name": "Medium Underwear - Top - 1",
-            "DispName": "Undergarment (Top)",
-            "Type": "Top",
-            "FormKey": "000836:underwearforeveryone.esp"
+            "Name": "Rich Variant 2",
+            "DispName": "Fine Undergarment",
+            "Weight": 1,
+            "Value": 50,
+            "Items": ["000828:underwearforeveryone.esp", "00083A:underwearforeveryone.esp"]
         },
         {
-            "Name": "Medium Underwear - Bottom - 1",
-            "DispName": "Undergarment (Bottom)",
-            "Type": "Bottom",
-            "FormKey": "000824:underwearforeveryone.esp"
-        },
-        {
-            "Name": "Medium Underwear - Top - 2",
-            "DispName": "Undergarment (Top)",
-            "Type": "Top",
-            "FormKey": "000837:underwearforeveryone.esp"
-        },
-        {
-            "Name": "Medium Underwear - Bottom - 2",
-            "DispName": "Undergarment (Bottom)",
-            "Type": "Bottom",
-            "FormKey": "000825:underwearforeveryone.esp"
-        },
-        {
-            "Name": "Medium Underwear - Top - 3",
-            "DispName": "Undergarment (Top)",
-            "Type": "Top",
-            "FormKey": "000838:underwearforeveryone.esp"
-        },
-        {
-            "Name": "Medium Underwear - Bottom - 3",
-            "DispName": "Undergarment (Bottom)",
-            "Type": "Bottom",
-            "FormKey": "000826:underwearforeveryone.esp"
-        },
-        {
-            "Name": "Rich Underwear - Top - 1",
-            "DispName": "Fine Undergarment (Top)",
-            "Type": "Top",
-            "FormKey": "000839:underwearforeveryone.esp"
-        },
-        {
-            "Name": "Rich Underwear - Bottom - 1",
-            "DispName": "Fine Undergarment (Bottom)",
-            "Type": "Bottom",
-            "FormKey": "000827:underwearforeveryone.esp"
-        },
-        {
-            "Name": "Rich Underwear - Top - 2",
-            "DispName": "Fine Undergarment (Top)",
-            "Type": "Top",
-            "FormKey": "00083A:underwearforeveryone.esp"
-        },
-        {
-            "Name": "Rich Underwear - Bottom - 2",
-            "DispName": "Fine Undergarment (Bottom)",
-            "Type": "Bottom",
-            "FormKey": "000828:underwearforeveryone.esp"
-        },
-        {
-            "Name": "Rich Underwear - Top - 3",
-            "DispName": "Fine Undergarment (Top)",
-            "Type": "Top",
-            "FormKey": "00083B:underwearforeveryone.esp"
-        },
-        {
-            "Name": "Rich Underwear - Bottom - 3",
-            "DispName": "Fine Undergarment (Bottom)",
-            "Type": "Bottom",
-            "FormKey": "000829:underwearforeveryone.esp"
-        }      
+            "Name": "Rich Variant 3",
+            "DispName": "Fine Undergarment",
+            "Weight": 1,
+            "Value": 50,
+            "Items": ["000829:underwearforeveryone.esp", "00083B:underwearforeveryone.esp"]
+        }
     ]
 }
