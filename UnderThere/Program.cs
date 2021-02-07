@@ -41,332 +41,323 @@ namespace UnderThere
             //Your code here!
             if (validateSettings(settings) == false)
             {
-                Console.WriteLine("Please fix the errors in the settings file and try again.");
-                Console.ReadLine();
-                return;
+                throw new Exception("Please fix the errors in the settings file and try again.");
             }
             
             createItems(settings.Sets, settings.bMakeItemsEquippable, settings.Slots, state.LinkCache, state.PatchMod);
 
-            Dictionary<string, List<string>> ClassLookupFailures = new Dictionary<string, List<string>>();
-            string gender = "";
-            /*
-            foreach (var npc in state.LoadOrder.PriorityOrder.WinningOverrides<INpcGetter>())
+            Dictionary<string, FormKey> UT_LeveledItemsByWealth = new Dictionary<string, FormKey>();
+            FormKey UT_LeveledItemsAll = new FormKey();
+            FormKey UT_DefaultItem = new FormKey();
+
+            // created leveled item lists (to be added to outfits)
+            if (settings.AssignmentMode.ToLower() == "random")
             {
-                // Use Traits: determines race and sex
-                // Use Inventory: determines outfit
+                UT_LeveledItemsAll = createLeveledList_AllItems(settings.Sets, state.LinkCache, state.PatchMod);
+            }
+            else if (settings.AssignmentMode.ToLower() == "class" || settings.AssignmentMode.ToLower() == "faction")
+            {
+                UT_LeveledItemsByWealth = createLeveledList_ByWealth(settings.Sets, settings.Assignments, state.LinkCache, state.PatchMod);
+            }
+            else
+            {
+                UT_DefaultItem = getDefaultItemFormKey(settings.Sets, settings.Assignments, state.LinkCache, state.PatchMod);
+            }
+            
+            // add leveled item lists to outfits
+            if (settings.AssignmentMode.ToLower() == "class" || settings.AssignmentMode.ToLower() == "faction")
+            {
+                Dictionary<FormKey, string> outfitsByWealth = assignOutfitsByWealth(settings.Sets, settings.ClassDefinitions, settings.FactionDefinitions, settings.AssignmentMode, state);
+                modifyOutfitsByWealth(outfitsByWealth, UT_LeveledItemsByWealth, UT_DefaultItem, state);
+            }
+            else if (settings.AssignmentMode.ToLower() == "random")
+            {
+                modifyOutfitsByRandom(UT_LeveledItemsAll, state);
+            }
+            else
+            {
+                modifyOutfitsByDefault(UT_DefaultItem, state);
+            }
 
+            // patch armor addons containing body slot to also contain underwear slots
 
-                //1: Check if NPC has a template
-                //  If no, process the NPC directly
-                //  If yes, 
-                //      check if the NPC inherits traits
-                //          If no, check if the NPC's race is patchable
-                //              If yes, handle outfit distribution directly via patcher
-                //              If no, don't patch this NPC
-                //          If yes, check if the template's race is patchable and continue if not (this may possibly be fallible if the template is a levelled list that contains both patchable and non-patchable races. Current strategy is to patch if ANY of the templates are patchable).
-                //              Handle outfit distribution via SPID
-                //      check if the NPC inherits inventory
-                //          If no, patch the current NPC's outfit
-                
-                //check if NPC has a template
-                if (npc.Template.TryResolve<INpcSpawnGetter>(state.LinkCache, out var npcTemplate) && npcTemplate != null)
+            foreach (var aa in state.LoadOrder.PriorityOrder.WinningOverrides<IArmorAddonGetter>())
+            {
+                if (aa.BodyTemplate != null && aa.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Body))
                 {
-                    List<NewOutfitContainer> Assignments = new List<NewOutfitContainer>();
-                    getAssignmentForTemplatedNPC(npcTemplate, Assignments, state.LinkCache, ClassLookupFailures, settings);
-                }
-
-                // check if NPC race is patchable
-                else if (npc.Race.TryResolve<IRaceGetter>(state.LinkCache, out var NPCrace) && npc != null && NPCrace.EditorID != null && settings.PatchableRaces.Contains(NPCrace.EditorID))
-                {
-                    var moddedNPC = state.PatchMod.Npcs.GetOrAddAsOverride(npc);
-                    // check which ClassDefinition this NPC belongs to
-                    if (npc.Class.TryResolve<IClassGetter>(state.LinkCache, out var NPCclass) && NPCclass != null && NPCclass.EditorID != null)
+                    var editedAA = state.PatchMod.ArmorAddons.GetOrAddAsOverride(aa);
+                    if (editedAA != null && editedAA.BodyTemplate != null)
                     {
-                        string assignmentClass = GetClassDef(NPCclass.EditorID, settings.ClassDefinitions, settings.bAssignByClass, npc, ClassLookupFailures);
-
-                        // get NPC's gender
-                        if (npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Female))
+                        foreach (int slot in settings.Slots)
                         {
-                            gender = "female";
-                            if (settings.bPatchFemales == false)
-                            {
-                                continue;
-                            }
-                        }
-                        else
-                        {
-                            gender = "male";
-                            if (settings.bPatchMales == false)
-                            {
-                                continue;
-                            }
-                        }
-
-                        // Get NPC's current outfit
-                        if (npc.DefaultOutfit.TryResolve<IOutfitGetter>(state.LinkCache, out var NPCoutfit) && NPCoutfit != null)
-                        {
-                            // pick an item set based on NPC's gender and assignmentClass
-                            string chosenItemSet = chooseItemSet(gender, assignmentClass, settings.Assignments);
-
-                            // check if the given outfit + itemset combination has already been assigned
-                            FormKey chosenOutfit = getModifiedOutfit(gender, chosenItemSet, NPCoutfit.FormKey, OutfitMap);
-                            if (chosenOutfit == NPCoutfit.FormKey) // getModifiedOutfitKey returns the original outfit formlink if it can't find a modified one in the mapping
-                            {
-                                chosenOutfit = createModifiedOutfit(gender, chosenItemSet, NPCoutfit, settings, OutfitMap, state.PatchMod);
-                                moddedNPC.DefaultOutfit = chosenOutfit;
-                            }
-                            else
-                            {
-                                moddedNPC.DefaultOutfit = chosenOutfit;
-                            }
-
-                            //Console.WriteLine($"{moddedNPC.Name} ({moddedNPC.EditorID}) was assigned outfit {chosenOutfit.ToString()}");
+                            editedAA.BodyTemplate.FirstPersonFlags |= mapIntToSlot(slot);
                         }
                     }
                 }
-            }
 
-            if (ClassLookupFailures.Count > 0)
-            {
-                Console.WriteLine("Some NPCs' classes were not defined in the json settings file and were therefore assigned to the Medium group.");
-                foreach (string nC in ClassLookupFailures.Keys)
-                {
-                    Console.WriteLine(nC + ":");
-                    foreach (string label in ClassLookupFailures[nC])
-                    {
-                        Console.WriteLine("\t" + label);
-                    }
-                    Console.WriteLine();
-                }
             }
-
-            // add flags to all Body Armor Addons to prevent clipping
-            foreach (var AA in state.LoadOrder.PriorityOrder.WinningOverrides<IArmorAddonGetter>())
-            {
-                if (AA.BodyTemplate != null && AA.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Body))
-                {
-                    var editedAA = state.PatchMod.ArmorAddons.GetOrAddAsOverride(AA);
-                    if (editedAA.BodyTemplate != null)
-                    {
-                        editedAA.BodyTemplate.FirstPersonFlags |= mapIntToSlot(settings.Slots.Bottom);
-                        editedAA.BodyTemplate.FirstPersonFlags |= mapIntToSlot(settings.Slots.Top);
-                    }
-                }
-            }
-
-            */
 
             Console.WriteLine("\nEnjoy the underwear. Goodbye.");
         }
 
-        public static void getAssignmentForTemplatedNPC(INpcSpawnGetter template, List<NewOutfitContainer> assignments, ILinkCache lk, Dictionary<string, List<string>> ClassLookupFailures, UTconfig settings)
+        public static FormKey getDefaultItemFormKey(List<UTSet> sets, Dictionary<string, List<string>> assignments, ILinkCache lk, ISkyrimMod PatchMod)
         {
-            // if leveled list entry is an NPC
-            if (lk.TryResolve<INpcGetter>(template.FormKey, out var npcTemplate) && npcTemplate != null && (npcTemplate.Race.TryResolve<IRaceGetter>(lk, out var NPCrace) && NPCrace != null && NPCrace.EditorID != null && settings.PatchableRaces.Contains(NPCrace.EditorID)))
+            if (assignments["Default"] == null || assignments["Default"].Count == 0)
             {
-                // check if NPC inherits inventory
-
-                if (npcTemplate.Class.TryResolve<IClassGetter>(lk, out var NPCclass) && NPCclass != null && NPCclass.EditorID != null)
-                {
-                    NewOutfitContainer NOC = new NewOutfitContainer();
-                    string assignmentClass = GetClassDef(NPCclass.EditorID, settings.ClassDefinitions, settings.bAssignByClass, npcTemplate, ClassLookupFailures);
-
-                }
-                int debug1 = 0;
+                throw new Exception("Error: could not find a default underwear defined in the settings file.");
             }
-            // if leveled list entry is another leveled list
-            else if (lk.TryResolve<ILeveledNpcGetter>(template.FormKey, out var lvlListTemplate) && lvlListTemplate != null && lvlListTemplate.Entries != null)
+
+            string defaultUWname = assignments["Default"][0];
+
+            foreach (UTSet set in sets)
             {
-                foreach (ILeveledNpcEntryGetter lvn in lvlListTemplate.Entries)
+                if (set.Name == defaultUWname)
                 {
-                    if (lvn.Data != null && lk.TryResolve<INpcSpawnGetter>(lvn.Data.Reference.FormKey, out var subRef) && subRef != null)
-                    {
-                        getAssignmentForTemplatedNPC(subRef, assignments, lk, ClassLookupFailures, settings);
-                    }
+                    return set.FormKeyObject;
                 }
             }
 
-            return;
+            throw new Exception("Error: Could not find a Set with name " + defaultUWname);
         }
 
-        /*
-        public static FormKey createModifiedOutfit(string gender, string itemSet, IOutfitGetter origOutfit, UTconfig config, OutfitMapping map, ISkyrimMod PatchMod)
+        public static FormKey createLeveledList_AllItems(List<UTSet> sets, ILinkCache lk, ISkyrimMod PatchMod)
         {
-            var moddedOutfit = PatchMod.Outfits.AddNew(); // Create new record, /w new FormKey
-            moddedOutfit.DeepCopyIn(origOutfit);
-
-            List<UTitemset> availableSets = new List<UTitemset>();
-            List<string> chosenItems = new List<string>();
-
-            switch(gender)
+            var allItems = PatchMod.LeveledItems.AddNew();
+            allItems.EditorID = "UnderThereAllItems";
+            allItems.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
+            foreach (UTSet set in sets)
             {
-                case "male":
-                    availableSets = config.Sets.Male;
-                    moddedOutfit.EditorID += "_M";
-                    break;
-                case "female":
-                    availableSets = config.Sets.Female;
-                    moddedOutfit.EditorID += "_F";
-                    break;
+                LeveledItemEntry entry = new LeveledItemEntry();
+                LeveledItemEntryData data = new LeveledItemEntryData();
+                data.Reference = set.FormKeyObject;
+                data.Level = 1;
+                data.Count = 1;
+                entry.Data = data;
+                allItems.Entries.Add(entry);
             }
 
-            moddedOutfit.EditorID += "_" + itemSet;
-            
-            foreach (UTitemset set in availableSets)
+            return allItems.FormKey;
+        }
+
+        public static Dictionary<string, FormKey> createLeveledList_ByWealth(List<UTSet> sets, Dictionary<string, List<string>> assignments, ILinkCache lk, ISkyrimMod PatchMod)
+        {
+            Dictionary<string, FormKey> itemsByWealth = new Dictionary<string, FormKey>();
+
+            foreach (KeyValuePair<string, List<string>> assignment in assignments)
             {
-                if (set.Name == itemSet)
+                if (assignment.Value.Count == 0)
                 {
-                    chosenItems = set.Members;
-                    break;
+                    continue;
                 }
+
+                var currentItems = PatchMod.LeveledItems.AddNew();
+                currentItems.EditorID = "UnderThereItems_" + assignment.Key;
+                currentItems.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
+
+                foreach (UTSet set in sets)
+                {
+                    if (assignment.Value.Contains(set.Name))
+                    {
+                        LeveledItemEntry entry = new LeveledItemEntry();
+                        LeveledItemEntryData data = new LeveledItemEntryData();
+                        data.Reference = set.FormKeyObject;
+                        data.Level = 1;
+                        data.Count = 1;
+                        entry.Data = data;
+                        currentItems.Entries.Add(entry);
+                    }
+                }
+
+                itemsByWealth[assignment.Key] = currentItems.FormKey;
             }
 
-            foreach (string item in chosenItems)
+            return itemsByWealth;
+        }
+
+        public static Dictionary<FormKey, string> assignOutfitsByWealth(List<UTSet> sets, Dictionary<string, List<string>> classDefinitions, Dictionary<string, List<string>> factionDefinitions, string mode, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            Dictionary<FormKey, string> outfitsByWealth = new Dictionary<FormKey, string>();
+
+            Dictionary<FormKey, Dictionary<string, int>> outfitsByWealth_Tally = new Dictionary<FormKey, Dictionary<string, int>>();
+
+            string npcWealthGroup = "";
+            List<String> GroupLookupFailures = new List<string>();
+
+            // intialize outfit wealth group tally lists
+            foreach (var outfit in state.LoadOrder.PriorityOrder.WinningOverrides<IOutfitGetter>())
             {
-                foreach(UTitem uTitem in config.Items)
+                outfitsByWealth[outfit.FormKey] = "";
+                outfitsByWealth_Tally[outfit.FormKey] = new Dictionary<string, int>();
+                switch(mode)
                 {
-                    if (uTitem.Name == item && moddedOutfit.Items != null)
-                    {
-                        moddedOutfit.Items.Add(uTitem.FormKeyObject);
+                    case "class":
+                        foreach (KeyValuePair<string, List<string>> Def in classDefinitions)
+                        {
+                            outfitsByWealth_Tally[outfit.FormKey].Add(Def.Key, 0);
+                        }
                         break;
-                    }
+                    case "faction":
+                        foreach (KeyValuePair<string, List<string>> Def in factionDefinitions)
+                        {
+                            outfitsByWealth_Tally[outfit.FormKey].Add(Def.Key, 0);
+                        }
+                        break;
                 }
             }
 
-            // add outfit to the dictionary
-            Dictionary<FormKey, List<NewOutfitContainer>> mapping = new Dictionary<FormKey, List<NewOutfitContainer>>();
-            switch(gender)
+            // "score" each outfit by the number of NPCs wearing that outfit that fall into a given wealth group "bin"
+            foreach (var npc in state.LoadOrder.PriorityOrder.WinningOverrides<INpcGetter>())
             {
-                case "male":
-                    mapping = map.Male;
-                    break;
-                case "female":
-                    mapping = map.Female;
-                    break;
-            }
-
-            NewOutfitContainer NOC = new NewOutfitContainer();
-            NOC.itemSet = itemSet;
-            NOC.FormKey = moddedOutfit.FormKey;
-            
-            if (mapping.ContainsKey(origOutfit.FormKey))
-            {
-                mapping[origOutfit.FormKey].Add(NOC);
-            }
-            else
-            {
-                mapping.Add(origOutfit.FormKey, new List<NewOutfitContainer>() { NOC });
-            }
-
-            return moddedOutfit.FormKey;
-        }*/
-
-        public static FormKey getModifiedOutfit(string gender, string itemSet, FormKey origFormKey, OutfitMapping map)
-        {
-            Dictionary<FormKey, List<NewOutfitContainer>> toSearch = new Dictionary<FormKey, List<NewOutfitContainer>>();
-
-            switch(gender)
-            {
-                case "male":
-                    toSearch = map.Male;
-                    break;
-                case "female":
-                    toSearch = map.Female;
-                    break;
-            }
-
-            if (toSearch.ContainsKey(origFormKey))
-            {
-                foreach (NewOutfitContainer NOC in toSearch[origFormKey])
+                // get the wealth of current NPC
+                switch(mode)
                 {
-                    if (NOC.itemSet == itemSet)
-                    {
-                        return NOC.FormKey;
-                    }
+                    case "class":
+                        if (state.LinkCache.TryResolve<IClassGetter>(npc.Class.FormKey, out var NPCclass) && NPCclass != null && NPCclass.EditorID != null)
+                        {
+                            npcWealthGroup = getWealthGroupByEDID(NPCclass.EditorID, classDefinitions, GroupLookupFailures);
+                        }
+                        break;
+                    case "faction":
+                        npcWealthGroup = getWealthGroupByFactions(npc, factionDefinitions, GroupLookupFailures, state);
+                        break;
+                }
+
+                // get current NPC's outfit formKey and add its score
+                if (npcWealthGroup != "Default" && state.LinkCache.TryResolve<IOutfitGetter>(npc.DefaultOutfit.FormKey, out var NPCoutfit) && NPCoutfit != null)
+                {
+                    outfitsByWealth_Tally[NPCoutfit.FormKey][npcWealthGroup]++;
                 }
             }
 
-            return origFormKey;
-        }
-
-        public static string chooseItemSet(string gender, string classAssignment, UTassignmentContainer Assignments)
-        {
-            UTassignment possibleAssignments = new UTassignment();
-            switch(gender)
+            // assign the highest scoring wealth group to each outfit
+            Dictionary<string, int> score = new Dictionary<string, int>();
+            foreach (KeyValuePair<FormKey, Dictionary<string, int>> OutfitScores in outfitsByWealth_Tally)
             {
-                case "male":
-                    possibleAssignments = Assignments.Male;
-                    break;
-                case "female":
-                    possibleAssignments = Assignments.Female;
-                    break;
-            }
+                score = OutfitScores.Value;
+                int maxScore = score.Values.Max();
 
-            List<string> availableItemSets = new List<string>();
-            switch(classAssignment)
-            {
-                case "Default":
-                    availableItemSets = possibleAssignments.Default;
-                    break;
-                case "Poor":
-                    availableItemSets = possibleAssignments.Poor;
-                    break;
-                case "Medium":
-                    availableItemSets = possibleAssignments.Medium;
-                    break;
-                case "Rich":
-                    availableItemSets = possibleAssignments.Rich;
-                    break;
-            }
-
-            // choose random index
-            Random r = new Random();
-            int rIndex = r.Next(0, availableItemSets.Count);
-            return availableItemSets[rIndex];
-        }
-
-        public static string GetClassDef(string classEDID, UTclassDef ClassDefinitions, bool bAssignByClass, INpcGetter npc, Dictionary<string, List<string>> ClassLookupFailures)
-        {
-            string classDef = "";
-
-            if (bAssignByClass == false)
-            {
-                classDef = "Default";
-            }
-            else
-            {
-                if (ClassDefinitions.Poor.Contains(classEDID))
+                if (maxScore == 0)
                 {
-                    classDef = "Poor";
-                }
-                else if (ClassDefinitions.Medium.Contains(classEDID))
-                {
-                    classDef = "Medium";
-                }
-                else if (ClassDefinitions.Rich.Contains(classEDID))
-                {
-                    classDef = "Rich";
+                    Console.WriteLine("No wealth assignments could be made for outfit " + OutfitScores.Key.ToString() + ". Assigning default underwear.");
+                    outfitsByWealth[OutfitScores.Key] = "Default";
                 }
                 else
                 {
-                    //Console.WriteLine("Warning: Class " + classEDID + " was not assigned to any of ther (Poor/Medium/Rich) categories. Assigning Medium to NPCs of this class.");
-                    string label = npc?.Name?.ToString() ?? "No Name";
-
-                    if (ClassLookupFailures.ContainsKey(classEDID) == false)
+                    foreach (string wealthGroup in score.Keys)
                     {
-                        ClassLookupFailures.Add(classEDID, new List<string> { label + " (" + npc?.EditorID + ")" });
+                        if (score[wealthGroup] == maxScore)
+                        {
+                            outfitsByWealth[OutfitScores.Key] = wealthGroup;
+                            break;
+                        }
                     }
-                    else
-                    {
-                        ClassLookupFailures[classEDID].Add(label + " (" + npc?.EditorID + ")");
-                    }
-
-                    classDef = "Medium";
                 }
             }
 
-            return classDef;
+            return outfitsByWealth;
+        }
+
+        public static string getWealthGroupByFactions(INpcGetter npc, Dictionary<string, List<string>> factionDefinitions, List<string> GroupLookupFailures, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            Dictionary<string, int> wealthCounts = new Dictionary<string, int>();
+            string tmpWealthGroup = "";
+
+            // initialize wealth counts
+            foreach (KeyValuePair<string, List<string>> Def in factionDefinitions)
+            {
+                wealthCounts.Add(Def.Key, 0);
+            }
+
+            // add each faction by appropriate wealth count
+            foreach (Faction fact in npc.Factions)
+            {
+                if (fact.EditorID == null) { continue; }
+                tmpWealthGroup = getWealthGroupByEDID(fact.EditorID, factionDefinitions, GroupLookupFailures);
+
+                if (wealthCounts.ContainsKey(tmpWealthGroup))
+                {
+                    wealthCounts[tmpWealthGroup]++;
+                }
+            }
+
+            // get the wealth group with the highest number of corresponding factions.
+            int maxFactionsMatched = wealthCounts.Values.Max();
+            foreach (string x in wealthCounts.Keys)
+            {
+                if (wealthCounts[x] == maxFactionsMatched)
+                {
+                    return x;
+                }
+            }
+
+            // if no matches, return default
+            return "Default";
+        }
+
+        public static string getWealthGroupByEDID(string EDID, Dictionary<string, List<string>> Definitions, List<string> GroupLookupFailures)
+        {
+            foreach (KeyValuePair<string, List<string>> Def in Definitions)
+            {
+                if (Def.Value.Contains(EDID))
+                {
+                    return Def.Key;
+                }
+            }
+
+            // if EDID wasn't found in definitions
+            if (GroupLookupFailures.Contains(EDID) == false)
+            {
+                GroupLookupFailures.Add(EDID);
+            }
+
+            return "Default";
+        }
+
+        public static void modifyOutfitsByWealth(Dictionary<FormKey, string> outfitsByWealth, Dictionary<string, FormKey> UT_LeveledItemsByWealth, FormKey UT_DefaultItem, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            foreach (var outfit in state.LoadOrder.PriorityOrder.WinningOverrides<IOutfitGetter>())
+            {
+                var editedOutfit = state.PatchMod.Outfits.GetOrAddAsOverride(outfit);
+
+                if (editedOutfit != null && editedOutfit.Items != null)
+                {
+                    string wealthGroupForOutfit = outfitsByWealth[editedOutfit.FormKey];
+
+                    if (wealthGroupForOutfit == "Default")
+                    {
+                        editedOutfit.Items.Add(UT_DefaultItem);
+                    }
+                    else
+                    {
+                        editedOutfit.Items.Add(UT_LeveledItemsByWealth[wealthGroupForOutfit]);
+                    }
+                }
+            }
+        }
+
+        public static void modifyOutfitsByRandom(FormKey UT_LeveledItemsAll, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            foreach (var outfit in state.LoadOrder.PriorityOrder.WinningOverrides<IOutfitGetter>())
+            {
+                var editedOutfit = state.PatchMod.Outfits.GetOrAddAsOverride(outfit);
+
+                if (editedOutfit != null && editedOutfit.Items != null)
+                {
+                    editedOutfit.Items.Add(UT_LeveledItemsAll);
+                }
+            }
+        }
+        public static void modifyOutfitsByDefault(FormKey UT_DefaultItem, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            foreach (var outfit in state.LoadOrder.PriorityOrder.WinningOverrides<IOutfitGetter>())
+            {
+                var editedOutfit = state.PatchMod.Outfits.GetOrAddAsOverride(outfit);
+
+                if (editedOutfit != null && editedOutfit.Items != null)
+                {
+                    editedOutfit.Items.Add(UT_DefaultItem);
+                }
+            }
         }
 
         public static bool validateSettings(UTconfig settings)
@@ -375,7 +366,6 @@ namespace UnderThere
             {
                 return false;
             }
-
             if (settings.Slots == null)
             {
                 return false;
@@ -390,7 +380,14 @@ namespace UnderThere
             {
                 return false;
             }
-
+            if (settings.FactionDefinitions == null)
+            {
+                return false;
+            }
+            if (settings.AssignmentMode == null)
+            {
+                return false;
+            }
             if (settings.Assignments == null)
             {
                 return false;
@@ -402,100 +399,6 @@ namespace UnderThere
             }
 
             return true;
-        }
-
-        public static void deepCopyItems(List<UTSet> Sets, ILinkCache lk, ISkyrimMod PatchMod)
-        {
-            List<UTSet> toRemove = new List<UTSet>();
-            var recordsToDup = new HashSet<FormLinkInformation>();
-
-            List<FormKey> extraArmors = new List<FormKey>(); // these extra armors will be removed at the end of the function when their armor addons have been duplicated. 
-
-            foreach (var Set in Sets)
-            {
-                for (int i = 0; i < Set.Items.Count; i++) 
-                {
-                    var item = Set.Items[i];
-                    if (FormKey.TryFactory(item, out var origFormKey) && !origFormKey.IsNull)
-                    {
-                        if (!lk.TryResolve<IArmorGetter>(origFormKey, out var origItem))
-                        {
-                            Console.WriteLine("Could not find item with formKey " + origFormKey);
-                            toRemove.Add(Set); // remove this set from the list
-                            break;
-                        }
-
-                        foreach (FormLinkInformation FLI in origItem.ContainedFormLinks)
-                        {
-                            recordsToDup.Add(FLI);
-                        }
-
-                        recordsToDup.Add(origItem.ToFormLinkInformation());
-                        
-                        if (i > 0)
-                        {
-                            extraArmors.Add(origFormKey);
-                        }
-                    }
-                }
-            }
-
-            foreach (UTSet i in toRemove)
-            {
-                Sets.Remove(i);
-            }
-
-            var deleteMeEventually = (ILinkCache<ISkyrimMod>)lk; // will be moved to lk directly in next Mutagen version.
-            var duplicated = recordsToDup
-                .Select(toDup =>
-                {
-                    if (!deleteMeEventually.TryResolveContext(toDup.FormKey, toDup.Type, out var existingContext))
-                    {
-                        throw new ArgumentException($"Couldn't find {toDup.FormKey}?");
-                    }
-                    return (OldFormKey: toDup.FormKey, Duplicate: existingContext.DuplicateIntoAsNewRecord(PatchMod));
-                })
-                .ToList();
-
-            // Remap form links in each record to point to the duplicated versions
-            var remap = duplicated.ToDictionary(x => x.OldFormKey, x => x.Duplicate.FormKey);
-            foreach (var dup in duplicated)
-            {
-                dup.Duplicate.RemapLinks(remap);
-            }
-
-            // remap Set formlinks to the duplicated ones
-            // note: Only the first armor in the set needs to be remapped - the rest will have their armatures added to the first armor
-            foreach (UTSet set in Sets)
-            {
-                FormKey.TryFactory(set.Items[0], out var itemFormKey);
-                set.FormKeyObject = remap[itemFormKey];
-
-                // store additional armor addons
-                for (int i = 1; i < set.Items.Count; i++)
-                {
-                    string additionalArmorFormKeyString = set.Items[i];
-                    if (FormKey.TryFactory(additionalArmorFormKeyString, out var origArmorFormKey) && !origArmorFormKey.IsNull)
-                    {
-                        if (remap.ContainsKey(origArmorFormKey) && lk.TryResolve<IArmorGetter>(remap[origArmorFormKey], out var additionalArmor)) // should always be true but checking just in case
-                        {
-                            foreach (IFormLink<IArmorAddonGetter> additionalARMA_FL in additionalArmor.Armature)
-                            {
-                                set.AdditionalAAs.Add(additionalARMA_FL);
-                            }
-                        }
-                    }
-                }
-            }
-
-            foreach (FormKey extra in extraArmors)
-            {
-                if (remap != null && remap.ContainsKey(extra))
-                {
-                    PatchMod.Remove(remap[extra]);
-                }
-            }
-
         }
 
 
@@ -533,28 +436,6 @@ namespace UnderThere
                             moddedItem.Armature.Add(additionalARMA_FL);
                         }
 
-                        /*
-                        if (Set.Items.Count > 1)
-                        {
-                            for (int i = 1; i < Set.Items.Count; i++)
-                            {
-                                if (FormKey.TryFactory(Set.Items[i], out var additionalFormKey) && !additionalFormKey.IsNull)
-                                {
-                                    if (!lk.TryResolve<IArmorGetter>(additionalFormKey, out var additionalItem))
-                                    {
-                                        Console.WriteLine("Could not find item with formKey " + additionalFormKey);
-                                        toRemove.Add(Set); // remove this set from the list
-                                        break;
-                                    }
-
-                                    foreach (IFormLink<IArmorAddonGetter> additionalARMAtemplateGetter in additionalItem.Armature)
-                                    {
-                                        moddedItem.Armature.Add(additionalARMAtemplateGetter);
-                                    }
-                                }
-                            }
-                        }*/
-
                         // set armor addon slots
                         foreach (var aaInList in moddedItem.Armature)
                         {
@@ -583,6 +464,91 @@ namespace UnderThere
             {
                 Sets.Remove(i);
             }        
+        }
+
+        public static void deepCopyItems(List<UTSet> Sets, ILinkCache lk, ISkyrimMod PatchMod)
+        {
+            List<UTSet> toRemove = new List<UTSet>();
+            var recordsToDup = new HashSet<FormLinkInformation>();
+
+            Dictionary<UTSet, List<FormKey>> additionalAAformkeys = new Dictionary<UTSet, List<FormKey>>();
+
+            foreach (var Set in Sets)
+            {
+                additionalAAformkeys[Set] = new List<FormKey>();
+                for (int i = 0; i < Set.Items.Count; i++)
+                {
+                    var item = Set.Items[i];
+                    if (FormKey.TryFactory(item, out var origFormKey) && !origFormKey.IsNull)
+                    {
+                        if (!lk.TryResolve<IArmorGetter>(origFormKey, out var origItem))
+                        {
+                            Console.WriteLine("Could not find item with formKey " + origFormKey);
+                            toRemove.Add(Set); // remove this set from the list
+                            break;
+                        }
+
+                        foreach (FormLinkInformation FLI in origItem.ContainedFormLinks)
+                        {
+                            recordsToDup.Add(FLI);
+                        }
+
+                        if (i == 0)
+                        {
+                            recordsToDup.Add(origItem.ToFormLinkInformation());
+                        }
+                        else
+                        {
+                            foreach (var aa in origItem.Armature)
+                            {
+                                additionalAAformkeys[Set].Add(aa.FormKey);
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach (UTSet i in toRemove)
+            {
+                Sets.Remove(i);
+            }
+
+            var deleteMeEventually = (ILinkCache<ISkyrimMod>)lk; // will be moved to lk directly in next Mutagen version.
+            var duplicated = recordsToDup
+                .Select(toDup =>
+                {
+                    if (!deleteMeEventually.TryResolveContext(toDup.FormKey, toDup.Type, out var existingContext))
+                    {
+                        throw new ArgumentException($"Couldn't find {toDup.FormKey}?");
+                    }
+                    return (OldFormKey: toDup.FormKey, Duplicate: existingContext.DuplicateIntoAsNewRecord(PatchMod));
+                })
+                .ToList();
+
+            // Remap form links in each record to point to the duplicated versions
+            var remap = duplicated.ToDictionary(x => x.OldFormKey, x => x.Duplicate.FormKey);
+            foreach (var dup in duplicated)
+            {
+                dup.Duplicate.RemapLinks(remap);
+            }
+
+            // remap Set formlinks to the duplicated ones
+            // note: Only the first armor in the set needs to be remapped - the rest will have their armatures added to the first armor
+            foreach (UTSet set in Sets)
+            {
+                FormKey.TryFactory(set.Items[0], out var itemFormKey);
+                set.FormKeyObject = remap[itemFormKey];
+
+                // store additional armor addons
+
+                foreach (FormKey origAAformKey in additionalAAformkeys[set])
+                {
+                    if (remap.ContainsKey(origAAformKey) && lk.TryResolve<IArmorAddonGetter>(remap[origAAformKey], out var additionalARMA_FL)) // should always be true but checking just in case
+                    {
+                        set.AdditionalAAs.Add(additionalARMA_FL);
+                    }
+                }
+            }
         }
 
         public static BipedObjectFlag mapIntToSlot(int iFlag)
@@ -629,52 +595,27 @@ namespace UnderThere
 
     public class UTconfig
     {
-        public bool bPatchMales { get; set; }
-        public bool bPatchFemales { get; set; }
+        public string AssignmentMode { get; set; }
         public bool bMakeItemsEquippable { get; set; }
-        public bool bAssignByClass {get; set;}
         public List<int> Slots { get; set; }
         public List<string> PatchableRaces { get; set; }
-        public UTclassDef ClassDefinitions { get; set; }
-        public UTassignmentContainer Assignments { get; set; }
+        public Dictionary<string, List<string>> ClassDefinitions { get; set; }
+        public Dictionary<string, List<string>> FactionDefinitions { get; set; }
+        public Dictionary<string, List<string>> Assignments { get; set; }
         public List<UTSet> Sets { get; set; }
 
         public UTconfig()
         {
-            bAssignByClass = false;
+            AssignmentMode = "";
             Slots = new List<int>();
             PatchableRaces = new List<string>();
-            ClassDefinitions = new UTclassDef();
-            Assignments = new UTassignmentContainer();
+            ClassDefinitions = new Dictionary<string, List<string>>();
+            FactionDefinitions = new Dictionary<string, List<string>>();
+            Assignments = new Dictionary<string, List<string>>();
             Sets = new List<UTSet>();
         }
     }
 
-    public class UTclassDef
-    {
-        public List<string> Poor { get; set; }
-        public List<string> Medium { get; set; }
-        public List<string> Rich { get; set; }
-
-        public UTclassDef()
-        {
-            Poor = new List<string>();
-            Medium = new List<string>();
-            Rich = new List<string>();
-        }
-    }
-
-    public class UTassignmentContainer
-    {
-        public UTassignment Male { get; set; }
-        public UTassignment Female { get; set; }
-
-        public UTassignmentContainer()
-        {
-            Male = new UTassignment();
-            Female = new UTassignment();
-        }
-    }
     public class UTassignment
     {
         public List<string> Default { get; set; }
