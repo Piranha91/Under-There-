@@ -21,7 +21,6 @@ namespace UnderThere
                 {
                     ActionsForEmptyArgs = new RunDefaultPatcher()
                     {
-                        //IdentifyingModKey = "FoodRemover.esp",
                         TargetRelease = GameRelease.SkyrimSE
                     }
                 });
@@ -30,7 +29,6 @@ namespace UnderThere
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             var settingsPath = Path.Combine(state.ExtraSettingsDataPath, "UnderThereConfig.json");
-            //var settingsPath = "Data\\UnderThereConfig.json";
 
             UTconfig settings = new UTconfig();
 
@@ -38,13 +36,12 @@ namespace UnderThere
 
             OutfitMapping OutfitMap = new OutfitMapping();
 
-            //Your code here!
             if (validateSettings(settings) == false)
             {
                 throw new Exception("Please fix the errors in the settings file and try again.");
             }
             
-            createItems(settings.Sets, settings.bMakeItemsEquippable, settings.Slots, state.LinkCache, state.PatchMod);
+            createItems(settings.Sets, settings.bMakeItemsEquippable, state.LinkCache, state.PatchMod);
 
             Dictionary<string, FormKey> UT_LeveledItemsByWealth = new Dictionary<string, FormKey>();
             FormKey UT_LeveledItemsAll = new FormKey();
@@ -80,7 +77,7 @@ namespace UnderThere
             }
 
             // patch armor addons containing body slot to also contain underwear slots
-
+            List<BipedObjectFlag> usedSlots = getUT_ARMAslots(settings.Sets, state.LinkCache);
             foreach (var aa in state.LoadOrder.PriorityOrder.WinningOverrides<IArmorAddonGetter>())
             {
                 if (aa.BodyTemplate != null && aa.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Body))
@@ -88,13 +85,12 @@ namespace UnderThere
                     var editedAA = state.PatchMod.ArmorAddons.GetOrAddAsOverride(aa);
                     if (editedAA != null && editedAA.BodyTemplate != null)
                     {
-                        foreach (int slot in settings.Slots)
+                        foreach (BipedObjectFlag slot in usedSlots)
                         {
-                            editedAA.BodyTemplate.FirstPersonFlags |= mapIntToSlot(slot);
+                            editedAA.BodyTemplate.FirstPersonFlags |= slot;
                         }
                     }
                 }
-
             }
 
             Console.WriteLine("\nEnjoy the underwear. Goodbye.");
@@ -113,7 +109,7 @@ namespace UnderThere
             {
                 if (set.Name == defaultUWname)
                 {
-                    return set.FormKeyObject;
+                    return set.LeveledListFormKey;
                 }
             }
 
@@ -127,16 +123,31 @@ namespace UnderThere
             allItems.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
             foreach (UTSet set in sets)
             {
+                addUTitemsToLeveledList(set.Items_Mutual, allItems);
+                addUTitemsToLeveledList(set.Items_Male, allItems);
+                addUTitemsToLeveledList(set.Items_Female, allItems);
+            }
+
+            return allItems.FormKey;
+        }
+
+        public static void addUTitemsToLeveledList(List<UTitem> items, LeveledItem allItems)
+        {
+            if (allItems.Entries == null)
+            {
+                return;
+            }
+
+            foreach (UTitem item in items)
+            {
                 LeveledItemEntry entry = new LeveledItemEntry();
                 LeveledItemEntryData data = new LeveledItemEntryData();
-                data.Reference = set.FormKeyObject;
+                data.Reference = item.formKey;
                 data.Level = 1;
                 data.Count = 1;
                 entry.Data = data;
                 allItems.Entries.Add(entry);
             }
-
-            return allItems.FormKey;
         }
 
         public static Dictionary<string, FormKey> createLeveledList_ByWealth(List<UTSet> sets, Dictionary<string, List<string>> assignments, ILinkCache lk, ISkyrimMod PatchMod)
@@ -160,7 +171,7 @@ namespace UnderThere
                     {
                         LeveledItemEntry entry = new LeveledItemEntry();
                         LeveledItemEntryData data = new LeveledItemEntryData();
-                        data.Reference = set.FormKeyObject;
+                        data.Reference = set.LeveledListFormKey;
                         data.Level = 1;
                         data.Count = 1;
                         entry.Data = data;
@@ -366,10 +377,6 @@ namespace UnderThere
             {
                 return false;
             }
-            if (settings.Slots == null)
-            {
-                return false;
-            }
 
             if (settings.PatchableRaces == null)
             {
@@ -417,12 +424,25 @@ namespace UnderThere
 
 
 
-        public static void createItems(List<UTSet> Sets, bool bMakeItemsEquipable, List<int> slots, ILinkCache lk, ISkyrimMod PatchMod)
+        public static void createItems(List<UTSet> Sets, bool bMakeItemsEquipable, ILinkCache lk, ISkyrimMod PatchMod)
         {
             deepCopyItems(Sets, lk, PatchMod); // copy all armor records along with their linked subrecords into PatchMod to get rid of dependencies on the original plugins. Sets[i].FormKeyObject will now point to the new FormKey in PatchMod
 
-            List<UTSet> toRemove = new List<UTSet>();
+            // create a leveled list entry for each set
+            foreach (var set in Sets)
+            {
+                var currentItems = PatchMod.LeveledItems.AddNew();
+                currentItems.EditorID = "LItems_" + set.Name;
+                currentItems.Flags |= LeveledItem.Flag.UseAll;
+                currentItems.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
 
+                editAndStoreUTitems(set.Items_Mutual, currentItems, bMakeItemsEquipable, lk);
+                editAndStoreUTitems(set.Items_Male, currentItems, bMakeItemsEquipable, lk);
+                editAndStoreUTitems(set.Items_Female, currentItems, bMakeItemsEquipable, lk);
+                set.LeveledListFormKey = currentItems.FormKey;
+            }
+
+            /*
             foreach (var Set in Sets)
             {
                 // Get the first armor in the set. 
@@ -477,54 +497,18 @@ namespace UnderThere
             foreach (UTSet i in toRemove)
             {
                 Sets.Remove(i);
-            }        
+            }   */     
         }
 
         public static void deepCopyItems(List<UTSet> Sets, ILinkCache lk, ISkyrimMod PatchMod)
         {
-            List<UTSet> toRemove = new List<UTSet>();
             var recordsToDup = new HashSet<FormLinkInformation>();
 
-            Dictionary<UTSet, List<FormKey>> additionalAAformkeys = new Dictionary<UTSet, List<FormKey>>();
-
-            foreach (var Set in Sets)
+            foreach (var set in Sets)
             {
-                additionalAAformkeys[Set] = new List<FormKey>();
-                for (int i = 0; i < Set.Items.Count; i++)
-                {
-                    var item = Set.Items[i];
-                    if (FormKey.TryFactory(item, out var origFormKey) && !origFormKey.IsNull)
-                    {
-                        if (!lk.TryResolve<IArmorGetter>(origFormKey, out var origItem))
-                        {
-                            Console.WriteLine("Could not find item with formKey " + origFormKey);
-                            toRemove.Add(Set); // remove this set from the list
-                            break;
-                        }
-
-                        foreach (FormLinkInformation FLI in origItem.ContainedFormLinks)
-                        {
-                            recordsToDup.Add(FLI);
-                        }
-
-                        if (i == 0)
-                        {
-                            recordsToDup.Add(origItem.ToFormLinkInformation());
-                        }
-                        else
-                        {
-                            foreach (var aa in origItem.Armature)
-                            {
-                                additionalAAformkeys[Set].Add(aa.FormKey);
-                            }
-                        }
-                    }
-                }
-            }
-
-            foreach (UTSet i in toRemove)
-            {
-                Sets.Remove(i);
+                getFormLinksToDuplicate(set.Items_Mutual, recordsToDup, lk);
+                getFormLinksToDuplicate(set.Items_Male, recordsToDup, lk);
+                getFormLinksToDuplicate(set.Items_Female, recordsToDup, lk);
             }
 
             var deleteMeEventually = (ILinkCache<ISkyrimMod>)lk; // will be moved to lk directly in next Mutagen version.
@@ -547,22 +531,168 @@ namespace UnderThere
             }
 
             // remap Set formlinks to the duplicated ones
-            // note: Only the first armor in the set needs to be remapped - the rest will have their armatures added to the first armor
             foreach (UTSet set in Sets)
             {
-                FormKey.TryFactory(set.Items[0], out var itemFormKey);
-                set.FormKeyObject = remap[itemFormKey];
+                remapSetItemList(set.Items_Mutual, remap);
+                remapSetItemList(set.Items_Male, remap);
+                remapSetItemList(set.Items_Female, remap);
+            }
+        }
 
-                // store additional armor addons
-
-                foreach (FormKey origAAformKey in additionalAAformkeys[set])
+        public static void getFormLinksToDuplicate(List<UTitem> UTitemList, HashSet<FormLinkInformation> recordsToDup, ILinkCache lk)
+        {
+            foreach (var item in UTitemList)
+            {
+                if (FormKey.TryFactory(item.Record, out var origFormKey) && !origFormKey.IsNull)
                 {
-                    if (remap.ContainsKey(origAAformKey) && lk.TryResolve<IArmorAddonGetter>(remap[origAAformKey], out var additionalARMA_FL)) // should always be true but checking just in case
+                    if (!lk.TryResolve<IArmorGetter>(origFormKey, out var origItem))
                     {
-                        set.AdditionalAAs.Add(additionalARMA_FL);
+                        throw new Exception("Could not find item with formKey " + origFormKey);
+                    }
+
+                    foreach (FormLinkInformation FLI in origItem.ContainedFormLinks)
+                    {
+                        if (FLI.FormKey.ModKey == origItem.FormKey.ModKey) // only copy subrecord as new record if it comes from the same mod as the armor itself
+                        {
+                            recordsToDup.Add(FLI);
+                        }
+                    }
+                    recordsToDup.Add(origItem.ToFormLinkInformation());
+                }
+            }
+        }
+
+        public static void remapSetItemList(List<UTitem> UTitemList, Dictionary<FormKey, FormKey> remap)
+        {
+            foreach (var item in UTitemList)
+            {
+                FormKey.TryFactory(item.Record, out var origFormKey);
+                item.formKey = remap[origFormKey];
+            }
+        }
+
+        public static void editAndStoreUTitems(List<UTitem> items, LeveledItem currentItems, bool bMakeItemsEquipable, ILinkCache lk)
+        {
+            foreach (UTitem item in items)
+            {
+                if (lk.TryResolve<IArmor>(item.formKey, out var moddedItem) && currentItems.Entries != null)
+                {
+                    moddedItem.Name = item.DispName;
+                    moddedItem.EditorID = "UT_" + moddedItem.EditorID;
+                    moddedItem.Weight = item.Weight;
+                    moddedItem.Value = item.Value;
+
+                    switch (bMakeItemsEquipable)
+                    {
+                        case true: moddedItem.MajorFlags &= Armor.MajorFlag.NonPlayable; break;
+                        case false: moddedItem.MajorFlags |= Armor.MajorFlag.NonPlayable; break;
+                    }
+
+                    LeveledItemEntry entry = new LeveledItemEntry();
+                    LeveledItemEntryData data = new LeveledItemEntryData();
+                    data.Reference = moddedItem.FormKey;
+                    data.Level = 1;
+                    data.Count = 1;
+                    entry.Data = data;
+                    currentItems.Entries.Add(entry);
+                }
+            }
+        }
+
+        public static List<BipedObjectFlag> getUT_ARMAslots(List<UTSet> sets, ILinkCache lk)
+        {
+            List<BipedObjectFlag> usedSlots = new List<BipedObjectFlag>();
+
+            foreach (UTSet set in sets)
+            {
+                getContainedSlots(set.Items_Mutual, usedSlots, lk);
+                getContainedSlots(set.Items_Male, usedSlots, lk);
+                getContainedSlots(set.Items_Female, usedSlots, lk);
+            }
+
+            Console.WriteLine("The following slots are being used by underwear. Please make sure they don't conflict with any other modded armors.");
+            foreach (var slot in usedSlots)
+            {
+                Console.WriteLine(mapSlotToInt(slot));
+            }
+
+            return usedSlots;
+        }
+
+        public static void getContainedSlots(List<UTitem> items, List<BipedObjectFlag> usedSlots, ILinkCache lk)
+        {
+            foreach (UTitem item in items)
+            {
+                if (!lk.TryResolve<IArmor>(item.formKey, out var itemObj) || itemObj == null)
+                {
+                    continue;
+                }
+
+                foreach (IFormLink<IArmorAddonGetter> AAgetter in itemObj.Armature)
+                {
+                    if (!lk.TryResolve<IArmorAddon>(AAgetter.FormKey, out var ARMAobj) || ARMAobj == null || ARMAobj.BodyTemplate == null)
+                    {
+                        continue;
+                    }
+
+                    List<BipedObjectFlag> currentUsedSlots = getARMAslots(ARMAobj.BodyTemplate);
+                    foreach (var usedFlag in currentUsedSlots)
+                    {
+                        if (usedSlots.Contains(usedFlag) == false)
+                        {
+                            usedSlots.Add(usedFlag);
+                        }
                     }
                 }
             }
+        }
+
+        public static List<BipedObjectFlag> getARMAslots(BodyTemplate bodyTemplate)
+        {
+            List<BipedObjectFlag> usedSlots = new List<BipedObjectFlag>();
+            List<BipedObjectFlag> possibleSlots = new List<BipedObjectFlag>
+            {
+                (BipedObjectFlag)0x00000001,
+                (BipedObjectFlag)0x00000002,
+                (BipedObjectFlag)0x00000004,
+                (BipedObjectFlag)0x00000008,
+                (BipedObjectFlag)0x00000010,
+                (BipedObjectFlag)0x00000020,
+                (BipedObjectFlag)0x00000040,
+                (BipedObjectFlag)0x00000080,
+                (BipedObjectFlag)0x00000100,
+                (BipedObjectFlag)0x00000200,
+                (BipedObjectFlag)0x00000400,
+                (BipedObjectFlag)0x00000800,
+                (BipedObjectFlag)0x00001000,
+                (BipedObjectFlag)0x00002000,
+                (BipedObjectFlag)0x00004000,
+                (BipedObjectFlag)0x00008000,
+                (BipedObjectFlag)0x00010000,
+                (BipedObjectFlag)0x00020000,
+                (BipedObjectFlag)0x00040000,
+                (BipedObjectFlag)0x00080000,
+                (BipedObjectFlag)0x00100000,
+                (BipedObjectFlag)0x00200000,
+                (BipedObjectFlag)0x00400000,
+                (BipedObjectFlag)0x00800000,
+                (BipedObjectFlag)0x01000000,
+                (BipedObjectFlag)0x02000000,
+                (BipedObjectFlag)0x04000000,
+                (BipedObjectFlag)0x08000000,
+                (BipedObjectFlag)0x10000000,
+                (BipedObjectFlag)0x20000000
+            };
+
+            foreach (BipedObjectFlag flag in possibleSlots)
+            {
+                if (bodyTemplate.FirstPersonFlags.HasFlag(flag))
+                {
+                    usedSlots.Add(flag);
+                }
+            }
+
+            return usedSlots;
         }
 
         public static BipedObjectFlag mapIntToSlot(int iFlag)
@@ -602,6 +732,44 @@ namespace UnderThere
                 default: return new BipedObjectFlag();
             }
         }
+
+        public static int mapSlotToInt(BipedObjectFlag oFlag)
+        {
+            switch (oFlag)
+            {
+                case (BipedObjectFlag)0x00000001: return 30;
+                case (BipedObjectFlag)0x00000002: return 31;
+                case (BipedObjectFlag)0x00000004: return 32;
+                case (BipedObjectFlag)0x00000008: return 33;
+                case (BipedObjectFlag)0x00000010: return 34;
+                case (BipedObjectFlag)0x00000020: return 35;
+                case (BipedObjectFlag)0x00000040: return 36;
+                case (BipedObjectFlag)0x00000080: return 37;
+                case (BipedObjectFlag)0x00000100: return 38;
+                case (BipedObjectFlag)0x00000200: return 39;
+                case (BipedObjectFlag)0x00000400: return 40;
+                case (BipedObjectFlag)0x00000800: return 41;
+                case (BipedObjectFlag)0x00001000: return 42;
+                case (BipedObjectFlag)0x00002000: return 43;
+                case (BipedObjectFlag)0x00004000: return 44;
+                case (BipedObjectFlag)0x00008000: return 45;
+                case (BipedObjectFlag)0x00010000: return 46;
+                case (BipedObjectFlag)0x00020000: return 47;
+                case (BipedObjectFlag)0x00040000: return 48;
+                case (BipedObjectFlag)0x00080000: return 49;
+                case (BipedObjectFlag)0x00100000: return 50;
+                case (BipedObjectFlag)0x00200000: return 51;
+                case (BipedObjectFlag)0x00400000: return 52;
+                case (BipedObjectFlag)0x00800000: return 53;
+                case (BipedObjectFlag)0x01000000: return 54;
+                case (BipedObjectFlag)0x02000000: return 55;
+                case (BipedObjectFlag)0x04000000: return 56;
+                case (BipedObjectFlag)0x08000000: return 57;
+                case (BipedObjectFlag)0x10000000: return 58;
+                case (BipedObjectFlag)0x20000000: return 59;
+                default: return 0;
+            }
+        }
     }
 
 
@@ -611,7 +779,6 @@ namespace UnderThere
     {
         public string AssignmentMode { get; set; }
         public bool bMakeItemsEquippable { get; set; }
-        public List<int> Slots { get; set; }
         public List<string> PatchableRaces { get; set; }
         public Dictionary<string, List<string>> ClassDefinitions { get; set; }
         public Dictionary<string, List<string>> FactionDefinitions { get; set; }
@@ -621,7 +788,6 @@ namespace UnderThere
         public UTconfig()
         {
             AssignmentMode = "";
-            Slots = new List<int>();
             PatchableRaces = new List<string>();
             ClassDefinitions = new Dictionary<string, List<string>>();
             FactionDefinitions = new Dictionary<string, List<string>>();
@@ -649,35 +815,35 @@ namespace UnderThere
     public class UTSet
     {
         public string Name { get; set; }
-        public string DispName { get; set; }
-        public float Weight { get; set; }
-        public float Value { get; set; }
-        public List<string> Items { get; set; }
-        public FormKey FormKeyObject { get; set; }
-
-        public List<IFormLink<IArmorAddonGetter>> AdditionalAAs { get; set; }
+        public List<UTitem> Items_Mutual { get; set; }
+        public List<UTitem> Items_Male { get; set; }
+        public List<UTitem> Items_Female { get; set; }
+        public FormKey LeveledListFormKey { get; set; }
 
         public UTSet()
         {
             Name = "";
-            DispName = "Undergarments";
-            Weight = 0;
-            Value = 0;
-            Items = new List<string>();
-            FormKeyObject = new FormKey();
-            AdditionalAAs = new List<IFormLink<IArmorAddonGetter>>();
+            Items_Mutual = new List<UTitem>();
+            Items_Male = new List<UTitem>();
+            Items_Female = new List<UTitem>();
+            LeveledListFormKey = new FormKey();
         }
     }
-    public class UTitemset
+    public class UTitem
     {
-        public string Name { get; set; }
+        public string Record { get; set; }
         
-        public List<string> Members { get; set; }
-
-        public UTitemset()
+        public string DispName { get; set; }
+        public float Weight { get; set; }
+        public UInt32 Value { get; set; }
+        public FormKey formKey { get; set; }
+        public UTitem()
         {
-            Name = "";
-            Members = new List<string>();
+            Record = "";
+            DispName = "";
+            Weight = 0;
+            Value = 0;
+            formKey = new FormKey();
         }
     }
 

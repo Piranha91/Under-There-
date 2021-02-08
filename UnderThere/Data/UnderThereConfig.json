@@ -1,7 +1,6 @@
 {
     "AssignmentMode": "default",
     "bMakeItemsEquippable": false,
-    "Slots": [49, 56],
     "PatchableRaces":[
         "HighElfRace",
         "ArgonianRace",
@@ -49,73 +48,203 @@
     [
         {
             "Name": "Default Variant",
-            "DispName": "Undergarment",
-            "Weight": 1,
-            "Value": 5,
-            "Items": ["000821:underwearforeveryone.esp", "000820:underwearforeveryone.esp"]
+            "Items_Mutual": [
+                {
+                "Record": "000821:underwearforeveryone.esp",
+                "DispName": "Undergarment",
+                "Weight": 0.5,
+                "Value": 25
+                }
+            ],
+            "Items_Male": [],
+            "Items_Female": [
+                {
+                    "Record": "000820:underwearforeveryone.esp",
+                    "DispName": "Undergarment",
+                    "Weight": 0.5,
+                    "Value": 25
+                }
+            ]
         },
         {
             "Name": "Poor Variant 1",
-            "DispName": "Cheap Undergarment",
-            "Weight": 1,
-            "Value": 5,
-            "Items": ["00081F:underwearforeveryone.esp", "000833:underwearforeveryone.esp"]
+            "Items_Mutual": [
+                {
+                "Record": "00081F:underwearforeveryone.esp",
+                "DispName": "Cheap Undergarment",
+                "Weight": 0.5,
+                "Value": 25
+                }
+            ],
+            "Items_Male": [],
+            "Items_Female": [
+                {
+                    "Record": "000833:underwearforeveryone.esp",
+                    "DispName": "Cheap Undergarment",
+                    "Weight": 0.5,
+                    "Value": 25
+                }
+            ]
         },
         {
             "Name": "Poor Variant 2",
-            "DispName": "Cheap Undergarment",
-            "Weight": 1,
-            "Value": 5,
-            "Items": ["00081E:underwearforeveryone.esp", "000834:underwearforeveryone.esp"]
+            "Items_Mutual": [
+                {
+                "Record": "00081E:underwearforeveryone.esp",
+                "DispName": "Cheap Undergarment",
+                "Weight": 0.5,
+                "Value": 25
+                }
+            ],
+            "Items_Male": [],
+            "Items_Female": [
+                {
+                    "Record": "000834:underwearforeveryone.esp",
+                    "DispName": "Cheap Undergarment",
+                    "Weight": 0.5,
+                    "Value": 25
+                }
+            ]
         },
         {
             "Name": "Poor Variant 3",
-            "DispName": "Cheap Undergarment",
-            "Weight": 1,
-            "Value": 5,
-            "Items": ["000823:underwearforeveryone.esp", "000835:underwearforeveryone.esp"]
+            "Items_Mutual": [
+                {
+                "Record": "000823:underwearforeveryone.esp",
+                "DispName": "Cheap Undergarment",
+                "Weight": 0.5,
+                "Value": 25
+                }
+            ],
+            "Items_Male": [],
+            "Items_Female": [
+                {
+                    "Record": "000835:underwearforeveryone.esp",
+                    "DispName": "Cheap Undergarment",
+                    "Weight": 0.5,
+                    "Value": 25
+                }
+            ]
         },
         {
             "Name": "Medium Variant 1",
-            "DispName": "Undergarment",
-            "Weight": 1,
-            "Value": 25,
-            "Items": ["000824:underwearforeveryone.esp", "000836:underwearforeveryone.esp"]
+            "Items_Mutual": [
+                {
+                "Record": "000824:underwearforeveryone.esp",
+                "DispName": "Undergarment",
+                "Weight": 0.5,
+                "Value": 25
+                }
+            ],
+            "Items_Male": [],
+            "Items_Female": [
+                {
+                    "Record": "000836:underwearforeveryone.esp",
+                    "DispName": "Undergarment",
+                    "Weight": 0.5,
+                    "Value": 25
+                }
+            ]
         },
         {
             "Name": "Medium Variant 2",
-            "DispName": "Undergarment",
-            "Weight": 1,
-            "Value": 25,
-            "Items": ["000825:underwearforeveryone.esp", "000837:underwearforeveryone.esp"]
+            "Items_Mutual": [
+                {
+                "Record": "000825:underwearforeveryone.esp",
+                "DispName": "Undergarment",
+                "Weight": 0.5,
+                "Value": 25
+                }
+            ],
+            "Items_Male": [],
+            "Items_Female": [
+                {
+                    "Record": "000837:underwearforeveryone.esp",
+                    "DispName": "Undergarment",
+                    "Weight": 0.5,
+                    "Value": 25
+                }
+            ]
         },
         {
             "Name": "Medium Variant 3",
-            "DispName": "Undergarment",
-            "Weight": 1,
-            "Value": 25,
-            "Items": ["000826:underwearforeveryone.esp", "000838:underwearforeveryone.esp"]
+            "Items_Mutual": [
+                {
+                "Record": "000826:underwearforeveryone.esp",
+                "DispName": "Undergarment",
+                "Weight": 0.5,
+                "Value": 25
+                }
+            ],
+            "Items_Male": [],
+            "Items_Female": [
+                {
+                    "Record": "000838:underwearforeveryone.esp",
+                    "DispName": "Undergarment",
+                    "Weight": 0.5,
+                    "Value": 25
+                }
+            ]
         },
         {
             "Name": "Rich Variant 1",
-            "DispName": "Fine Undergarment",
-            "Weight": 1,
-            "Value": 50,
-            "Items": ["000827:underwearforeveryone.esp", "000839:underwearforeveryone.esp"]
+            "Items_Mutual": [
+                {
+                "Record": "000827:underwearforeveryone.esp",
+                "DispName": "Fine Undergarment",
+                "Weight": 0.5,
+                "Value": 25
+                }
+            ],
+            "Items_Male": [],
+            "Items_Female": [
+                {
+                    "Record": "000839:underwearforeveryone.esp",
+                    "DispName": "Fine Undergarment",
+                    "Weight": 0.5,
+                    "Value": 25
+                }
+            ]
         },
         {
             "Name": "Rich Variant 2",
-            "DispName": "Fine Undergarment",
-            "Weight": 1,
-            "Value": 50,
-            "Items": ["000828:underwearforeveryone.esp", "00083A:underwearforeveryone.esp"]
+            "Items_Mutual": [
+                {
+                "Record": "000828:underwearforeveryone.esp",
+                "DispName": "Fine Undergarment",
+                "Weight": 0.5,
+                "Value": 25
+                }
+            ],
+            "Items_Male": [],
+            "Items_Female": [
+                {
+                    "Record": "00083A:underwearforeveryone.esp",
+                    "DispName": "Fine Undergarment",
+                    "Weight": 0.5,
+                    "Value": 25
+                }
+            ]
         },
         {
             "Name": "Rich Variant 3",
-            "DispName": "Fine Undergarment",
-            "Weight": 1,
-            "Value": 50,
-            "Items": ["000829:underwearforeveryone.esp", "00083B:underwearforeveryone.esp"]
+            "Items_Mutual": [
+                {
+                "Record": "000829:underwearforeveryone.esp",
+                "DispName": "Fine Undergarment",
+                "Weight": 0.5,
+                "Value": 25
+                }
+            ],
+            "Items_Male": [],
+            "Items_Female": [
+                {
+                    "Record": "00083B:underwearforeveryone.esp",
+                    "DispName": "Fine Undergarment",
+                    "Weight": 0.5,
+                    "Value": 25
+                }
+            ]
         }
     ]
 }
