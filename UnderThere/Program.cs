@@ -29,8 +29,8 @@ namespace UnderThere
 
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            //var settingsPath = Path.Combine(state.ExtraSettingsDataPath, "UnderThereConfig.json");
-            var settingsPath = "Data\\UnderThereConfig.json";
+            var settingsPath = Path.Combine(state.ExtraSettingsDataPath, "UnderThereConfig.json");
+            //var settingsPath = "Data\\UnderThereConfig.json";
 
             UTconfig settings = new UTconfig();
 
@@ -388,6 +388,20 @@ namespace UnderThere
             {
                 return false;
             }
+            else
+            {
+                string[] validModes = new string[] { "default", "random", "class", "faction" };
+                if (validModes.Contains(settings.AssignmentMode) == false)
+                {
+                    Console.WriteLine("Error: AssignmentMode can only contain one of the following:");
+                    foreach (String m in validModes)
+                    {
+                        Console.WriteLine(m);
+                    }
+                    return false;
+                }
+            }
+
             if (settings.Assignments == null)
             {
                 return false;

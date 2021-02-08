@@ -1,5 +1,5 @@
 {
-    "AssignmentMode": "class",
+    "AssignmentMode": "default",
     "bMakeItemsEquippable": false,
     "Slots": [49, 56],
     "PatchableRaces":[
