@@ -1,6 +1,9 @@
 {
-    "AssignmentMode": "default",
-    "bMakeItemsEquippable": false,
+    "AssignmentMode": "class",
+    "bPatchMales": true,
+    "bPatchFemales": true,
+    "bPatchNakedNPCs": true,
+    "bMakeItemsEquippable": true,
     "PatchableRaces":[
         "HighElfRace",
         "ArgonianRace",
