@@ -3,5 +3,6 @@
   "Visibility": "Exclude",
   "OneLineDescription": "",
   "LongDescription": "",
-  "PreferredAutoVersioning": "Default"
+  "PreferredAutoVersioning": "Default",
+  "RequiredMods": []
 }
