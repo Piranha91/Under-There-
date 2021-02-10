@@ -175,7 +175,16 @@ namespace UnderThere
                 NPCassignment specificAssignment = NPCassignment.getSpecificNPC(npc.FormKey, settings.SpecificNPCs);
 
                 // check if NPC race should be patched
-                if (!state.LinkCache.TryResolve<IRaceGetter>(npc.Race.FormKey, out var currentRace) || currentRace == null || currentRace.EditorID == null || settings.PatchableRaces.Contains(currentRace.EditorID) == false)
+                bool isInventoryTemplate = npc.DefaultOutfit.IsNull == false && npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Inventory) == false;
+                if (!state.LinkCache.TryResolve<IRaceGetter>(npc.Race.FormKey, out var currentRace) || 
+                    currentRace == null || 
+                    currentRace.EditorID == null || 
+                    settings.NonPatchableRaces.Contains(currentRace.EditorID) || 
+                    IsNonHumanoidFaction(npc, state.LinkCache) || 
+                    (settings.bPatchSummonedNPCs == false && npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Summonable)) ||
+                    currentRace.EditorID.Contains("Child") ||
+                    currentRace.EditorID.ToLower().Contains("atronach") ||
+                    (settings.PatchableRaces.Contains(currentRace.EditorID) == false && isInventoryTemplate == false))
                 {
                     continue;
                 }
@@ -309,6 +318,20 @@ namespace UnderThere
                         break;
                 }
             }
+        }
+
+        public static bool IsNonHumanoidFaction(INpcGetter npc, ILinkCache lk)
+        {
+            foreach (var fact in npc.Factions)
+            {
+                if (!lk.TryResolve<IFactionGetter>(fact.Faction.FormKey, out var currentFaction) || currentFaction == null || currentFaction.EditorID == null) { continue; }
+                if (currentFaction.EditorID == "CreatureFaction" || currentFaction.EditorID == "PreyFaction" || currentFaction.EditorID == "DwarvenAutomatonFaction")
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static string getWealthGroupByFactions(INpcGetter npc, Dictionary<string, List<string>> factionDefinitions, List<string> ignoredFactions, List<string> GroupLookupFailures, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
@@ -1003,8 +1026,10 @@ namespace UnderThere
         public bool bPatchMales { get; set; }
         public bool bPatchFemales { get; set; }
         public bool bPatchNakedNPCs { get; set; }
+        public bool bPatchSummonedNPCs { get; set; }
         public bool bMakeItemsEquippable { get; set; }
         public List<string> PatchableRaces { get; set; }
+        public List<string> NonPatchableRaces { get; set; }
         public Dictionary<string, List<string>> ClassDefinitions { get; set; }
         public Dictionary<string, List<string>> FactionDefinitions { get; set; }
         public List<string> IgnoreFactionsWhenScoring { get; set; }
@@ -1018,7 +1043,9 @@ namespace UnderThere
             bPatchMales = true;
             bPatchFemales = true;
             bPatchNakedNPCs = true;
+            bPatchSummonedNPCs = false;
             PatchableRaces = new List<string>();
+            NonPatchableRaces = new List<string>();
             ClassDefinitions = new Dictionary<string, List<string>>();
             FactionDefinitions = new Dictionary<string, List<string>>();
             IgnoreFactionsWhenScoring = new List<string>();

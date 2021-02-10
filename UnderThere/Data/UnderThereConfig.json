@@ -3,6 +3,7 @@
     "bPatchMales": true,
     "bPatchFemales": true,
     "bPatchNakedNPCs": true,
+    "bPatchSummonedNPCs": false,
     "bMakeItemsEquippable": true,
     "PatchableRaces":[
         "HighElfRace",
@@ -27,6 +28,11 @@
         "OrcRaceVampire",
         "RedguardRaceVampire",
         "ElderRaceVampire"
+    ],
+    "NonPatchableRaces":[
+        "DraugrRace",
+        "DLC2HulkingDraugrRace",
+        "FalmerRace"
     ],
     "ClassDefinitions":
     {
