@@ -64,6 +64,10 @@ namespace UnderThere
             // modify NPC outfits
             AssignOutfits(settings, UT_DefaultItem, UT_LeveledItemsByWealth, UT_LeveledItemsAll, state);
 
+            // create and distribute inventory spell 
+            copyUTScript(state);
+            createInventoryFixSpell(settings.Sets, state);
+
             // message user
             reportARMAslots(settings.Sets, state.LinkCache);
             reportDeactivatablePlugins(UWsourcePlugins);
@@ -221,7 +225,7 @@ namespace UnderThere
                 // get the wealth of current NPC
                 switch (mode)
                 {
-                    case "default": 
+                    case "default":
                         npcGroup = "Default";
                         currentUWkey = UT_DefaultItem; break;
                     case "class":
@@ -261,7 +265,7 @@ namespace UnderThere
                     }
                     OutfitMap[currentOutfitKey][npcGroup] = newOutfit;
                 }
-                
+
                 NPCoverride.DefaultOutfit = OutfitMap[currentOutfitKey][npcGroup]; // assign the correct outfit to the current NPC
             }
         }
@@ -374,8 +378,6 @@ namespace UnderThere
             return true;
         }
 
-
-
         public static void createItems(List<UTSet> Sets, bool bMakeItemsEquipable, List<string> UWsourcePlugins, ILinkCache lk, ISkyrimMod PatchMod)
         {
             deepCopyItems(Sets, UWsourcePlugins, lk, PatchMod); // copy all armor records along with their linked subrecords into PatchMod to get rid of dependencies on the original plugins. Sets[i].FormKeyObject will now point to the new FormKey in PatchMod
@@ -392,7 +394,7 @@ namespace UnderThere
                 editAndStoreUTitems(set.Items_Male, currentItems, bMakeItemsEquipable, lk);
                 editAndStoreUTitems(set.Items_Female, currentItems, bMakeItemsEquipable, lk);
                 set.LeveledListFormKey = currentItems.FormKey;
-            }   
+            }
         }
 
         public static void deepCopyItems(List<UTSet> Sets, List<string> UWsourcePlugins, ILinkCache lk, ISkyrimMod PatchMod)
@@ -451,7 +453,7 @@ namespace UnderThere
                 {
                     if (!lk.TryResolve<IArmorGetter>(origFormKey, out var origItem))
                     {
-                        throw new Exception("Could not find item with formKey " + origFormKey);
+                        throw new Exception("Could not find item with formKey " + origFormKey + ". Please make sure that " + origFormKey.ModKey.ToString() + " is active in your load order.");
                     }
 
                     foreach (FormLinkInformation FLI in origItem.ContainedFormLinks)
@@ -499,6 +501,143 @@ namespace UnderThere
                     data.Count = 1;
                     entry.Data = data;
                     currentItems.Entries.Add(entry);
+                }
+            }
+        }
+
+        public static void copyUTScript(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            string UTscriptPath = Path.Combine(state.ExtraSettingsDataPath, "UnderThereGenderedItemFix.pex");
+
+            if (File.Exists(UTscriptPath) == false)
+            {
+                throw new Exception("Could not find " + UTscriptPath);
+            }
+            else
+            {
+                string destPath = Path.Combine(state.Settings.DataFolderPath, "Scripts\\UnderThereGenderedItemFix.pex");
+                try
+                {
+                    File.Copy(UTscriptPath, destPath, true);
+                }
+                catch
+                {
+                    throw new Exception("Could not copy " + UTscriptPath + " to " + destPath);
+                }
+            }
+        }
+
+        public static void createInventoryFixSpell(List<UTSet> sets, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            // get all gendered items
+            Dictionary<string, List<FormKey>> genderedItems = getGenderedItems(sets);
+
+            // create gendered item FormLists
+            FormList maleItems = state.PatchMod.FormLists.AddNew();
+            maleItems.EditorID = "UT_FLST_MaleOnly";
+            foreach (var fk in genderedItems["male"])
+            {
+                maleItems.Items.Add(fk);
+            }
+
+            FormList femaleItems = state.PatchMod.FormLists.AddNew();
+            femaleItems.EditorID = "UT_FLST_FemaleOnly";
+            foreach (var fk in genderedItems["female"])
+            {
+                femaleItems.Items.Add(fk);
+            }
+
+            // create spell for SPID distribution
+            // create MGEF first
+            MagicEffect utItemFixEffect = state.PatchMod.MagicEffects.AddNew();
+            utItemFixEffect.EditorID = "UT_MGEF_GenderedInventoryFix";
+            utItemFixEffect.Name = "Removes female-only items from males and vice-versa";
+            utItemFixEffect.Flags |= MagicEffect.Flag.HideInUI;
+            utItemFixEffect.Flags |= MagicEffect.Flag.NoDeathDispel;
+            utItemFixEffect.Archetype.Type = MagicEffectArchetype.TypeEnum.Script;
+            utItemFixEffect.TargetType = TargetType.Self;
+            utItemFixEffect.CastType = CastType.ConstantEffect;
+            utItemFixEffect.VirtualMachineAdapter = new VirtualMachineAdapter();
+
+            ScriptEntry UTinventoryFixScript = new ScriptEntry();
+            UTinventoryFixScript.Name = "UnderThereGenderedItemFix";
+
+            ScriptObjectProperty mProp = new ScriptObjectProperty();
+            mProp.Name = "maleItems";
+            mProp.Flags |= ScriptProperty.Flag.Edited;
+            mProp.Object = maleItems;
+            UTinventoryFixScript.Properties.Add(mProp);
+
+            ScriptObjectProperty fProp = new ScriptObjectProperty();
+            fProp.Name = "femaleItems";
+            fProp.Flags |= ScriptProperty.Flag.Edited;
+            fProp.Object = femaleItems;
+            UTinventoryFixScript.Properties.Add(fProp);
+
+            utItemFixEffect.VirtualMachineAdapter.Scripts.Add(UTinventoryFixScript);
+
+            // create Spell
+            Spell utItemFixSpell = state.PatchMod.Spells.AddNew();
+            utItemFixSpell.EditorID = "UT_SPEL_GenderedInventoryFix";
+            utItemFixSpell.Name = "Fixes gendered UnderThere inventory";
+            utItemFixSpell.CastType = CastType.ConstantEffect;
+            utItemFixSpell.TargetType = TargetType.Self;
+            Effect utItemFixShellEffect = new Effect();
+            utItemFixShellEffect.BaseEffect = utItemFixEffect;
+            utItemFixSpell.Effects.Add(utItemFixShellEffect);
+
+            // distribute spell via SPID
+            string distr = "Spell = " + utItemFixSpell.FormKey.IDString() + " - " + utItemFixSpell.FormKey.ModKey.ToString() + " | ActorTypeNPC | NONE | NONE | NONE";
+            string destPath = Path.Combine(state.Settings.DataFolderPath, "UnderThereGenderedItemFix_DISTR.ini");
+            try
+            {
+                File.WriteAllLines(destPath, new List<string> { distr });
+            }
+
+            catch
+            {
+                throw new Exception("Could not write " + destPath);
+            }
+        }
+
+        public static Dictionary<string, List<FormKey>> getGenderedItems(List<UTSet> sets)
+        {
+            Dictionary<string, List<FormKey>> genderedItems = new Dictionary<string, List<FormKey>>();
+            genderedItems["male"] = new List<FormKey>();
+            genderedItems["female"] = new List<FormKey>();
+
+            foreach (UTSet set in sets)
+            {
+                getGenderedItemsFromList(set.Items_Male, genderedItems["male"]);
+                getGenderedItemsFromList(set.Items_Female, genderedItems["female"]);
+            }
+
+            //make sure that gendered items aren't mixed
+            foreach (FormKey maleItem in genderedItems["male"])
+            {
+                if (genderedItems["female"].Contains(maleItem))
+                {
+                    throw new Exception("Error: found item " + maleItem.ToString() + " in both Items_Male and Items_Female. Please move it to Items_Mutual.");
+                }
+            }
+            foreach (FormKey femaleItem in genderedItems["female"])
+            {
+                if (genderedItems["male"].Contains(femaleItem))
+                {
+                    throw new Exception("Error: found item " + femaleItem.ToString() + " in both Items_Male and Items_Female. Please move it to Items_Mutual.");
+                }
+            }
+
+            return genderedItems;
+        }
+
+        public static void getGenderedItemsFromList(List<UTitem> items, List<FormKey> uniqueFormKeys)
+        {
+            foreach (UTitem item in items)
+            {
+                if (uniqueFormKeys.Contains(item.formKey) == false)
+                {
+                    uniqueFormKeys.Add(item.formKey);
                 }
             }
         }
@@ -684,7 +823,7 @@ namespace UnderThere
     }
 
 
-   
+
 
     public class UTconfig
     {
@@ -749,7 +888,7 @@ namespace UnderThere
     public class UTitem
     {
         public string Record { get; set; }
-        
+
         public string DispName { get; set; }
         public float Weight { get; set; }
         public UInt32 Value { get; set; }
@@ -772,7 +911,7 @@ namespace UnderThere
         public OutfitMapping()
         {
             Male = new Dictionary<FormKey, List<NewOutfitContainer>>();
-            Female =new  Dictionary<FormKey, List<NewOutfitContainer>>();
+            Female = new Dictionary<FormKey, List<NewOutfitContainer>>();
         }
     }
 
