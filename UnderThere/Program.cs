@@ -43,23 +43,10 @@ namespace UnderThere
 
             createItems(settings.Sets, settings.bMakeItemsEquippable, UWsourcePlugins, state.LinkCache, state.PatchMod);
 
-            Dictionary<string, FormKey> UT_LeveledItemsByWealth = new Dictionary<string, FormKey>();
-            FormKey UT_LeveledItemsAll = new FormKey();
-            FormKey UT_DefaultItem = new FormKey();
-
             // created leveled item lists (to be added to outfits)
-            if (settings.AssignmentMode.ToLower() == "random")
-            {
-                UT_LeveledItemsAll = createLeveledList_AllItems(settings.Sets, state.LinkCache, state.PatchMod);
-            }
-            else if (settings.AssignmentMode.ToLower() == "class" || settings.AssignmentMode.ToLower() == "faction")
-            {
-                UT_LeveledItemsByWealth = createLeveledList_ByWealth(settings.Sets, settings.Assignments, state.LinkCache, state.PatchMod);
-            }
-            else
-            {
-                UT_DefaultItem = getDefaultItemFormKey(settings.Sets, settings.Assignments, state.LinkCache, state.PatchMod);
-            }
+            Dictionary<string, FormKey> UT_LeveledItemsByWealth = createLeveledList_ByWealth(settings.Sets, settings.Assignments, state.LinkCache, state.PatchMod);
+            FormKey UT_LeveledItemsAll = createLeveledList_AllItems(settings.Sets, state.LinkCache, state.PatchMod);
+            FormKey UT_DefaultItem = getDefaultItemFormKey(settings.Sets, settings.Assignments, state.LinkCache, state.PatchMod);
 
             // modify NPC outfits
             assignOutfits(settings, UT_DefaultItem, UT_LeveledItemsByWealth, UT_LeveledItemsAll, state);
@@ -185,6 +172,8 @@ namespace UnderThere
 
             foreach (var npc in state.LoadOrder.PriorityOrder.WinningOverrides<INpcGetter>())
             {
+                NPCassignment specificAssignment = NPCassignment.getSpecificNPC(npc.FormKey, settings.SpecificNPCs);
+
                 // check if NPC race should be patched
                 if (!state.LinkCache.TryResolve<IRaceGetter>(npc.Race.FormKey, out var currentRace) || currentRace == null || currentRace.EditorID == null || settings.PatchableRaces.Contains(currentRace.EditorID) == false)
                 {
@@ -205,11 +194,11 @@ namespace UnderThere
                 currentOutfitKey = npc.DefaultOutfit.FormKey;
                 if (currentOutfitKey.IsNull)
                 {
-                    if (npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Inventory)) // npc inherits inventory from a template - no need to patch
+                    if (npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Inventory) && specificAssignment.isNull) // npc inherits inventory from a template - no need to patch
                     {
                         continue;
                     }
-                    else if (settings.bPatchNakedNPCs == false)
+                    else if (settings.bPatchNakedNPCs == false && specificAssignment.isNull)
                     {
                         continue;
                     }
@@ -227,27 +216,50 @@ namespace UnderThere
                 }
 
                 var NPCoverride = state.PatchMod.Npcs.GetOrAddAsOverride(npc);
-                // get the wealth of current NPC
-                switch (mode)
+
+                if (!specificAssignment.isNull)
                 {
-                    case "default":
-                        npcGroup = "Default";
-                        currentUWkey = UT_DefaultItem; break;
-                    case "class":
-                        if (state.LinkCache.TryResolve<IClassGetter>(npc.Class.FormKey, out var NPCclass) && NPCclass != null && NPCclass.EditorID != null)
-                        {
-                            npcGroup = getWealthGroupByEDID(NPCclass.EditorID, settings.ClassDefinitions, GroupLookupFailures);
+                    switch(specificAssignment.Type)
+                    {
+                        case "set":
+                            npcGroup = specificAssignment.Assignment_Set;
+                            currentUWkey = specificAssignment.Assignment_Set_Obj.LeveledListFormKey;
+                            break;
+                        case "group":
+                            npcGroup = specificAssignment.Assignment_Group;
                             currentUWkey = UT_LeveledItemsByWealth[npcGroup];
-                        }
-                        break;
-                    case "faction":
-                        npcGroup = getWealthGroupByFactions(npc, settings.FactionDefinitions, GroupLookupFailures, state);
-                        currentUWkey = UT_LeveledItemsByWealth[npcGroup];
-                        break;
-                    case "random":
-                        npcGroup = "Random";
-                        currentUWkey = UT_LeveledItemsAll;
-                        break;
+                            break;
+                    }    
+                }
+                else
+                {
+                    // get the wealth of current NPC
+                    switch (mode)
+                    {
+                        case "default":
+                            npcGroup = "Default";
+                            currentUWkey = UT_DefaultItem; break;
+                        case "class":
+                            if (state.LinkCache.TryResolve<IClassGetter>(npc.Class.FormKey, out var NPCclass) && NPCclass != null && NPCclass.EditorID != null)
+                            {
+                                if (npc.EditorID == "Hroki" && npc.FormKey.IDString() == "01339E")
+                                {
+                                    npcGroup = "Default"; // hardcoded due to a particular idiosyncratic issue due to Bethesda's weird choice of Class for Hroki.
+                                    break;
+                                }
+                                npcGroup = getWealthGroupByEDID(NPCclass.EditorID, settings.ClassDefinitions, GroupLookupFailures);
+                                currentUWkey = UT_LeveledItemsByWealth[npcGroup];
+                            }
+                            break;
+                        case "faction":
+                            npcGroup = getWealthGroupByFactions(npc, settings.FactionDefinitions, settings.IgnoreFactionsWhenScoring, GroupLookupFailures, state);
+                            currentUWkey = UT_LeveledItemsByWealth[npcGroup];
+                            break;
+                        case "random":
+                            npcGroup = "Random";
+                            currentUWkey = UT_LeveledItemsAll;
+                            break;
+                    }
                 }
 
                 // if the current outfit modified by the current wealth group doesn't exist, create it
@@ -273,9 +285,33 @@ namespace UnderThere
 
                 NPCoverride.DefaultOutfit = OutfitMap[currentOutfitKey][npcGroup]; // assign the correct outfit to the current NPC
             }
+
+            //report failed lookups
+            if (GroupLookupFailures.Count > 0)
+            {
+                switch (settings.AssignmentMode)
+                {
+                    case "class":
+                        Console.WriteLine("The following classes were not found in your settings file's ClassDefinitions:");
+                        foreach (string s in GroupLookupFailures)
+                        {
+                            Console.WriteLine(s);
+                        }
+                        Console.WriteLine("NPCs of this class were assigned default underwear.");
+                        break;
+                    case "faction":
+                        Console.WriteLine("The following factions were not found in your settings file's FactionDefinitions:");
+                        foreach (string s in GroupLookupFailures)
+                        {
+                            Console.WriteLine(s);
+                        }
+                        Console.WriteLine("These factions were ignored when assigning underwear. NPCs that only belonged to these factions were assigned default underwear.");
+                        break;
+                }
+            }
         }
 
-        public static string getWealthGroupByFactions(INpcGetter npc, Dictionary<string, List<string>> factionDefinitions, List<string> GroupLookupFailures, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static string getWealthGroupByFactions(INpcGetter npc, Dictionary<string, List<string>> factionDefinitions, List<string> ignoredFactions, List<string> GroupLookupFailures, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             Dictionary<string, int> wealthCounts = new Dictionary<string, int>();
             string tmpWealthGroup = "";
@@ -285,12 +321,19 @@ namespace UnderThere
             {
                 wealthCounts.Add(Def.Key, 0);
             }
+            wealthCounts.Add("Default", 0);
 
             // add each faction by appropriate wealth count
-            foreach (Faction fact in npc.Factions)
+            foreach (var fact in npc.Factions)
             {
-                if (fact.EditorID == null) { continue; }
-                tmpWealthGroup = getWealthGroupByEDID(fact.EditorID, factionDefinitions, GroupLookupFailures);
+                if (!state.LinkCache.TryResolve<IFactionGetter>(fact.Faction.FormKey, out var currentFaction) || currentFaction == null || currentFaction.EditorID == null) { continue; }
+
+                if (ignoredFactions.Contains(currentFaction.EditorID))
+                {
+                    wealthCounts["Default"]++; // "Default" will be ignored if other factions are matched
+                }
+
+                tmpWealthGroup = getWealthGroupByEDID(currentFaction.EditorID, factionDefinitions, GroupLookupFailures);
 
                 if (wealthCounts.ContainsKey(tmpWealthGroup))
                 {
@@ -299,17 +342,33 @@ namespace UnderThere
             }
 
             // get the wealth group with the highest number of corresponding factions.
+
+            // first remove the "Default" wealth group if others are populated
+            if (wealthCounts.ContainsKey("Default"))
+            {
+                foreach (string wGroup in wealthCounts.Keys)
+                {
+                    if (wGroup != "Default" && wealthCounts[wGroup] > 0)
+                    {
+                        wealthCounts.Remove("Default");
+                    }
+                }
+            } // if "Default" was the only matched wealth group, then it remains in the wealthCounts dictionary and will necessarily be chosen
+
+            // then figure out which wealth group was matched to the highest number of factions
             int maxFactionsMatched = wealthCounts.Values.Max();
+            List<string> bestMatches = new List<string>();
             foreach (string x in wealthCounts.Keys)
             {
                 if (wealthCounts[x] == maxFactionsMatched)
                 {
-                    return x;
+                    bestMatches.Add(x);
                 }
             }
 
-            // if no matches, return default
-            return "Default";
+            // return the wealth group that was matched to the highest number of factions (choose random if tied)
+            var random = new Random();
+            return bestMatches[random.Next(bestMatches.Count)]; 
         }
 
         public static string getWealthGroupByEDID(string EDID, Dictionary<string, List<string>> Definitions, List<string> GroupLookupFailures)
@@ -378,6 +437,67 @@ namespace UnderThere
             if (settings.Sets == null)
             {
                 return false;
+            }
+
+            if (settings.SpecificNPCs == null)
+            {
+                return false;
+            }
+            else
+            {
+                foreach (var npc in settings.SpecificNPCs)
+                {
+                    if (!FormKey.TryFactory(npc.FormKey, out var currentFK) || currentFK == null)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        npc.FormKeyObj = currentFK;
+                    }
+
+                    string npcID = npc.Name + " (" + npc.FormKey + ")";
+
+                    npc.Type = npc.Type.ToLower();
+                    switch(npc.Type)
+                    {
+                        case "set":
+                            if (npc.Assignment_Set == null)
+                            {
+                                return false;
+                            }
+                            bool bFound = false;
+                            foreach (UTSet set in settings.Sets)
+                            {
+                                if (set.Name == npc.Assignment_Set)
+                                {
+                                    bFound = true;
+                                    npc.Assignment_Set_Obj = set;
+                                    break;
+                                }
+                            }
+                            if (bFound == false)
+                            {
+                                throw new Exception("Specific NPC Assignment " + npcID + "'s Assignemnt_Set could not be matched to one of the defined sets.");
+                            }
+                            break;
+
+                        case "group":
+                            if (npc.Assignment_Group == null)
+                            {
+                                return false;
+                            }
+                            if (settings.Assignments.ContainsKey(npc.Assignment_Group) == false)
+                            {
+                                throw new Exception("Specific NPC Assignment " + npcID + "'s Assignemnt_Group could not be matched to one of the defined Assignments.");
+                            }
+                            break;
+                        default:
+                            throw new Exception("Specific NPC Assignment " + npcID + "'s Type must be either \"set\" or \"group\"");
+                    }
+
+                    npc.isNull = false;
+                }
             }
 
             return true;
@@ -877,9 +997,6 @@ namespace UnderThere
         }
     }
 
-
-
-
     public class UTconfig
     {
         public string AssignmentMode { get; set; }
@@ -890,6 +1007,8 @@ namespace UnderThere
         public List<string> PatchableRaces { get; set; }
         public Dictionary<string, List<string>> ClassDefinitions { get; set; }
         public Dictionary<string, List<string>> FactionDefinitions { get; set; }
+        public List<string> IgnoreFactionsWhenScoring { get; set; }
+        public List<NPCassignment> SpecificNPCs { get; set; }
         public Dictionary<string, List<string>> Assignments { get; set; }
         public List<UTSet> Sets { get; set; }
 
@@ -902,24 +1021,10 @@ namespace UnderThere
             PatchableRaces = new List<string>();
             ClassDefinitions = new Dictionary<string, List<string>>();
             FactionDefinitions = new Dictionary<string, List<string>>();
+            IgnoreFactionsWhenScoring = new List<string>();
+            SpecificNPCs = new List<NPCassignment>();
             Assignments = new Dictionary<string, List<string>>();
             Sets = new List<UTSet>();
-        }
-    }
-
-    public class UTassignment
-    {
-        public List<string> Default { get; set; }
-        public List<string> Poor { get; set; }
-        public List<string> Medium { get; set; }
-        public List<string> Rich { get; set; }
-
-        public UTassignment()
-        {
-            Default = new List<string>();
-            Poor = new List<string>();
-            Medium = new List<string>();
-            Rich = new List<string>();
         }
     }
 
@@ -958,27 +1063,39 @@ namespace UnderThere
         }
     }
 
-    public class OutfitMapping
+    public class NPCassignment
     {
-        public Dictionary<FormKey, List<NewOutfitContainer>> Male { get; set; }
-        public Dictionary<FormKey, List<NewOutfitContainer>> Female { get; set; }
-
-        public OutfitMapping()
+        public string Name { get; set; }
+        public string FormKey { get; set; }
+        public string Type { get; set; }
+        public string Assignment_Set { get; set; }
+        public string Assignment_Group { get; set; }
+        public UTSet Assignment_Set_Obj { get; set; }
+        public FormKey FormKeyObj { get; set; }
+        public bool isNull { get; set; }
+        public NPCassignment()
         {
-            Male = new Dictionary<FormKey, List<NewOutfitContainer>>();
-            Female = new Dictionary<FormKey, List<NewOutfitContainer>>();
+            Name = "";
+            FormKey = "";
+            Type = "";
+            Assignment_Set = "";
+            Assignment_Group = "";
+            Assignment_Set_Obj = new UTSet();
+            FormKeyObj = new FormKey();
+            isNull = true;
         }
-    }
 
-    public class NewOutfitContainer
-    {
-        public string itemSet { get; set; }
-        public FormKey FormKey { get; set; }
-
-        public NewOutfitContainer()
+        public static NPCassignment getSpecificNPC(FormKey fk, List<NPCassignment> assigments)
         {
-            itemSet = "";
-            FormKey = new FormKey();
+            foreach (var assignment in assigments)
+            {
+               if (assignment.FormKeyObj == fk)
+               {
+                    return assignment;
+               }
+            }
+
+            return new NPCassignment();
         }
     }
 }
