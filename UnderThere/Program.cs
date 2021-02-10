@@ -62,16 +62,21 @@ namespace UnderThere
             }
 
             // modify NPC outfits
-            AssignOutfits(settings, UT_DefaultItem, UT_LeveledItemsByWealth, UT_LeveledItemsAll, state);
+            assignOutfits(settings, UT_DefaultItem, UT_LeveledItemsByWealth, UT_LeveledItemsAll, state);
+
+            // Add slots used by underwear items to clothes and armors with 32 - Body slot active
+            List<BipedObjectFlag> usedSlots = getARMAslots(settings.Sets, state.LinkCache);
+            patchBodyARMAslots(usedSlots, settings.PatchableRaces, state);
 
             // create and distribute inventory spell 
             copyUTScript(state);
             createInventoryFixSpell(settings.Sets, state);
 
             // message user
-            reportARMAslots(settings.Sets, state.LinkCache);
+            reportARMAslots(usedSlots);
             reportDeactivatablePlugins(UWsourcePlugins);
 
+            Console.WriteLine("\nDon't forget to install Spell Perk Item Distributor to properly manage gender-specific items.");
             Console.WriteLine("\nEnjoy the underwear. Goodbye.");
         }
 
@@ -164,7 +169,7 @@ namespace UnderThere
             return itemsByWealth;
         }
 
-        public static void AssignOutfits(UTconfig settings, FormKey UT_DefaultItem, Dictionary<string, FormKey> UT_LeveledItemsByWealth, FormKey UT_LeveledItemsAll, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void assignOutfits(UTconfig settings, FormKey UT_DefaultItem, Dictionary<string, FormKey> UT_LeveledItemsByWealth, FormKey UT_LeveledItemsAll, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             string npcGroup = "";
             FormKey currentOutfitKey = new FormKey();
@@ -577,13 +582,29 @@ namespace UnderThere
             utItemFixEffect.VirtualMachineAdapter.Scripts.Add(UTinventoryFixScript);
 
             // create Spell
+
+            //the following does not fix the issue - check later if it's deletable
+            
+            if (!FormKey.TryFactory("013F44:skyrim.esm", out var equipTypeEitherHandKey) || equipTypeEitherHandKey.IsNull)
+            {
+                throw new Exception("Could not create FormKey 013F44:skyrim.esm");
+            }
+            if (!state.LinkCache.TryResolve<IEquipTypeGetter>(equipTypeEitherHandKey, out var equipTypeEitherHand) || equipTypeEitherHand == null)
+            {
+                throw new Exception("Could not resolve FormKey 013F44:skyrim.esm");
+            }
+            ///
+
             Spell utItemFixSpell = state.PatchMod.Spells.AddNew();
             utItemFixSpell.EditorID = "UT_SPEL_GenderedInventoryFix";
             utItemFixSpell.Name = "Fixes gendered UnderThere inventory";
             utItemFixSpell.CastType = CastType.ConstantEffect;
             utItemFixSpell.TargetType = TargetType.Self;
+            utItemFixSpell.Type = SpellType.Ability;
+            utItemFixSpell.EquipmentType = equipTypeEitherHandKey;
             Effect utItemFixShellEffect = new Effect();
             utItemFixShellEffect.BaseEffect = utItemFixEffect;
+            utItemFixShellEffect.Data = new EffectData();
             utItemFixSpell.Effects.Add(utItemFixShellEffect);
 
             // distribute spell via SPID
@@ -642,7 +663,7 @@ namespace UnderThere
             }
         }
 
-        public static void reportARMAslots(List<UTSet> sets, ILinkCache lk)
+        public static List<BipedObjectFlag> getARMAslots(List<UTSet> sets, ILinkCache lk)
         {
             List<BipedObjectFlag> usedSlots = new List<BipedObjectFlag>();
 
@@ -653,6 +674,40 @@ namespace UnderThere
                 getContainedSlots(set.Items_Female, usedSlots, lk);
             }
 
+            return usedSlots;
+        }
+
+        public static void patchBodyARMAslots(List<BipedObjectFlag> usedSlots, List<string> patchableRaces, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            if (!FormKey.TryFactory("000019:Skyrim.esm", out var defaultRaceKey) || defaultRaceKey.IsNull)
+            {
+                throw new Exception("Could not get FormKey " + defaultRaceKey.ToString());
+            }
+
+            foreach (var arma in state.LoadOrder.PriorityOrder.WinningOverrides<IArmorAddonGetter>())
+            {
+                if (!state.LinkCache.TryResolve<IRaceGetter>(arma.Race.FormKey, out var armaRace) || armaRace == null || armaRace.EditorID == null || armaRace.EditorID.Contains("Child"))
+                {
+                    continue;
+                }
+
+                if (arma.Race.FormKey == defaultRaceKey || patchableRaces.Contains(armaRace.EditorID))
+                { 
+                    if (arma.BodyTemplate != null && arma.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Body))
+                    {
+                        var patchedAA = state.PatchMod.ArmorAddons.GetOrAddAsOverride(arma);
+                        if (patchedAA.BodyTemplate == null) { continue; }
+                        foreach (var uwSlot in usedSlots)
+                        {
+                            patchedAA.BodyTemplate.FirstPersonFlags |= uwSlot;
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void reportARMAslots(List<BipedObjectFlag> usedSlots)
+        {
             Console.WriteLine("The following slots are being used by underwear. Please make sure they don't conflict with any other modded armors.");
             foreach (var slot in usedSlots)
             {

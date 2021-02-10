@@ -5,7 +5,7 @@ FormList Property maleItems Auto
 
 Event OnEffectStart(Actor akTarget, Actor akCaster)
 
-	Debug.MessageBox("UnderThere Script has been called")
+	Debug.MessageBox("UnderThere Script has been called");
 
     FormList armorsToRemove = None;
     int gender = akCaster.GetLeveledActorBase().GetSex();
