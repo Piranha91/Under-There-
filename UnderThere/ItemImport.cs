@@ -10,21 +10,27 @@ namespace UnderThere
 {
     class ItemImport
     {
-        public static void createItems(List<UTSet> Sets, bool bMakeItemsEquipable, List<string> UWsourcePlugins, ILinkCache lk, ISkyrimMod PatchMod)
+        public static void createItems(UTconfig settings, List<string> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            deepCopyItems(Sets, UWsourcePlugins, lk, PatchMod); // copy all armor records along with their linked subrecords into PatchMod to get rid of dependencies on the original plugins. Sets[i].FormKeyObject will now point to the new FormKey in PatchMod
+            deepCopyItems(settings.Sets, UWsourcePlugins, state.LinkCache, state.PatchMod); // copy all armor records along with their linked subrecords into PatchMod to get rid of dependencies on the original plugins. Sets[i].FormKeyObject will now point to the new FormKey in PatchMod
+
+            List<IFormLink<IRaceGetter>> patchableRaceFormLinks = Auxil.getRaceFormLinksFromEDID(settings.PatchableRaces, state); // get race formlinks to update armor addons
 
             // create a leveled list entry for each set
-            foreach (var set in Sets)
+            foreach (var set in settings.Sets)
             {
-                var currentItems = PatchMod.LeveledItems.AddNew();
+                var currentItems = state.PatchMod.LeveledItems.AddNew();
                 currentItems.EditorID = "LItems_" + set.Name;
                 currentItems.Flags |= LeveledItem.Flag.UseAll;
                 currentItems.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
 
-                editAndStoreUTitems(set.Items_Mutual, currentItems, bMakeItemsEquipable, lk);
-                editAndStoreUTitems(set.Items_Male, currentItems, bMakeItemsEquipable, lk);
-                editAndStoreUTitems(set.Items_Female, currentItems, bMakeItemsEquipable, lk);
+                editAndStoreUTitems(set.Items_Mutual, currentItems, settings.bMakeItemsEquippable, state.LinkCache);
+                editAndStoreUTitems(set.Items_Male, currentItems, settings.bMakeItemsEquippable, state.LinkCache);
+                editAndStoreUTitems(set.Items_Female, currentItems, settings.bMakeItemsEquippable, state.LinkCache);
+
+                setAdditionalRaces(set.Items_Mutual, patchableRaceFormLinks, state);
+                setAdditionalRaces(set.Items_Male, patchableRaceFormLinks, state);
+                setAdditionalRaces(set.Items_Female, patchableRaceFormLinks, state);
                 set.LeveledListFormKey = currentItems.FormKey;
             }
         }
@@ -133,6 +139,46 @@ namespace UnderThere
                     data.Count = 1;
                     entry.Data = data;
                     currentItems.Entries.Add(entry);
+                }
+            }
+        }
+
+        public static void setAdditionalRaces(List<UTitem> items, List<IFormLink<IRaceGetter>> patchableRaceFormLinks, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            foreach (UTitem item in items)
+            {
+                if (state.LinkCache.TryResolve<IArmorGetter>(item.formKey, out var moddedItem) && moddedItem != null)
+                {
+                    foreach (var aa in moddedItem.Armature)
+                    {
+                        if (state.LinkCache.TryResolve<IArmorAddonGetter>(aa.FormKey, out var moddedAA) && moddedAA != null)
+                        {
+                            var moddedAA_override = state.PatchMod.ArmorAddons.GetOrAddAsOverride(moddedAA);
+                            // get missing PatchableRaces
+                            List<IFormLink<IRaceGetter>> addedRaces = new List<IFormLink<IRaceGetter>>();
+                            foreach (var neededRace in patchableRaceFormLinks)
+                            {
+                                bool keyFound = false;
+                                foreach (var additionalRace in moddedAA.AdditionalRaces)
+                                {
+                                    if (additionalRace.FormKey == neededRace.FormKey)
+                                    {
+                                        keyFound = true;
+                                        break;
+                                    }
+                                }
+                                if (keyFound == false)
+                                {
+                                    addedRaces.Add(neededRace);
+                                }
+                            }
+                            // add missing PatchableRaces
+                            foreach (var additionalRace in addedRaces)
+                            {
+                                moddedAA_override.AdditionalRaces.Add(additionalRace);
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -42,9 +42,9 @@ namespace UnderThere
 
             Validator.validateSettings(settings);
 
+            // create underwear items
             List<string> UWsourcePlugins = new List<string>(); // list of source mod names for the underwear (to report to user so that they can be disabled)
-
-            ItemImport.createItems(settings.Sets, settings.bMakeItemsEquippable, UWsourcePlugins, state.LinkCache, state.PatchMod);
+            ItemImport.createItems(settings, UWsourcePlugins, state);
 
             // created leveled item lists (to be added to outfits)
             FormKey UT_DefaultItem = getDefaultItemFormKey(settings.Sets, settings.Assignments, state.LinkCache, state.PatchMod);

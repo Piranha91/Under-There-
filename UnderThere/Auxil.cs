@@ -11,6 +11,34 @@ namespace UnderThere
 {
     class Auxil
     {
+        public static List<IFormLink<IRaceGetter>> getRaceFormLinksFromEDID(List<string> EDIDs, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            List<IFormLink<IRaceGetter>> raceFormLinks = new List<IFormLink<IRaceGetter>>();
+            List<string> matchedEDIDs = new List<string>();
+
+            bool bMatched = false;
+            foreach (string EDID in EDIDs)
+            {
+                bMatched = false;
+
+                foreach (var race in state.LoadOrder.PriorityOrder.WinningOverrides<IRaceGetter>())
+                {
+                    if (race.EditorID == EDID)
+                    {
+                        raceFormLinks.Add(race);
+                        bMatched = true;
+                        break;
+                    }
+                }
+                if (bMatched == false)
+                {
+                    throw new Exception("Could not find Race \"" + EDID + "\" in your load order.");
+                }
+            }
+
+            return raceFormLinks;
+        }
+
         public static bool isNonHumanoid(INpcGetter npc, IRaceGetter npcRace, ILinkCache lk)
         {
             List<string> nonHumanoidFactions = new List<string> { "CreatureFaction", "PreyFaction", "DragonFaction", "DwarvenAutomatonFaction", "DLC2ExpSpiderFriendFaction" };
