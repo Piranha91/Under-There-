@@ -28,6 +28,12 @@ namespace UnderThere
 
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
+            string SPIDpath = Path.Combine(state.Settings.DataFolderPath, "skse\\plugins\\po3_SpellPerkItemDistributor.dll");
+            if (File.Exists(SPIDpath) == false) //SPIDtest (dual-level pun - whoa!)
+            {
+                throw new Exception("Spell Perk Item Distributor was not detected at " + SPIDpath + "\nAborting patch");
+            }
+
             var settingsPath = Path.Combine(state.ExtraSettingsDataPath, "UnderThereConfig.json");
 
             UTconfig settings = new UTconfig();
