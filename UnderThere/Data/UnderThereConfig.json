@@ -4,6 +4,7 @@
     "bPatchFemales": true,
     "bPatchNakedNPCs": true,
     "bPatchSummonedNPCs": false,
+    "bPatchGhosts": true,
     "bMakeItemsEquippable": true,
     "PatchableRaces":[
         "HighElfRace",
@@ -32,29 +33,59 @@
     "NonPatchableRaces":[
         "DraugrRace",
         "DLC2HulkingDraugrRace",
-        "FalmerRace"
+        "FalmerRace",
+        "HorseRace",
+        "SkeletonRace",
+        "SkeletonNecroRace",
+        "FrostbiteSpiderRace",
+        "DLC2ExpSpiderBaseRace",
+        "DragonRace",
+        "DragonPriestRace",
+        "DLC2AcolyteDragonPriestRace",
+        "DLC2DremoraRace",
+        "ManakinRace"
     ],
     "ClassDefinitions":
     {
         "Poor": ["CombatThief", "Prisoner", "Miner", "Beggar", "EncClassBanditMissile", "EncClassBanditMelee", "EncClassForsworn", "EncClassForswornShaman", "EncClassForswornMissile", "MQAncientNord" ],
         "Medium": ["CombatWarrior1H", "CombatSpellSword", "CombatWitchblade", "CombatMageElemental", "CombatNightblade", "CombatScout", "CombatAssassin", "CombatRogue", "CombatRanger", "CombatMonk", "VendorFood", "VendorBlacksmith", "VendorApothecary", "VendorFletcher", "VendorPawnbroker", "Jailor", "Citizen", "Farmer", "Lumberjack", "SoldierImperialNotGuard", "SoldierSonsSkyrimNotGuard", "CombatWarrior2H", "CombatBarbarian", "CombatMageDestruction", "Blade", "GuardImperial", "GuardSonsSkyrim", "GuardOrc1H", "EncClassBanditWizard", "EncClassAlikrMelee", "EncClassAlikrMissile", "EncClassAlikrWizard", "EncClassPenitusoculatus", "EncClassWerewolf", "EncClassWerewolfMage", "EncClassWerewolfBoss", "TrainerSmithingJourneyman", "TrainerLightArmorJourneyman", "TrainerRestorationJourneyman", "CombatMageNecro", "TrainerDestructionJourneyman", "TrainerAlchemyJourneyman", "TrainerOneHandedJourneyman", "TrainerAlchemyJourneyman", "TrainerOneHandedJourneyman", "TrainerSneakJourneyman", "TrainerSpeechcraftJourneyman", "TrainerConjurationJourneyman", "EncClassDremoraMelee", "DLC2EncClassBanditBoss", "DLC2dunHaknirClass", "DLC2dunKolbjornRalisClass", "DLC2csFrea", "DLC2NelothClassTrainer", "EncClassVampire", "CombatSpellsword", "AAAPlayerSpellswordClass", "CombatMystic"],
-        "Rich": ["CombatSorcerer", "Combat Mystic", "VendorSpells", "Bard", "VendorTailor", "Priest", "CombatMageConjurer", "TrainerSmithingMaster", "TrainerMarksmanExpert", "TrainerOneHandedExpert", "TrainerTwoHandedMaster", "TrainerTwoHandedExpert", "TrainerIllusionMaster", "TrainerBlockExpert", "EncClassThalmorWizard", "EncClassThalmorMissile", "EncClassThalmorMelee", "TrainerBockMaster", "TrainerOneHandedMaster", "TrainerIllusionExpert", "TrainerPickpocketExpert", "TrainerDestructionExpert", "TrainerDestructionExpert", "TrainerSmithingExpert", "TrainerHeavyArmorExpert", "TrainerLightArmorExpert", "TrainerPickpocketMaster", "TrainerSneakMaster", "TrainerSpeechcraftMaster", "TrainerSneakMaster", "TrainerSpeechcraftMaster", "TrainerLockpickMaster", "TrainerMarksmanMaster", "TrainerAlchemyMaster", "TrainerLightArmorMaster", "TrainerAlterationMaster", "TrainerConjurationMaster", "TrainerLockpickExpert", "TrainerSneakExpert", "TrainerAlchemyExpert", "TrainerSpeechcraftExpert", "TrainerAlterationExpert", "TrainerDestructionMaster", "TrainerRestorationExpert", "TrainerRestorationExpert", "TrainerEnchantingExpert", "TrainerEnchantingMaster", "TrainerConjurationExpert", "TrainerHeavyArmorMaster", "CombatNightingale", "CWSoldierClass", "Vigilant1hMeleeClass", "Vigilant2hMeleeClass", "GuardOrc2H", "NPCclassBelrand", "TrainerMarksmanJourneyman", "DLC2NPCClassTeldryn", "DLC2EbonyWarriorClass", "BYOHHousecarlHjaalmarchClass", "DLC1EncClassKatria", "TrainerRestorationMaster", "EncClassDragonPriest", "EncClassPenitusOculatus", "TrainerBlockMaster"]
+        "Rich": ["CombatSorcerer", "Combat Mystic", "VendorSpells", "Bard", "VendorTailor", "Priest", "CombatMageConjurer", "TrainerSmithingMaster", "TrainerMarksmanExpert", "TrainerOneHandedExpert", "TrainerTwoHandedMaster", "TrainerTwoHandedExpert", "TrainerIllusionMaster", "TrainerBlockExpert", "EncClassThalmorWizard", "EncClassThalmorMissile", "EncClassThalmorMelee", "TrainerBockMaster", "TrainerOneHandedMaster", "TrainerIllusionExpert", "TrainerPickpocketExpert", "TrainerDestructionExpert", "TrainerDestructionExpert", "TrainerSmithingExpert", "TrainerHeavyArmorExpert", "TrainerLightArmorExpert", "TrainerPickpocketMaster", "TrainerSneakMaster", "TrainerSpeechcraftMaster", "TrainerSneakMaster", "TrainerSpeechcraftMaster", "TrainerLockpickMaster", "TrainerMarksmanMaster", "TrainerAlchemyMaster", "TrainerLightArmorMaster", "TrainerAlterationMaster", "TrainerConjurationMaster", "TrainerLockpickExpert", "TrainerSneakExpert", "TrainerAlchemyExpert", "TrainerSpeechcraftExpert", "TrainerAlterationExpert", "TrainerDestructionMaster", "TrainerRestorationExpert", "TrainerRestorationExpert", "TrainerEnchantingExpert", "TrainerEnchantingMaster", "TrainerConjurationExpert", "TrainerHeavyArmorMaster", "CombatNightingale", "CWSoldierClass", "Vigilant1hMeleeClass", "Vigilant2hMeleeClass", "GuardOrc2H", "NPCclassBelrand", "TrainerMarksmanJourneyman", "DLC2NPCClassTeldryn", "DLC2EbonyWarriorClass", "BYOHHousecarlHjaalmarchClass", "DLC1EncClassKatria", "TrainerRestorationMaster", "EncClassDragonPriest", "EncClassPenitusOculatus", "TrainerBlockMaster", "DLC2EncClassMiraak", "DLC1CClassVyrthur"]
     },
     "FactionDefinitions":
     {
-        "Poor": ["BanditFaction", "DLC2TribalWerebearFaction", "DLC2PillarBuilderFaction", "DLC2BanditDialogueFaction", "DLC2RavenRockMinersFaction", "WerewolfFaction", "DLC2RRBeggarFaction", "DLC2WaterStoneSailors", "DLC2dunKolbjornMinerFaction", "DLC2dunFrostmoonWerewolvesFaction", "DLC2dunFrostmoonWerewolvesVendorFaction"],
-        "Medium": ["JobTrainerFaction", "KynesgroveDravyneaFaction", "ServicesKynesgroveDravynea", "DLC2RavenRockGuardFaction", "DLC2RRBulwarkFaction", "DLC2ThirskNordFaction", "DLC2NorthernMaidenFaction", "DLC2CultistFaction", "WarlockFaction", "IsGuardFaction", "HunterFaction", "WEServicesHunterFaction", "DLC2HunterFaction", "DLC2ExpSpiderEnemyFaction", "DLC2AshSpawnFaction"],
-        "Rich": ["JobCourtWizardFaction", "JobMerchantFaction", "JobTrainerAlterationFaction", "dlc2MerchMerchantFaction", "WEServiceMiscMerchant", "DLC2MQ04MiraakFaction", "ThalmorFaction"]
+        "Poor": ["BanditFaction", "DLC2TribalWerebearFaction", "DLC2PillarBuilderFaction", "DLC2BanditDialogueFaction", "DLC2RavenRockMinersFaction", "WerewolfFaction", "DLC2RRBeggarFaction", "DLC2WaterStoneSailors", "DLC2dunKolbjornMinerFaction", "DLC2dunFrostmoonWerewolvesFaction", "DLC2dunFrostmoonWerewolvesVendorFaction", "JobHostlerFaction", "JobMinerFaction", "TownCidhnaMinePrisonerFaction", "MG02MinerFaction", "RiftenRatwayFactionNeutral", "MS07BanditFaction", "WIThiefFaction", "dunBlackreachFalmerServantFaction", "dunFellglow_PrisonerFaction", "MQ101LokirFaction", "RiftenRatwayFactionEnemy"],
+        "Medium": ["*NONE", "JobTrainerFaction", "JobBardFaction", "JobBlacksmithFaction", "JobAnimalTrainerFaction", "JobCarriageFaction", "JobFarmerFaction", "JobFenceFaction", "JobFletcherFaction", "Favor104QuestGiverFaction", "KynesgroveDravyneaFaction", "ServicesKynesgroveDravynea", "DLC2RavenRockGuardFaction", "DLC2RRBulwarkFaction", "DLC2ThirskNordFaction", "DLC2NorthernMaidenFaction", "DLC2CultistFaction", "WarlockFaction", "IsGuardFaction", "HunterFaction", "WEServicesHunterFaction", "DLC2HunterFaction", "DLC2ExpSpiderEnemyFaction", "DLC2AshSpawnFaction", "JobInnServer", "JobLumberjackFaction", "JobStreetVendorFaction", "JobTailorFaction", "DLC2HirelingTeldrynCrimeFaction", "DLC2BendWillImmuneFaction", "DLC2MoragTongFaction", "VigilantOfStendarrFaction", "BYOHHousecarlFaction", "DLC1HunterFaction", "WEFarmerFaction", "FishermanFaction", "DA14CultistFaction", "DunAlftandSullaHostileFaction", "DunAlftandUmanaHostileFaction", "HirelingJenassaCrimeFaction"],
+        "Rich": ["JobCourtWizardFaction", "JobMerchantFaction", "JobTrainerAlterationFaction", "dlc2MerchMerchantFaction", "WEServiceMiscMerchant", "DLC2MQ04MiraakFaction", "ThalmorFaction", "JobGuardCaptainFaction", "JobHousecarlFaction", "JobInnkeeperFaction", "JobJarlFaction", "JobJewelerFaction", "JobJusticiar", "JobOrcChiefFaction", "JobOrcWiseWomanFaction", "JobPriestFaction", "JobSpellFaction", "JobStewardFaction", "DLC1VampireFaction", "MQ304SovngardeHeroFaction", "MQAncientHeroFaction", "PenitusOculatusFaction", "DarkBrotherhoodFaction", "DLC1GeleborFaction", "WEDL03Faction", "DLC1SeranaFaction", "DLC1ValericaFaction", "TsunFaction", "dunLinweFaction"]
     },
-    "IgnoreFactionsWhenScoring": ["CrimeFactionEastmarch", "PotentialMarriageFaction", "TownKynesgroveFaction", "DLC2CrimeRavenRockFaction", "DLC2ThirskNordCrimeFaction", "CurrentHireling", "DLC2HirelingTeldrynCrimeFaction", "PotentialFollowerFaction", "PotentialHireling", "WIGenericCrimeFaction", "DLC2BendWillImmuneFaction", "CrimeFactionWhiterun", "DLC2MQ02Faction", "WINeverFillAliasesFaction", "DLC2ApocryphaFaction", "DLC2SV02ThalmorCrimeFaction", "DLC2ServicesThirskHalbarn"],
+    "FallBackFactionDefinitions":
+    {
+        "Poor": ["CrimeFactionCidhnaMine", "DLC1VampireFeedNoCrimeFaction", "ForswornFaction", "DA13AfflictedFaction", "MS09NorthwatchPrisonerFaction", "HagravenFaction", "MS10BloodHorkerFaction", "BanditAllyFaction", "dunHonningbrewMeaderyCreatureFaction", "dunBloatedMan_SindingFaction", "VampireThrallFaction", "DLC1ThrallFaction", "DA11CannibalFaction"],
+        "Medium": ["TownAngasMillFaction", "TownBarleydarkFarmFaction", "TownDarkwaterCrossingFaction", "TownDragonBridgeFaction", "TownDushnikhYalFaction", "TownFalkreathFaction", "TownHalfMoonMillFaction", "TownHeartwoodMillFaction", "TownHelgenFaction", "TownIrontreeMillFaction", "TownIvarsteadFaction", "TownKarthwastenFaction", "TownKolskeggrMineFaction", "TownKynesgroveFaction", "TownLargashburFaction", "TownLeftHandMineFaction", "TownLoreiusFarmFaction", "TownMerryfairFarmFaction", "TownMorKhazgurFaction", "TownMorthalFaction", "TownNarzulburFaction", "TownOldHroldanFaction", "TownRiverwoodFaction", "TownRoriksteadFaction", "TownSalviusFarmFaction", "TownSarethiFarmFaction", "TownShorsStoneFaction", "TownSnowShodFarmFaction", "TownSoljundsSinkholeFaction", "TownStonehillsFaction", "TownWinterholdFaction", "DLC2CrimeRavenRockFaction", "CrimeFactionEastmarch", "CrimeFactionFalkreath", "CrimeFactionHaafingar", "CrimeFactionHjaalmarch", "CrimeFactionImperial", "CrimeFactionKhajiitCaravans", "CrimeFactionNull", "CrimeFactionOrcs", "CrimeFactionPale", "CrimeFactionReach", "CrimeFactionRift", "CrimeFactionSons", "CrimeFactionThievesGuild", "CrimeFactionWhiterun", "CrimeFactionWinterhold", "DLC2SkaalVillageCitizenFaction", "VampireFaction", "SoulCairnSoulFaction", "DLC1_WESC09Faction", "CWSonsFaction", "CWImperialFaction", "NecromancerFaction", "SilverHandFaction", "DraugrFaction", "CarriageSystemFaction", "TG09NightingaleEnemyFaction", "DunPlayerAllyFaction", "DA16VaerminaHostileFaction", "POIVolcanicHunterFaction", "DA05HuntersOfHircineFaction", "MS08AlikrFaction", "DraugrAllyFaction", "dunKilkreathFaction", "SailorFaction", "dunBluePalacePelagiusArenaFaction", "KarthwastenSilverFishGuards", "DragonBridgeFourShieldsInnFaction", "DA01MalynVarenFaction", "MS06CultistSceneFaction", "DunAnsilvundLuahFaction", "TGNoPickpocketFaction", "DLC1RuunvaldFaction", "MS09PlayerAllyFaction", "DLC1LD_KatriaFaction", "dunDeadMensRespiteBardFaction", "BanditFriendFaction", "dunIronbindAdventurerFaction", "dunDawnstarSanctuaryGuardianFaction", "dunFrostmereCryptRajirrFaction", "DLC1DexionThrall", "FrostRiverFarmFaction", "dunFrostmereCryptEisaFaction", "WIGenericCrimeFaction", "dunBluePalaceFaction", "DBRecuringContact1CrimeFaction", "DBRecuringContact2CrimeFaction", "DBRecuringContact3CrimeFaction", "DBRecuringContact4CrimeFaction", "DBRecuringContact5CrimeFaction", "DBRecuringContact6CrimeFaction", "DBRecuringContact7CrimeFaction", "DBRecuringContact8CrimeFaction", "DBRecuringContact9CrimeFaction", "DBRecuringContact10CrimeFaction", "DBRecuringTarget1CrimeFaction", "DBRecuringTarget2CrimeFaction", "DBRecuringTarget3CrimeFaction", "DBRecuringTarget4CrimeFaction", "DBRecuringTarget5CrimeFaction", "DBRecuringTarget6CrimeFaction", "DBRecuringTarget7CrimeFaction", "DBRecuringTarget8CrimeFaction", "DBRecuringTarget9CrimeFaction", "DBRecuringTarget10CrimeFaction", "FavorExcludedFaction", "PotentialFollowerFaction"],
+        "Rich": ["TownGoldenglowEstateFaction", "TownMarkarthFaction", "TownRiftenFaction", "TownDawnstarFaction", "TownSolitudeFaction", "TownWhiterunFaction", "TownWindhelmFaction", "CrimeFactionGreybeard", "MQSovngardeCombatDialogueFaction", "WICraftItem02AdditionalEnchanterFaction", "dunBluePalaceEnemyFaction", "DB09TowerFaction", "DA16VaerminaDreamFaction", "MarriageLoveInterestWitnessFaction", "dunPrisonerFaction", "dunEldergleamFaction", "DA16PriestFaction", "DBAmaundMotierreFaction", "MQ201PartyGuestFaction", "MGThalmorFaction"]
+    },
+    "IgnoreFactionsWhenScoring": ["PotentialMarriageFaction", "TownKynesgroveFaction", "CurrentHireling", "PotentialFollowerFaction", "PotentialHireling", "DLC2MQ02Faction", "WINeverFillAliasesFaction", "DLC2ApocryphaFaction", "DLC2SV02ThalmorCrimeFaction", "DLC2ServicesThirskHalbarn"],
     "SpecificNPCs":
     [
         {
-            "Name": "Brenuin",
-            "FormKey": "013BA7:Skyrim.esm",
+            "Name": "Example - Player - this will be ignored because Player is hard-excluded",
+            "FormKey": "000007:Skyrim.esm",
             "Type": "group",
-            "Assignment_Set": "Poor Variant 1",
+            "Assignment_Set": "",
             "Assignment_Group": "Rich"
+        },
+        {
+            "Name": "Example - Player - this will be ignored because Player is hard-excluded",
+            "FormKey": "000007:Skyrim.esm",
+            "Type": "set",
+            "Assignment_Set": "Poor Variant 1",
+            "Assignment_Group": ""
+        },
+    ],
+    "BlockedNPCs":
+    [
+        {
+            "Name": "Example - Player - this will be ignored because Player is hard-excluded",
+            "FormKey": "000007:Skyrim.esm"
         }
     ],
     "Assignments":
