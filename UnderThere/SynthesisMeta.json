@@ -1,8 +1,8 @@
 {
   "Nickname": "UnderThere",
   "Visibility": "Visible",
-  "OneLineDescription": "",
-  "LongDescription": "",
+  "OneLineDescription": "Gives and equips underwear to NPCs.",
+  "LongDescription": "User-configurable patcher that defines underwear items, distributes them to NPCs, and equips them under their clothes or armor.",
   "PreferredAutoVersioning": "Default",
   "RequiredMods": []
 }
