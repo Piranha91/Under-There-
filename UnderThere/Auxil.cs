@@ -221,7 +221,7 @@ namespace UnderThere
                 case 57: return (BipedObjectFlag)0x08000000;
                 case 58: return (BipedObjectFlag)0x10000000;
                 case 59: return (BipedObjectFlag)0x20000000;
-                default: return new BipedObjectFlag();
+                default: throw new Exception(iFlag + " is not a valid armor slot.");
             }
         }
 

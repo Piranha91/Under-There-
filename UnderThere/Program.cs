@@ -716,13 +716,15 @@ namespace UnderThere
         public string DispName { get; set; }
         public float Weight { get; set; }
         public UInt32 Value { get; set; }
+        public List<int> Slots { get; set; }
         public FormKey formKey { get; set; }
         public UTitem()
         {
             Record = "";
             DispName = "";
-            Weight = 0;
-            Value = 0;
+            Weight = -1;
+            Value = 4294967295; // max uInt32 value
+            Slots = new List<int>();
             formKey = new FormKey();
         }
     }

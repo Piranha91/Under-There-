@@ -24,13 +24,10 @@ namespace UnderThere
                 currentItems.Flags |= LeveledItem.Flag.UseAll;
                 currentItems.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
 
-                editAndStoreUTitems(set.Items_Mutual, currentItems, settings.bMakeItemsEquippable, state.LinkCache);
-                editAndStoreUTitems(set.Items_Male, currentItems, settings.bMakeItemsEquippable, state.LinkCache);
-                editAndStoreUTitems(set.Items_Female, currentItems, settings.bMakeItemsEquippable, state.LinkCache);
+                editAndStoreUTitems(set.Items_Mutual, currentItems, settings.bMakeItemsEquippable, patchableRaceFormLinks, state);
+                editAndStoreUTitems(set.Items_Male, currentItems, settings.bMakeItemsEquippable, patchableRaceFormLinks, state);
+                editAndStoreUTitems(set.Items_Female, currentItems, settings.bMakeItemsEquippable, patchableRaceFormLinks, state);
 
-                setAdditionalRaces(set.Items_Mutual, patchableRaceFormLinks, state);
-                setAdditionalRaces(set.Items_Male, patchableRaceFormLinks, state);
-                setAdditionalRaces(set.Items_Female, patchableRaceFormLinks, state);
                 set.LeveledListFormKey = currentItems.FormKey;
             }
         }
@@ -115,22 +112,37 @@ namespace UnderThere
             }
         }
 
-        public static void editAndStoreUTitems(List<UTitem> items, LeveledItem currentItems, bool bMakeItemsEquipable, ILinkCache lk)
+        public static void editAndStoreUTitems(List<UTitem> items, LeveledItem currentItems, bool bMakeItemsEquipable, List<IFormLink<IRaceGetter>> patchableRaceFormLinks, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             foreach (UTitem item in items)
             {
-                if (lk.TryResolve<IArmor>(item.formKey, out var moddedItem) && currentItems.Entries != null)
+                if (state.LinkCache.TryResolve<IArmor>(item.formKey, out var moddedItem) && currentItems.Entries != null)
                 {
                     moddedItem.Name = item.DispName;
                     moddedItem.EditorID = "UT_" + moddedItem.EditorID;
-                    moddedItem.Weight = item.Weight;
-                    moddedItem.Value = item.Value;
-
+                    if (item.Weight >= 0) // if not defined in config file, keep the original item's weight
+                    {
+                        moddedItem.Weight = item.Weight;
+                    }
+                    if (item.Value != 4294967295) // if not defined in config file, keep the original item's value
+                    {
+                        moddedItem.Value = item.Value;
+                    }
+                    if (item.Slots.Count > 0 && moddedItem.BodyTemplate != null) // if not defined in config file, keep the original item's slots
+                    {
+                        moddedItem.BodyTemplate.FirstPersonFlags = new BipedObjectFlag();
+                        foreach (int modSlot in item.Slots)
+                        {
+                            moddedItem.BodyTemplate.FirstPersonFlags |= Auxil.mapIntToSlot(modSlot);
+                        }
+                    }
                     switch (bMakeItemsEquipable)
                     {
                         case true: moddedItem.MajorFlags &= Armor.MajorFlag.NonPlayable; break;
                         case false: moddedItem.MajorFlags |= Armor.MajorFlag.NonPlayable; break;
                     }
+
+                    modifyArmature(moddedItem, item.Slots, patchableRaceFormLinks, state); // sets slots and additional races for armature if necessary
 
                     LeveledItemEntry entry = new LeveledItemEntry();
                     LeveledItemEntryData data = new LeveledItemEntryData();
@@ -143,6 +155,63 @@ namespace UnderThere
             }
         }
 
+        public static void modifyArmature (IArmor moddedItem, List<int> slots, List<IFormLink<IRaceGetter>> patchableRaceFormLinks, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            if (moddedItem != null)
+            {
+                foreach (var aa in moddedItem.Armature)
+                {
+                    if (state.LinkCache.TryResolve<IArmorAddonGetter>(aa.FormKey, out var moddedAA) && moddedAA != null)
+                    {
+                        var moddedAA_override = state.PatchMod.ArmorAddons.GetOrAddAsOverride(moddedAA);
+
+                        setAdditionalRaces(moddedAA_override, patchableRaceFormLinks);
+                        editARMAslots(moddedAA_override, slots);
+                    }
+                }
+            }
+        }
+
+        public static void editARMAslots(IArmorAddon moddedAA, List<int> slots)
+        {
+            if (slots.Count > 0 && moddedAA != null && moddedAA.BodyTemplate != null)
+            {
+                moddedAA.BodyTemplate.FirstPersonFlags = new BipedObjectFlag();
+                foreach (int modSlot in slots)
+                {
+                    moddedAA.BodyTemplate.FirstPersonFlags |= Auxil.mapIntToSlot(modSlot);
+                }
+            }
+        }
+
+        public static void setAdditionalRaces(IArmorAddon moddedAA, List<IFormLink<IRaceGetter>> patchableRaceFormLinks)
+        {
+            // get missing PatchableRaces
+            List<IFormLink<IRaceGetter>> addedRaces = new List<IFormLink<IRaceGetter>>();
+            foreach (var neededRace in patchableRaceFormLinks)
+            {
+                bool keyFound = false;
+                foreach (var additionalRace in moddedAA.AdditionalRaces)
+                {
+                    if (additionalRace.FormKey == neededRace.FormKey)
+                    {
+                        keyFound = true;
+                        break;
+                    }
+                }
+                if (keyFound == false)
+                {
+                    addedRaces.Add(neededRace);
+                }
+            }
+            // add missing PatchableRaces
+            foreach (var additionalRace in addedRaces)
+            {
+                moddedAA.AdditionalRaces.Add(additionalRace);
+            }
+        }
+
+        /*
         public static void setAdditionalRaces(List<UTitem> items, List<IFormLink<IRaceGetter>> patchableRaceFormLinks, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             foreach (UTitem item in items)
@@ -181,6 +250,6 @@ namespace UnderThere
                     }
                 }
             }
-        }
+        }*/
     }
 }
