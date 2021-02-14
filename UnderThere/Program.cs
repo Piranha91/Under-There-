@@ -58,12 +58,15 @@ namespace UnderThere
             List<BipedObjectFlag> usedSlots = Auxil.getItemSetARMAslots(settings.Sets, state.LinkCache);
             patchBodyARMAslots(usedSlots, settings.PatchableRaces, state);
 
+            // set SOS compatibiilty if needed
+            bool bSOS = addSOScompatibility(settings.Sets, usedSlots, state);
+
             // create and distribute gendered item inventory spell 
             copyUTScript(state);
             createInventoryFixSpell(settings.Sets, state);
 
             // message user
-            reportARMAslots(usedSlots);
+            reportARMAslots(usedSlots, bSOS);
             reportDeactivatablePlugins(UWsourcePlugins);
 
             Console.WriteLine("\nDon't forget to install Spell Perk Item Distributor to properly manage gender-specific items.");
@@ -632,12 +635,16 @@ namespace UnderThere
             }
         }
 
-        public static void reportARMAslots(List<BipedObjectFlag> usedSlots)
+        public static void reportARMAslots(List<BipedObjectFlag> usedSlots, bool bSOS)
         {
             Console.WriteLine("\nThe following slots are being used by underwear. Please make sure they don't conflict with any other modded armors.");
             foreach (var slot in usedSlots)
             {
                 Console.WriteLine(Auxil.mapSlotToInt(slot));
+            }
+            if (bSOS)
+            {
+                Console.WriteLine("52 (Inserted by patcher for SOS Compatibility)");
             }
         }
 
@@ -647,6 +654,62 @@ namespace UnderThere
             foreach (string p in plugins)
             {
                 Console.WriteLine(p);
+            }
+        }
+
+        public static bool addSOScompatibility(List<UTSet> sets, List<BipedObjectFlag> usedSlots, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            bool bSOSdetected = false;
+            foreach (var mod in state.LoadOrder)
+            {
+                if (mod.Key.FileName == "Schlongs of Skyrim - Core.esm")
+                {
+                    bSOSdetected = true;
+                    break;
+                }
+            }
+            if (bSOSdetected == false)
+            {
+                return false;
+            }
+
+            // check to make sure no current armor addons use slot 52
+            foreach (var slot in usedSlots)
+            {
+                if (Auxil.mapSlotToInt(slot) == 52)
+                {
+                    throw new Exception("Schlongs of Skyrim has been detected, and one of your imported underwear items is slot 52. This will cause a clothing conflict in-game. Please edit the offending item, changing both the armor addon AND the nif file to a slot other than 52 (49 is recommended).");
+                }
+            }
+
+            // patch all bottoms to use slot 52
+            foreach (var set in sets)
+            {
+                addSOSslot(set.Items_Male, state);
+                addSOSslot(set.Items_Mutual, state);
+                addSOSslot(set.Items_Female, state); // just in case...
+            }
+            return true;
+        }
+
+        public static void addSOSslot(List<UTitem> items, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            foreach (var item in items)
+            {
+                if (item.IsBottom == true && state.LinkCache.TryResolve<IArmor>(item.formKey, out var moddedItem) && moddedItem != null)
+                {
+                    foreach (var aa in moddedItem.Armature)
+                    {
+                        if (state.LinkCache.TryResolve<IArmorAddonGetter>(aa.FormKey, out var moddedAA) && moddedAA != null)
+                        {
+                            var moddedAA_override = state.PatchMod.ArmorAddons.GetOrAddAsOverride(moddedAA);
+                            if (moddedAA_override.BodyTemplate != null)
+                            {
+                                moddedAA_override.BodyTemplate.FirstPersonFlags |= Auxil.mapIntToSlot(52);
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -714,6 +777,7 @@ namespace UnderThere
         public string Record { get; set; }
 
         public string DispName { get; set; }
+        public bool IsBottom { get; set; }
         public float Weight { get; set; }
         public UInt32 Value { get; set; }
         public List<int> Slots { get; set; }
@@ -722,6 +786,7 @@ namespace UnderThere
         {
             Record = "";
             DispName = "";
+            IsBottom = false;
             Weight = -1;
             Value = 4294967295; // max uInt32 value
             Slots = new List<int>();
