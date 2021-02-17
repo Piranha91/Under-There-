@@ -632,10 +632,12 @@ namespace UnderThere
                 { 
                     if (arma.BodyTemplate != null && arma.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Body))
                     {
+                        Console.WriteLine("Patching Armor Addon " + arma.FormKey.ToString()); // debug
                         var patchedAA = state.PatchMod.ArmorAddons.GetOrAddAsOverride(arma);
                         if (patchedAA.BodyTemplate == null) { continue; }
                         foreach (var uwSlot in usedSlots)
                         {
+                            Console.WriteLine("Adding slot " + Auxil.mapSlotToInt(uwSlot)); // debug
                             patchedAA.BodyTemplate.FirstPersonFlags |= uwSlot;
                         }
                     }
