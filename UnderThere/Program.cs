@@ -108,31 +108,16 @@ namespace UnderThere
             allItems.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
             foreach (UTSet set in sets)
             {
-                addUTitemsToLeveledList(set.Items_Mutual, allItems);
-                addUTitemsToLeveledList(set.Items_Male, allItems);
-                addUTitemsToLeveledList(set.Items_Female, allItems);
-            }
-
-            return allItems.FormKey;
-        }
-
-        public static void addUTitemsToLeveledList(List<UTitem> items, LeveledItem allItems)
-        {
-            if (allItems.Entries == null)
-            {
-                return;
-            }
-
-            foreach (UTitem item in items)
-            {
                 LeveledItemEntry entry = new LeveledItemEntry();
                 LeveledItemEntryData data = new LeveledItemEntryData();
-                data.Reference = item.formKey;
+                data.Reference = set.LeveledListFormKey;
                 data.Level = 1;
                 data.Count = 1;
                 entry.Data = data;
                 allItems.Entries.Add(entry);
             }
+
+            return allItems.FormKey;
         }
 
         public static Dictionary<string, FormKey> createLeveledList_ByWealth(List<UTSet> sets, Dictionary<string, List<string>> assignments, ILinkCache lk, ISkyrimMod PatchMod)
@@ -632,13 +617,18 @@ namespace UnderThere
                 { 
                     if (arma.BodyTemplate != null && arma.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Body))
                     {
-                        Console.WriteLine("Patching Armor Addon " + arma.FormKey.ToString()); // debug
                         var patchedAA = state.PatchMod.ArmorAddons.GetOrAddAsOverride(arma);
                         if (patchedAA.BodyTemplate == null) { continue; }
                         foreach (var uwSlot in usedSlots)
                         {
-                            Console.WriteLine("Adding slot " + Auxil.mapSlotToInt(uwSlot)); // debug
-                            patchedAA.BodyTemplate.FirstPersonFlags |= uwSlot;
+                            try
+                            {
+                                patchedAA.BodyTemplate.FirstPersonFlags |= uwSlot;
+                            }
+                            catch
+                            {
+                                Console.WriteLine("Failed to add slot {0} to armor addon {1}", Auxil.mapSlotToInt(uwSlot), arma.FormKey.ToString()); 
+                            }
                         }
                     }
                 }
