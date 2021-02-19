@@ -242,7 +242,7 @@ namespace UnderThere
                     {
                         case "set":
                             npcGroup = specificAssignment.Assignment_Set;
-                            currentUWkey = specificAssignment.Assignment_Set_Obj.LeveledListFormKey;
+                            currentUWkey = specificAssignment.AssignmentSet_Obj.LeveledListFormKey;
                             break;
                         case "group":
                             npcGroup = specificAssignment.Assignment_Group;
@@ -805,7 +805,7 @@ namespace UnderThere
         public string Type { get; set; }
         public string Assignment_Set { get; set; }
         public string Assignment_Group { get; set; }
-        public UTSet Assignment_Set_Obj { get; set; }
+        public UTSet AssignmentSet_Obj { get; set; }
         public FormKey FormKeyObj { get; set; }
         public bool isNull { get; set; }
         public NPCassignment()
@@ -815,7 +815,7 @@ namespace UnderThere
             Type = "";
             Assignment_Set = "";
             Assignment_Group = "";
-            Assignment_Set_Obj = new UTSet();
+            AssignmentSet_Obj = new UTSet();
             FormKeyObj = new FormKey();
             isNull = true;
         }

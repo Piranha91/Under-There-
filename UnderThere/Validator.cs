@@ -43,7 +43,7 @@ namespace UnderThere
                             if (set.Name == npc.Assignment_Set)
                             {
                                 bFound = true;
-                                npc.Assignment_Set_Obj = set;
+                                npc.AssignmentSet_Obj = set;
                                 break;
                             }
                         }
