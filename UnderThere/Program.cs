@@ -40,12 +40,6 @@ namespace UnderThere
                 throw new Exception("Spell Perk Item Distributor was not detected at " + SPIDpath + "\nAborting patch");
             }
 
-            //var settingsPath = Path.Combine(state.ExtraSettingsDataPath, "UnderThereConfig.json");
-
-            //UTconfig settings = new UTconfig();
-
-            //settings = JsonUtils.FromJson<UTconfig>(settingsPath);
-
             UTconfig settings = Settings.Value;
 
             Validator.validateSettings(settings);
@@ -64,7 +58,7 @@ namespace UnderThere
 
             // Add slots used by underwear items to clothes and armors with 32 - Body slot active
             List<BipedObjectFlag> usedSlots = Auxil.getItemSetARMAslots(settings.Sets, state.LinkCache);
-            patchBodyARMAslots(usedSlots, settings.PatchableRaces, state);
+            patchBodyARMAslots(usedSlots, settings.PatchableRaces, state, settings.bVerboseMode);
 
             // set SOS compatibiilty if needed
             bool bSOS = addSOScompatibility(settings.Sets, usedSlots, state);
@@ -599,7 +593,7 @@ namespace UnderThere
 
         
 
-        public static void patchBodyARMAslots(List<BipedObjectFlag> usedSlots, List<string> patchableRaces, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void patchBodyARMAslots(List<BipedObjectFlag> usedSlots, List<string> patchableRaces, IPatcherState<ISkyrimMod, ISkyrimModGetter> state, bool bVerboseMode)
         {
             if (!FormKey.TryFactory("000019:Skyrim.esm", out var defaultRaceKey) || defaultRaceKey.IsNull)
             {
@@ -617,6 +611,10 @@ namespace UnderThere
                 { 
                     if (arma.BodyTemplate != null && arma.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Body))
                     {
+                        if (bVerboseMode == true)
+                        {
+                            Console.WriteLine("Patching armor addon: {0}", arma.FormKey.ToString());
+                        }
                         var patchedAA = state.PatchMod.ArmorAddons.GetOrAddAsOverride(arma);
                         if (patchedAA.BodyTemplate == null) { continue; }
                         foreach (var uwSlot in usedSlots)
@@ -624,6 +622,10 @@ namespace UnderThere
                             try
                             {
                                 patchedAA.BodyTemplate.FirstPersonFlags |= uwSlot;
+                                if (bVerboseMode == true)
+                                {
+                                    Console.WriteLine("added slot {0}", Auxil.mapSlotToInt(uwSlot));
+                                }
                             }
                             catch
                             {
@@ -716,6 +718,7 @@ namespace UnderThere
 
     public class UTconfig
     {
+        public bool bVerboseMode {get; set;}
         public string AssignmentMode { get; set; }
         public bool bPatchMales { get; set; }
         public bool bPatchFemales { get; set; }
@@ -736,6 +739,7 @@ namespace UnderThere
 
         public UTconfig()
         {
+            bVerboseMode = false;
             AssignmentMode = "";
             bPatchMales = true;
             bPatchFemales = true;
