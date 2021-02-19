@@ -12,7 +12,7 @@ namespace UnderThere
     {
         public static void createItems(UTconfig settings, List<string> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            deepCopyItems(settings.Sets, UWsourcePlugins, state.LinkCache, state.PatchMod); // copy all armor records along with their linked subrecords into PatchMod to get rid of dependencies on the original plugins. Sets[i].FormKeyObject will now point to the new FormKey in PatchMod
+            deepCopyItems(settings.Sets, UWsourcePlugins, state); // copy all armor records along with their linked subrecords into PatchMod to get rid of dependencies on the original plugins. Sets[i].FormKeyObject will now point to the new FormKey in PatchMod
 
             List<IFormLink<IRaceGetter>> patchableRaceFormLinks = Auxil.getRaceFormLinksFromEDID(settings.PatchableRaces, state); // get race formlinks to update armor addons
 
@@ -32,15 +32,15 @@ namespace UnderThere
             }
         }
 
-        public static void deepCopyItems(List<UTSet> Sets, List<string> UWsourcePlugins, ILinkCache lk, ISkyrimMod PatchMod)
+        public static void deepCopyItems(List<UTSet> Sets, List<string> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             var recordsToDup = new HashSet<FormLinkInformation>();
 
             foreach (var set in Sets)
             {
-                getFormLinksToDuplicate(set.Items_Mutual, recordsToDup, lk);
-                getFormLinksToDuplicate(set.Items_Male, recordsToDup, lk);
-                getFormLinksToDuplicate(set.Items_Female, recordsToDup, lk);
+                getFormLinksToDuplicate(set.Items_Mutual, recordsToDup, state.LinkCache);
+                getFormLinksToDuplicate(set.Items_Male, recordsToDup, state.LinkCache);
+                getFormLinksToDuplicate(set.Items_Female, recordsToDup, state.LinkCache);
             }
 
             // store the original source mod names to notify user that they can be disabled.
@@ -52,15 +52,15 @@ namespace UnderThere
                 }
             }
 
-            var deleteMeEventually = (ILinkCache<ISkyrimMod>)lk; // will be moved to lk directly in next Mutagen version.
+            //var deleteMeEventually = (ILinkCache<ISkyrimMod>)lk; // will be moved to lk directly in next Mutagen version.
             var duplicated = recordsToDup
                 .Select(toDup =>
                 {
-                    if (!deleteMeEventually.TryResolveContext(toDup.FormKey, toDup.Type, out var existingContext))
+                    if (!state.LinkCache.TryResolveContext(toDup.FormKey, toDup.Type, out var existingContext))
                     {
                         throw new ArgumentException($"Couldn't find {toDup.FormKey}?");
                     }
-                    return (OldFormKey: toDup.FormKey, Duplicate: existingContext.DuplicateIntoAsNewRecord(PatchMod));
+                    return (OldFormKey: toDup.FormKey, Duplicate: existingContext.DuplicateIntoAsNewRecord(state.PatchMod));
                 })
                 .ToList();
 
