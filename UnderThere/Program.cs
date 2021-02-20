@@ -719,106 +719,55 @@ namespace UnderThere
     public class UTconfig
     {
         public bool VerboseMode { get; set; }
-        public string AssignmentMode { get; set; }
-        public bool PatchMales { get; set; }
-        public bool PatchFemales { get; set; }
-        public bool PatchNakedNPCs { get; set; }
+        public string AssignmentMode { get; set; } = string.Empty;
+        public bool PatchMales { get; set; } = true;
+        public bool PatchFemales { get; set; } = true;
+        public bool PatchNakedNPCs { get; set; } = true;
         public bool PatchSummonedNPCs { get; set; }
-        public bool PatchGhosts { get; set; }
+        public bool PatchGhosts { get; set; } = true;
         public bool MakeItemsEquippable { get; set; }
-        public List<string> PatchableRaces { get; set; }
-        public List<string> NonPatchableRaces { get; set; }
-        public Dictionary<string, List<string>> ClassDefinitions { get; set; }
-        public Dictionary<string, List<string>> FactionDefinitions { get; set; }
-        public Dictionary<string, List<string>> FallBackFactionDefinitions { get; set; }
-        public List<string> IgnoreFactionsWhenScoring { get; set; }
-        public List<NPCassignment> SpecificNPCs { get; set; }
-        public List<NPCassignment> BlockedNPCs { get; set; }
-        public Dictionary<string, List<string>> Assignments { get; set; }
-        public List<UTSet> Sets { get; set; }
-
-        public UTconfig()
-        {
-            VerboseMode = false;
-            AssignmentMode = "";
-            PatchMales = true;
-            PatchFemales = true;
-            PatchNakedNPCs = true;
-            PatchSummonedNPCs = false;
-            PatchGhosts = true;
-            PatchableRaces = new List<string>();
-            NonPatchableRaces = new List<string>();
-            ClassDefinitions = new Dictionary<string, List<string>>();
-            FactionDefinitions = new Dictionary<string, List<string>>();
-            FallBackFactionDefinitions = new Dictionary<string, List<string>>();
-            IgnoreFactionsWhenScoring = new List<string>();
-            SpecificNPCs = new List<NPCassignment>();
-            BlockedNPCs = new List<NPCassignment>();
-            Assignments = new Dictionary<string, List<string>>();
-            Sets = new List<UTSet>();
-        }
+        public List<string> PatchableRaces { get; set; } = new List<string>();
+        public List<string> NonPatchableRaces { get; set; } = new List<string>();
+        public Dictionary<string, List<string>> ClassDefinitions { get; set; } = new Dictionary<string, List<string>>();
+        public Dictionary<string, List<string>> FactionDefinitions { get; set; } = new Dictionary<string, List<string>>();
+        public Dictionary<string, List<string>> FallBackFactionDefinitions { get; set; } = new Dictionary<string, List<string>>();
+        public List<string> IgnoreFactionsWhenScoring { get; set; } = new List<string>();
+        public List<NPCassignment> SpecificNPCs { get; set; } = new List<NPCassignment>();
+        public List<NPCassignment> BlockedNPCs { get; set; } = new List<NPCassignment>();
+        public Dictionary<string, List<string>> Assignments { get; set; } = new Dictionary<string, List<string>>();
+        public List<UTSet> Sets { get; set; } = new List<UTSet>();
     }
 
     public class UTSet
     {
-        public string Name { get; set; }
-        public List<UTitem> Items_Mutual { get; set; }
-        public List<UTitem> Items_Male { get; set; }
-        public List<UTitem> Items_Female { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public List<UTitem> Items_Mutual { get; set; } = new List<UTitem>();
+        public List<UTitem> Items_Male { get; set; } = new List<UTitem>();
+        public List<UTitem> Items_Female { get; set; } = new List<UTitem>();
         public FormKey LeveledListFormKey { get; set; }
-
-        public UTSet()
-        {
-            Name = "";
-            Items_Mutual = new List<UTitem>();
-            Items_Male = new List<UTitem>();
-            Items_Female = new List<UTitem>();
-            LeveledListFormKey = new FormKey();
-        }
     }
+
     public class UTitem
     {
-        public string Record { get; set; }
-
-        public string DispName { get; set; }
+        public string Record { get; set; } = string.Empty;
+        public string DispName { get; set; } = string.Empty;
         public bool IsBottom { get; set; }
-        public float Weight { get; set; }
-        public UInt32 Value { get; set; }
-        public List<int> Slots { get; set; }
+        public float Weight { get; set; } = -1;
+        public UInt32 Value { get; set; } = int.MaxValue;
+        public List<int> Slots { get; set; } = new List<int>();
         public FormKey FormKey { get; set; }
-        public UTitem()
-        {
-            Record = "";
-            DispName = "";
-            IsBottom = false;
-            Weight = -1;
-            Value = 4294967295; // max uInt32 value
-            Slots = new List<int>();
-            FormKey = new FormKey();
-        }
     }
 
     public class NPCassignment
     {
-        public string Name { get; set; }
-        public string FormKey { get; set; }
-        public string Type { get; set; }
-        public string Assignment_Set { get; set; }
-        public string Assignment_Group { get; set; }
-        public UTSet AssignmentSet_Obj { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string FormKey { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public string Assignment_Set { get; set; } = string.Empty;
+        public string Assignment_Group { get; set; } = string.Empty;
+        public UTSet AssignmentSet_Obj { get; set; } = new UTSet();
         public FormKey FormKeyObj { get; set; }
-        public bool isNull { get; set; }
-        public NPCassignment()
-        {
-            Name = "";
-            FormKey = "";
-            Type = "";
-            Assignment_Set = "";
-            Assignment_Group = "";
-            AssignmentSet_Obj = new UTSet();
-            FormKeyObj = new FormKey();
-            isNull = true;
-        }
+        public bool isNull { get; set; } = true;
 
         public static NPCassignment getSpecificNPC(FormKey fk, List<NPCassignment> assigments)
         {
