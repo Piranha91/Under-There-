@@ -5,6 +5,7 @@ using Mutagen.Bethesda;
 using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Skyrim;
 using System.Linq;
+using Noggog;
 
 namespace UnderThere
 {
@@ -22,7 +23,7 @@ namespace UnderThere
                 var currentItems = state.PatchMod.LeveledItems.AddNew();
                 currentItems.EditorID = "LItems_" + set.Name;
                 currentItems.Flags |= LeveledItem.Flag.UseAll;
-                currentItems.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
+                currentItems.Entries = new ExtendedList<LeveledItemEntry>();
 
                 editAndStoreUTitems(set.Items_Mutual, currentItems, settings.MakeItemsEquippable, patchableRaceFormLinks, state);
                 editAndStoreUTitems(set.Items_Male, currentItems, settings.MakeItemsEquippable, patchableRaceFormLinks, state);

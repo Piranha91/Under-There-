@@ -8,6 +8,7 @@ using Mutagen.Bethesda.Skyrim;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Noggog;
 
 namespace UnderThere
 {
@@ -99,7 +100,7 @@ namespace UnderThere
         {
             var allItems = PatchMod.LeveledItems.AddNew();
             allItems.EditorID = "UnderThereAllItems";
-            allItems.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
+            allItems.Entries = new ExtendedList<LeveledItemEntry>();
             foreach (UTSet set in sets)
             {
                 LeveledItemEntry entry = new LeveledItemEntry();
@@ -127,7 +128,7 @@ namespace UnderThere
 
                 var currentItems = PatchMod.LeveledItems.AddNew();
                 currentItems.EditorID = "UnderThereItems_" + assignment.Key;
-                currentItems.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
+                currentItems.Entries = new ExtendedList<LeveledItemEntry>();
 
                 foreach (UTSet set in sets)
                 {
@@ -162,7 +163,7 @@ namespace UnderThere
 
             Outfit underwearOnly = state.PatchMod.Outfits.AddNew();
             underwearOnly.EditorID = "No_Clothes";
-            underwearOnly.Items = new Noggog.ExtendedList<IFormLink<IOutfitTargetGetter>>();
+            underwearOnly.Items = new ExtendedList<IFormLink<IOutfitTargetGetter>>();
 
             foreach (var npc in state.LoadOrder.PriorityOrder.WinningOverrides<INpcGetter>())
             {
