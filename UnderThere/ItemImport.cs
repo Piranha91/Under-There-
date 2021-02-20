@@ -194,7 +194,7 @@ namespace UnderThere
                         break;
                     }
                 }
-                if (keyFound == false)
+                if (!keyFound)
                 {
                     addedRaces.Add(neededRace);
                 }
@@ -231,7 +231,7 @@ namespace UnderThere
                                         break;
                                     }
                                 }
-                                if (keyFound == false)
+                                if (!keyFound)
                                 {
                                     addedRaces.Add(neededRace);
                                 }

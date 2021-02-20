@@ -14,7 +14,7 @@ namespace UnderThere
             // assignment mode
             settings.AssignmentMode = settings.AssignmentMode.ToLower();
             List<string> validModes = new List<string> { "default", "random", "class", "faction" };
-            if (validModes.Contains(settings.AssignmentMode) == false)
+            if (!validModes.Contains(settings.AssignmentMode))
             {
                 throw new Exception("AssignmentMode can only contain one of the following: default, random, class, faction.");
             }
@@ -47,14 +47,14 @@ namespace UnderThere
                                 break;
                             }
                         }
-                        if (bFound == false)
+                        if (!bFound)
                         {
                             throw new Exception("Specific NPC Assignment " + npcID + "'s Assignemnt_Set could not be matched to one of the defined sets.");
                         }
                         break;
 
                     case "group":
-                        if (settings.Assignments.ContainsKey(npc.Assignment_Group) == false)
+                        if (!settings.Assignments.ContainsKey(npc.Assignment_Group))
                         {
                             throw new Exception("Specific NPC Assignment " + npcID + "'s Assignemnt_Group could not be matched to one of the defined Assignments.");
                         }
@@ -78,7 +78,7 @@ namespace UnderThere
             // Class Definitions - make sure each is matched to an assignment
             foreach (var def in settings.ClassDefinitions.Keys)
             {
-                if (settings.Assignments.ContainsKey(def) == false)
+                if (!settings.Assignments.ContainsKey(def))
                 {
                     throw new Exception("ClassDefinitions: Definition " + def + " was not found in Assignments.");
                 }
@@ -91,7 +91,7 @@ namespace UnderThere
             // Faction definitions - make sure each is matched to an assignment
             foreach (var def in settings.FactionDefinitions.Keys)
             {
-                if (settings.Assignments.ContainsKey(def) == false)
+                if (!settings.Assignments.ContainsKey(def))
                 {
                     throw new Exception("FactionDefinitions: Definition " + def + " was not found in Assignments.");
                 }
@@ -104,11 +104,11 @@ namespace UnderThere
             // FallBackFaction definitions - make sure each is matched to an assignment
             foreach (var def in settings.FallBackFactionDefinitions.Keys)
             {
-                if (settings.Assignments.ContainsKey(def) == false)
+                if (!settings.Assignments.ContainsKey(def))
                 {
                     throw new Exception("FallBackFactionDefinitions: Definition " + def + " was not found in Assignments.");
                 }
-                if (settings.FactionDefinitions.ContainsKey(def) == false)
+                if (!settings.FactionDefinitions.ContainsKey(def))
                 {
                     throw new Exception("FallBackFactionDefinitions: Definition " + def + " was not found in FactionDefinitions.");
                 }
@@ -127,7 +127,7 @@ namespace UnderThere
                             bFound = true; break;
                         }
                     }
-                    if (bFound == false)
+                    if (!bFound)
                     {
                         throw new Exception("Assignments: Could not find set \"" + variant + "\" in Sets");
                     }
@@ -142,14 +142,14 @@ namespace UnderThere
             // Sets - make sure each set has at least one item for each patchable gender
             foreach (var set in settings.Sets)
             {
-                if(settings.PatchMales == true)
+                if (settings.PatchMales)
                 {
                     if (set.Items_Mutual.Count + set.Items_Male.Count < 1)
                     {
                         throw new Exception("Sets: set \"" + set.Name + "\" must have at least one item in Items_Mutual or Items_Male");
                     }
                 }
-                if (settings.PatchFemales == true)
+                if (settings.PatchFemales)
                 {
                     if (set.Items_Mutual.Count + set.Items_Female.Count < 1)
                     {

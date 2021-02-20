@@ -30,7 +30,7 @@ namespace UnderThere
                         break;
                     }
                 }
-                if (bMatched == false)
+                if (!bMatched)
                 {
                     throw new Exception("Could not find Race \"" + EDID + "\" in your load order.");
                 }
@@ -70,7 +70,7 @@ namespace UnderThere
 
         public static bool hasGhostAbility(INpcGetter npc)
         {
-            if (npc.ActorEffect == null) { return false; }
+            if (npc.ActorEffect == null) return false;
             foreach (var ability in npc.ActorEffect)
             {
                 if (ability.FormKey.ToString() == "05030B:Skyrim.esm")
@@ -84,14 +84,12 @@ namespace UnderThere
 
         public static bool hasGhostScript(INpcGetter npc)
         {
-            if (npc.VirtualMachineAdapter == null) { return false; }
+            if (npc.VirtualMachineAdapter == null) return false;
+            foreach (var script in npc.VirtualMachineAdapter.Scripts)
             {
-                foreach (var script in npc.VirtualMachineAdapter.Scripts)
+                if (script.Name == "defaultGhostScript")
                 {
-                    if (script.Name == "defaultGhostScript")
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
             return false;
@@ -130,7 +128,7 @@ namespace UnderThere
                     List<BipedObjectFlag> currentUsedSlots = getARMAslots(ARMAobj.BodyTemplate);
                     foreach (var usedFlag in currentUsedSlots)
                     {
-                        if (usedSlots.Contains(usedFlag) == false)
+                        if (!usedSlots.Contains(usedFlag))
                         {
                             usedSlots.Add(usedFlag);
                         }

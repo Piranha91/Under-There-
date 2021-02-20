@@ -36,7 +36,7 @@ namespace UnderThere
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             string SPIDpath = Path.Combine(state.Settings.DataFolderPath, "skse\\plugins\\po3_SpellPerkItemDistributor.dll");
-            if (File.Exists(SPIDpath) == false) //SPIDtest (dual-level pun - whoa!)
+            if (!File.Exists(SPIDpath)) //SPIDtest (dual-level pun - whoa!)
             {
                 throw new Exception("Spell Perk Item Distributor was not detected at " + SPIDpath + "\nAborting patch");
             }
@@ -170,7 +170,7 @@ namespace UnderThere
                 NPCassignment specificAssignment = NPCassignment.getSpecificNPC(npc.FormKey, settings.SpecificNPCs);
 
                 // check if NPC race should be patched
-                bool isInventoryTemplate = npc.DefaultOutfit.IsNull == false && npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Inventory) == false;
+                bool isInventoryTemplate = !npc.DefaultOutfit.IsNull && !npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Inventory);
                 bool isGhost = npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.IsGhost) || npc.Voice.FormKey.ToString() == "0854EC:Skyrim.esm" || npc.Voice.FormKey.ToString() == "0854ED:Skyrim.esm" || Auxil.hasGhostAbility(npc) || Auxil.hasGhostScript(npc);
 
                 if (!state.LinkCache.TryResolve<IRaceGetter>(npc.Race.FormKey, out var currentRace) ||
@@ -178,21 +178,21 @@ namespace UnderThere
                     currentRace.EditorID == null ||
                     settings.NonPatchableRaces.Contains(currentRace.EditorID) ||
                     Auxil.isNonHumanoid(npc, currentRace, state.LinkCache) ||
-                    (settings.PatchSummonedNPCs == false && npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Summonable)) ||
-                    (settings.PatchGhosts == false && isGhost) ||
+                    (!settings.PatchSummonedNPCs && npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Summonable)) ||
+                    (!settings.PatchGhosts && isGhost) ||
                     currentRace.EditorID.Contains("Child") ||
-                    (settings.PatchableRaces.Contains(currentRace.EditorID) == false && isInventoryTemplate == false) ||
+                    (!settings.PatchableRaces.Contains(currentRace.EditorID) && !isInventoryTemplate) ||
                     NPCassignment.isBlocked(npc.FormKey, settings.BlockedNPCs))
                 {
                     continue;
                 }
 
                 // check if NPC gender should be patched
-                if (npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Female) && settings.PatchFemales == false)
+                if (npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Female) && !settings.PatchFemales)
                 {
                     continue;
                 }
-                else if (!npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Female) && settings.PatchMales == false)
+                else if (!npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Female) && !settings.PatchMales)
                 {
                     continue;
                 }
@@ -218,7 +218,7 @@ namespace UnderThere
                     {
                         continue;
                     }
-                    else if (settings.PatchNakedNPCs == false && specificAssignment.isNull)
+                    else if (!settings.PatchNakedNPCs && specificAssignment.isNull)
                     {
                         continue;
                     }
@@ -229,7 +229,7 @@ namespace UnderThere
                 }
                 else
                 {
-                    if (state.LinkCache.TryResolve<IOutfitGetter>(npc.DefaultOutfit.FormKey, out var NPCoutfit) && NPCoutfit != null && NPCoutfit.Items != null && NPCoutfit.Items.Count == 0 && settings.PatchNakedNPCs == false)
+                    if (state.LinkCache.TryResolve<IOutfitGetter>(npc.DefaultOutfit.FormKey, out var NPCoutfit) && NPCoutfit != null && NPCoutfit.Items != null && NPCoutfit.Items.Count == 0 && !settings.PatchNakedNPCs)
                     {
                         continue;
                     }
@@ -285,7 +285,7 @@ namespace UnderThere
                 }
 
                 // if the current outfit modified by the current wealth group doesn't exist, create it
-                if (OutfitMap.ContainsKey(currentOutfitKey) == false || OutfitMap[currentOutfitKey].ContainsKey(npcGroup) == false)
+                if (!OutfitMap.ContainsKey(currentOutfitKey) || !OutfitMap[currentOutfitKey].ContainsKey(npcGroup))
                 {
                     if (!state.LinkCache.TryResolve<IOutfitGetter>(currentOutfitKey, out var NPCoutfit) || NPCoutfit == null) { continue; }
                     Outfit newOutfit = state.PatchMod.Outfits.AddNew();
@@ -298,7 +298,7 @@ namespace UnderThere
                     {
                         newOutfit.Items.Add(currentUWkey);
                     }
-                    if (OutfitMap.ContainsKey(currentOutfitKey) == false)
+                    if (!OutfitMap.ContainsKey(currentOutfitKey))
                     {
                         OutfitMap[currentOutfitKey] = new Dictionary<string, Outfit>();
                     }
@@ -389,7 +389,7 @@ namespace UnderThere
             // get the wealth group with the highest number of corresponding factions.
 
             // If no primary wealth groups were matched, use fallback wealth groups if they were matched
-            if (bPrimaryWealthGroupFound == false && fallBackwealthCounts.Values.Max() > 0)
+            if (!bPrimaryWealthGroupFound && fallBackwealthCounts.Values.Max() > 0)
             {
                 wealthCounts = fallBackwealthCounts;
             }
@@ -431,7 +431,7 @@ namespace UnderThere
             }
 
             // if EDID wasn't found in definitions
-            if (GroupLookupFailures.Contains(EDID) == false)
+            if (!GroupLookupFailures.Contains(EDID))
             {
                 GroupLookupFailures.Add(EDID);
             }
@@ -443,7 +443,7 @@ namespace UnderThere
         {
             string UTscriptPath = Path.Combine(state.ExtraSettingsDataPath, "UnderThereGenderedItemFix.pex");
 
-            if (File.Exists(UTscriptPath) == false)
+            if (!File.Exists(UTscriptPath))
             {
                 throw new Exception("Could not find " + UTscriptPath);
             }
@@ -585,7 +585,7 @@ namespace UnderThere
         {
             foreach (UTitem item in items)
             {
-                if (uniqueFormKeys.Contains(item.FormKey) == false)
+                if (!uniqueFormKeys.Contains(item.FormKey))
                 {
                     uniqueFormKeys.Add(item.FormKey);
                 }
@@ -612,7 +612,7 @@ namespace UnderThere
                 {
                     if (arma.BodyTemplate != null && arma.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Body))
                     {
-                        if (bVerboseMode == true)
+                        if (bVerboseMode)
                         {
                             Console.WriteLine("Patching armor addon: {0}", arma.FormKey.ToString());
                         }
@@ -623,7 +623,7 @@ namespace UnderThere
                             try
                             {
                                 patchedAA.BodyTemplate.FirstPersonFlags |= uwSlot;
-                                if (bVerboseMode == true)
+                                if (bVerboseMode)
                                 {
                                     Console.WriteLine("added slot {0}", Auxil.mapSlotToInt(uwSlot));
                                 }
@@ -671,7 +671,7 @@ namespace UnderThere
                     break;
                 }
             }
-            if (bSOSdetected == false)
+            if (!bSOSdetected)
             {
                 return false;
             }
@@ -699,7 +699,7 @@ namespace UnderThere
         {
             foreach (var item in items)
             {
-                if (item.IsBottom == true && state.LinkCache.TryResolve<IArmor>(item.FormKey, out var moddedItem) && moddedItem != null)
+                if (item.IsBottom && state.LinkCache.TryResolve<IArmor>(item.FormKey, out var moddedItem) && moddedItem != null)
                 {
                     foreach (var aa in moddedItem.Armature)
                     {
