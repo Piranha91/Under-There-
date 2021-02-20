@@ -179,7 +179,6 @@ namespace UnderThere
                     || Auxil.hasGhostScript(npc);
 
                 if (!state.LinkCache.TryResolve<IRaceGetter>(npc.Race.FormKey, out var currentRace) ||
-                    currentRace == null ||
                     currentRace.EditorID == null ||
                     settings.NonPatchableRaces.Contains(currentRace.EditorID) ||
                     Auxil.isNonHumanoid(npc, currentRace, state.LinkCache) ||
@@ -234,7 +233,7 @@ namespace UnderThere
                 }
                 else
                 {
-                    if (state.LinkCache.TryResolve<IOutfitGetter>(npc.DefaultOutfit.FormKey, out var NPCoutfit) && NPCoutfit != null && NPCoutfit.Items != null && NPCoutfit.Items.Count == 0 && !settings.PatchNakedNPCs)
+                    if (state.LinkCache.TryResolve<IOutfitGetter>(npc.DefaultOutfit.FormKey, out var NPCoutfit) && NPCoutfit.Items != null && NPCoutfit.Items.Count == 0 && !settings.PatchNakedNPCs)
                     {
                         continue;
                     }
@@ -265,7 +264,7 @@ namespace UnderThere
                             npcGroup = "Default";
                             currentUWkey = UT_DefaultItem; break;
                         case "class":
-                            if (state.LinkCache.TryResolve<IClassGetter>(npc.Class.FormKey, out var NPCclass) && NPCclass != null && NPCclass.EditorID != null)
+                            if (state.LinkCache.TryResolve<IClassGetter>(npc.Class.FormKey, out var NPCclass) && NPCclass.EditorID != null)
                             {
                                 if (npc.EditorID == "Hroki" && npc.FormKey == Skyrim.Npc.Hroki)
                                 {
@@ -339,7 +338,7 @@ namespace UnderThere
             // add each faction by appropriate wealth count
             foreach (var fact in npc.Factions)
             {
-                if (!state.LinkCache.TryResolve<IFactionGetter>(fact.Faction.FormKey, out var currentFaction) || currentFaction == null || currentFaction.EditorID == null) { continue; }
+                if (!state.LinkCache.TryResolve<IFactionGetter>(fact.Faction.FormKey, out var currentFaction) || currentFaction.EditorID == null) continue;
 
                 if (ignoredFactions.Contains(currentFaction.EditorID))
                 {
@@ -590,7 +589,7 @@ namespace UnderThere
         {
             foreach (var arma in state.LoadOrder.PriorityOrder.WinningOverrides<IArmorAddonGetter>())
             {
-                if (!state.LinkCache.TryResolve<IRaceGetter>(arma.Race.FormKey, out var armaRace) || armaRace == null || armaRace.EditorID == null || armaRace.EditorID.Contains("Child"))
+                if (!state.LinkCache.TryResolve<IRaceGetter>(arma.Race.FormKey, out var armaRace) || armaRace.EditorID == null || armaRace.EditorID.Contains("Child"))
                 {
                     continue;
                 }
@@ -686,11 +685,11 @@ namespace UnderThere
         {
             foreach (var item in items)
             {
-                if (item.IsBottom && state.LinkCache.TryResolve<IArmor>(item.FormKey, out var moddedItem) && moddedItem != null)
+                if (item.IsBottom && state.LinkCache.TryResolve<IArmor>(item.FormKey, out var moddedItem))
                 {
                     foreach (var aa in moddedItem.Armature)
                     {
-                        if (state.LinkCache.TryResolve<IArmorAddonGetter>(aa.FormKey, out var moddedAA) && moddedAA != null)
+                        if (state.LinkCache.TryResolve<IArmorAddonGetter>(aa.FormKey, out var moddedAA))
                         {
                             var moddedAA_override = state.PatchMod.ArmorAddons.GetOrAddAsOverride(moddedAA);
                             if (moddedAA_override.BodyTemplate != null)

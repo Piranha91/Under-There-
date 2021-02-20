@@ -45,7 +45,7 @@ namespace UnderThere
             List<string> nonHumanoidAttackRaces = new List<string> { "DwarvenSphereRace", "DwarvenSpiderRace" };
             foreach (var fact in npc.Factions)
             {
-                if (!lk.TryResolve<IFactionGetter>(fact.Faction.FormKey, out var currentFaction) || currentFaction == null || currentFaction.EditorID == null) { continue; }
+                if (!lk.TryResolve<IFactionGetter>(fact.Faction.FormKey, out var currentFaction) || currentFaction.EditorID == null) { continue; }
                 if (nonHumanoidFactions.Contains(currentFaction.EditorID))
                 {
                     return true;
@@ -57,7 +57,7 @@ namespace UnderThere
                 return true;
             }
 
-            if (lk.TryResolve<IRaceGetter>(npc.AttackRace.FormKey, out var currentAttackRace) && currentAttackRace != null && currentAttackRace.EditorID != null)
+            if (lk.TryResolve<IRaceGetter>(npc.AttackRace.FormKey, out var currentAttackRace) && currentAttackRace.EditorID != null)
             {
                 if (nonHumanoidAttackRaces.Contains(currentAttackRace.EditorID))
                 {
@@ -113,14 +113,14 @@ namespace UnderThere
         {
             foreach (UTitem item in items)
             {
-                if (!lk.TryResolve<IArmor>(item.FormKey, out var itemObj) || itemObj == null)
+                if (!lk.TryResolve<IArmor>(item.FormKey, out var itemObj))
                 {
                     continue;
                 }
 
                 foreach (IFormLink<IArmorAddonGetter> AAgetter in itemObj.Armature)
                 {
-                    if (!lk.TryResolve<IArmorAddon>(AAgetter.FormKey, out var ARMAobj) || ARMAobj == null || ARMAobj.BodyTemplate == null)
+                    if (!lk.TryResolve<IArmorAddon>(AAgetter.FormKey, out var ARMAobj) || ARMAobj.BodyTemplate == null)
                     {
                         continue;
                     }

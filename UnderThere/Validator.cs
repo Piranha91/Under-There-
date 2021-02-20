@@ -22,7 +22,7 @@ namespace UnderThere
             // specific NPCs
             foreach (var npc in settings.SpecificNPCs)
             {
-                if (!FormKey.TryFactory(npc.FormKey, out var currentFK) || currentFK == null)
+                if (!FormKey.TryFactory(npc.FormKey, out var currentFK))
                 {
                     throw new Exception("Specific NPC List: Could not resolve formkey " + npc.FormKey + " for NPC " + npc.Name);
                 }
@@ -69,7 +69,7 @@ namespace UnderThere
             // blocked NPCs
             foreach (var npc in settings.BlockedNPCs)
             {
-                if (!FormKey.TryFactory(npc.FormKey, out var currentFK) || currentFK == null)
+                if (!FormKey.TryFactory(npc.FormKey, out var currentFK))
                 {
                     throw new Exception("Blocked NPC List: Could not resolve formkey " + npc.FormKey + " for NPC " + npc.Name);
                 }

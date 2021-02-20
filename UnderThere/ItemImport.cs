@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Mutagen.Bethesda;
@@ -109,9 +109,10 @@ namespace UnderThere
 
         public static void editAndStoreUTitems(List<UTitem> items, LeveledItem currentItems, bool bMakeItemsEquipable, List<IFormLink<IRaceGetter>> patchableRaceFormLinks, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
+            if (currentItems.Entries == null) return;
             foreach (UTitem item in items)
             {
-                if (state.LinkCache.TryResolve<IArmor>(item.FormKey, out var moddedItem) && currentItems.Entries != null)
+                if (state.LinkCache.TryResolve<IArmor>(item.FormKey, out var moddedItem))
                 {
                     moddedItem.Name = item.DispName;
                     moddedItem.EditorID = "UT_" + moddedItem.EditorID;
@@ -156,7 +157,7 @@ namespace UnderThere
             {
                 foreach (var aa in moddedItem.Armature)
                 {
-                    if (state.LinkCache.TryResolve<IArmorAddonGetter>(aa.FormKey, out var moddedAA) && moddedAA != null)
+                    if (state.LinkCache.TryResolve<IArmorAddonGetter>(aa.FormKey, out var moddedAA))
                     {
                         var moddedAA_override = state.PatchMod.ArmorAddons.GetOrAddAsOverride(moddedAA);
 
@@ -211,11 +212,11 @@ namespace UnderThere
         {
             foreach (UTitem item in items)
             {
-                if (state.LinkCache.TryResolve<IArmorGetter>(item.formKey, out var moddedItem) && moddedItem != null)
+                if (state.LinkCache.TryResolve<IArmorGetter>(item.formKey, out var moddedItem))
                 {
                     foreach (var aa in moddedItem.Armature)
                     {
-                        if (state.LinkCache.TryResolve<IArmorAddonGetter>(aa.FormKey, out var moddedAA) && moddedAA != null)
+                        if (state.LinkCache.TryResolve<IArmorAddonGetter>(aa.FormKey, out var moddedAA))
                         {
                             var moddedAA_override = state.PatchMod.ArmorAddons.GetOrAddAsOverride(moddedAA);
                             // get missing PatchableRaces
