@@ -153,24 +153,21 @@ namespace UnderThere
 
         public static void modifyArmature (IArmor moddedItem, List<int> slots, List<IFormLink<IRaceGetter>> patchableRaceFormLinks, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            if (moddedItem != null)
+            foreach (var aa in moddedItem.Armature)
             {
-                foreach (var aa in moddedItem.Armature)
+                if (state.LinkCache.TryResolve<IArmorAddonGetter>(aa.FormKey, out var moddedAA))
                 {
-                    if (state.LinkCache.TryResolve<IArmorAddonGetter>(aa.FormKey, out var moddedAA))
-                    {
-                        var moddedAA_override = state.PatchMod.ArmorAddons.GetOrAddAsOverride(moddedAA);
+                    var moddedAA_override = state.PatchMod.ArmorAddons.GetOrAddAsOverride(moddedAA);
 
-                        setAdditionalRaces(moddedAA_override, patchableRaceFormLinks);
-                        editARMAslots(moddedAA_override, slots);
-                    }
+                    setAdditionalRaces(moddedAA_override, patchableRaceFormLinks);
+                    editARMAslots(moddedAA_override, slots);
                 }
             }
         }
 
         public static void editARMAslots(IArmorAddon moddedAA, List<int> slots)
         {
-            if (slots.Count > 0 && moddedAA != null && moddedAA.BodyTemplate != null)
+            if (slots.Count > 0 && moddedAA.BodyTemplate != null)
             {
                 moddedAA.BodyTemplate.FirstPersonFlags = new BipedObjectFlag();
                 foreach (int modSlot in slots)
