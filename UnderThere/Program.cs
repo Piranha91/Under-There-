@@ -14,7 +14,7 @@ namespace UnderThere
     public class Program
     {
         static Lazy<UTconfig> Settings = null!;
-        
+
         public static async Task<int> Main(string[] args)
         {
             return await SynthesisPipeline.Instance
@@ -172,11 +172,11 @@ namespace UnderThere
                 bool isInventoryTemplate = npc.DefaultOutfit.IsNull == false && npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Inventory) == false;
                 bool isGhost = npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.IsGhost) || npc.Voice.FormKey.ToString() == "0854EC:Skyrim.esm" || npc.Voice.FormKey.ToString() == "0854ED:Skyrim.esm" || Auxil.hasGhostAbility(npc) || Auxil.hasGhostScript(npc);
 
-                if (!state.LinkCache.TryResolve<IRaceGetter>(npc.Race.FormKey, out var currentRace) || 
-                    currentRace == null || 
-                    currentRace.EditorID == null || 
-                    settings.NonPatchableRaces.Contains(currentRace.EditorID) || 
-                    Auxil.isNonHumanoid(npc, currentRace, state.LinkCache) || 
+                if (!state.LinkCache.TryResolve<IRaceGetter>(npc.Race.FormKey, out var currentRace) ||
+                    currentRace == null ||
+                    currentRace.EditorID == null ||
+                    settings.NonPatchableRaces.Contains(currentRace.EditorID) ||
+                    Auxil.isNonHumanoid(npc, currentRace, state.LinkCache) ||
                     (settings.PatchSummonedNPCs == false && npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Summonable)) ||
                     (settings.PatchGhosts == false && isGhost) ||
                     currentRace.EditorID.Contains("Child") ||
@@ -238,7 +238,7 @@ namespace UnderThere
 
                 if (!specificAssignment.isNull)
                 {
-                    switch(specificAssignment.Type)
+                    switch (specificAssignment.Type)
                     {
                         case "set":
                             npcGroup = specificAssignment.Assignment_Set;
@@ -248,7 +248,7 @@ namespace UnderThere
                             npcGroup = specificAssignment.Assignment_Group;
                             currentUWkey = UT_LeveledItemsByWealth[npcGroup];
                             break;
-                    }    
+                    }
                 }
                 else
                 {
@@ -347,7 +347,7 @@ namespace UnderThere
                 {
                     wealthCounts[tmpWealthGroup]++;
                 }
-                
+
                 if (tmpWealthGroup == "Default") // check fallback factions
                 {
                     tmpWealthGroup = getWealthGroupByEDID(currentFaction.EditorID, fallbackFactionDefinitions, GroupLookupFailures);
@@ -416,7 +416,7 @@ namespace UnderThere
 
             // return the wealth group that was matched to the highest number of factions (choose random if tied)
             var random = new Random();
-            return bestMatches[random.Next(bestMatches.Count)]; 
+            return bestMatches[random.Next(bestMatches.Count)];
         }
 
         public static string getWealthGroupByEDID(string EDID, Dictionary<string, List<string>> Definitions, List<string> GroupLookupFailures)
@@ -512,7 +512,7 @@ namespace UnderThere
             // create Spell
 
             //the following does not fix the issue - check later if it's deletable
-            
+
             if (!FormKey.TryFactory("013F44:skyrim.esm", out var equipTypeEitherHandKey) || equipTypeEitherHandKey.IsNull)
             {
                 throw new Exception("Could not create FormKey 013F44:skyrim.esm");
@@ -591,7 +591,7 @@ namespace UnderThere
             }
         }
 
-        
+
 
         public static void patchBodyARMAslots(List<BipedObjectFlag> usedSlots, List<string> patchableRaces, IPatcherState<ISkyrimMod, ISkyrimModGetter> state, bool bVerboseMode)
         {
@@ -608,7 +608,7 @@ namespace UnderThere
                 }
 
                 if (arma.Race.FormKey == defaultRaceKey || patchableRaces.Contains(armaRace.EditorID))
-                { 
+                {
                     if (arma.BodyTemplate != null && arma.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Body))
                     {
                         if (bVerboseMode == true)
@@ -629,7 +629,7 @@ namespace UnderThere
                             }
                             catch
                             {
-                                Console.WriteLine("Failed to add slot {0} to armor addon {1}", Auxil.mapSlotToInt(uwSlot), arma.FormKey.ToString()); 
+                                Console.WriteLine("Failed to add slot {0} to armor addon {1}", Auxil.mapSlotToInt(uwSlot), arma.FormKey.ToString());
                             }
                         }
                     }
@@ -718,7 +718,7 @@ namespace UnderThere
 
     public class UTconfig
     {
-        public bool VerboseMode {get; set;}
+        public bool VerboseMode { get; set; }
         public string AssignmentMode { get; set; }
         public bool PatchMales { get; set; }
         public bool PatchFemales { get; set; }
@@ -824,10 +824,10 @@ namespace UnderThere
         {
             foreach (var assignment in assigments)
             {
-               if (assignment.FormKeyObj == fk)
-               {
+                if (assignment.FormKeyObj == fk)
+                {
                     return assignment;
-               }
+                }
             }
 
             return new NPCassignment();
