@@ -11,7 +11,7 @@ namespace UnderThere
 {
     class ItemImport
     {
-        public static void createItems(UTconfig settings, List<string> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void createItems(UTconfig settings, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             deepCopyItems(settings.Sets, UWsourcePlugins, state); // copy all armor records along with their linked subrecords into PatchMod to get rid of dependencies on the original plugins. Sets[i].FormKeyObject will now point to the new FormKey in PatchMod
 
@@ -33,7 +33,7 @@ namespace UnderThere
             }
         }
 
-        public static void deepCopyItems(List<UTSet> Sets, List<string> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void deepCopyItems(List<UTSet> Sets, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             var recordsToDup = new HashSet<FormLinkInformation>();
 
@@ -45,13 +45,7 @@ namespace UnderThere
             }
 
             // store the original source mod names to notify user that they can be disabled.
-            foreach (var td in recordsToDup)
-            {
-                if (UWsourcePlugins.Contains(td.FormKey.ModKey.ToString()) == false)
-                {
-                    UWsourcePlugins.Add(td.FormKey.ModKey.ToString());
-                }
-            }
+            UWsourcePlugins.Add(recordsToDup.Select(x => x.FormKey.ModKey));
 
             //var deleteMeEventually = (ILinkCache<ISkyrimMod>)lk; // will be moved to lk directly in next Mutagen version.
             var duplicated = recordsToDup

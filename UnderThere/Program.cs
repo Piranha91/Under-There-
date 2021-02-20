@@ -46,7 +46,7 @@ namespace UnderThere
             Validator.validateSettings(settings);
 
             // create underwear items
-            List<string> UWsourcePlugins = new List<string>(); // list of source mod names for the underwear (to report to user so that they can be disabled)
+            var UWsourcePlugins = new HashSet<ModKey>(); // set of source mod names for the underwear (to report to user so that they can be disabled)
             ItemImport.createItems(settings, UWsourcePlugins, state);
 
             // created leveled item lists (to be added to outfits)
@@ -651,10 +651,10 @@ namespace UnderThere
             }
         }
 
-        public static void reportDeactivatablePlugins(List<string> plugins)
+        public static void reportDeactivatablePlugins(IEnumerable<ModKey> plugins)
         {
             Console.WriteLine("\nThe following plugins have been absorbed into the synthesis patch and may now be deactivated. Make sure to keep the associated meshes and textures enabled.");
-            foreach (string p in plugins)
+            foreach (var p in plugins)
             {
                 Console.WriteLine(p);
             }
