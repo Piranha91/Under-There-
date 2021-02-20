@@ -24,9 +24,9 @@ namespace UnderThere
                 currentItems.Flags |= LeveledItem.Flag.UseAll;
                 currentItems.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
 
-                editAndStoreUTitems(set.Items_Mutual, currentItems, settings.bMakeItemsEquippable, patchableRaceFormLinks, state);
-                editAndStoreUTitems(set.Items_Male, currentItems, settings.bMakeItemsEquippable, patchableRaceFormLinks, state);
-                editAndStoreUTitems(set.Items_Female, currentItems, settings.bMakeItemsEquippable, patchableRaceFormLinks, state);
+                editAndStoreUTitems(set.Items_Mutual, currentItems, settings.MakeItemsEquippable, patchableRaceFormLinks, state);
+                editAndStoreUTitems(set.Items_Male, currentItems, settings.MakeItemsEquippable, patchableRaceFormLinks, state);
+                editAndStoreUTitems(set.Items_Female, currentItems, settings.MakeItemsEquippable, patchableRaceFormLinks, state);
 
                 set.LeveledListFormKey = currentItems.FormKey;
             }
@@ -108,7 +108,7 @@ namespace UnderThere
             foreach (var item in UTitemList)
             {
                 FormKey.TryFactory(item.Record, out var origFormKey);
-                item.formKey = remap[origFormKey];
+                item.FormKey = remap[origFormKey];
             }
         }
 
@@ -116,7 +116,7 @@ namespace UnderThere
         {
             foreach (UTitem item in items)
             {
-                if (state.LinkCache.TryResolve<IArmor>(item.formKey, out var moddedItem) && currentItems.Entries != null)
+                if (state.LinkCache.TryResolve<IArmor>(item.FormKey, out var moddedItem) && currentItems.Entries != null)
                 {
                     moddedItem.Name = item.DispName;
                     moddedItem.EditorID = "UT_" + moddedItem.EditorID;

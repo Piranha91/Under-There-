@@ -115,7 +115,7 @@ namespace UnderThere
         {
             foreach (UTitem item in items)
             {
-                if (!lk.TryResolve<IArmor>(item.formKey, out var itemObj) || itemObj == null)
+                if (!lk.TryResolve<IArmor>(item.FormKey, out var itemObj) || itemObj == null)
                 {
                     continue;
                 }

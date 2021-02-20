@@ -142,14 +142,14 @@ namespace UnderThere
             // Sets - make sure each set has at least one item for each patchable gender
             foreach (var set in settings.Sets)
             {
-                if(settings.bPatchMales == true)
+                if(settings.PatchMales == true)
                 {
                     if (set.Items_Mutual.Count + set.Items_Male.Count < 1)
                     {
                         throw new Exception("Sets: set \"" + set.Name + "\" must have at least one item in Items_Mutual or Items_Male");
                     }
                 }
-                if (settings.bPatchFemales == true)
+                if (settings.PatchFemales == true)
                 {
                     if (set.Items_Mutual.Count + set.Items_Female.Count < 1)
                     {

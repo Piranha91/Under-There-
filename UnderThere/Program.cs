@@ -58,7 +58,7 @@ namespace UnderThere
 
             // Add slots used by underwear items to clothes and armors with 32 - Body slot active
             List<BipedObjectFlag> usedSlots = Auxil.getItemSetARMAslots(settings.Sets, state.LinkCache);
-            patchBodyARMAslots(usedSlots, settings.PatchableRaces, state, settings.bVerboseMode);
+            patchBodyARMAslots(usedSlots, settings.PatchableRaces, state, settings.VerboseMode);
 
             // set SOS compatibiilty if needed
             bool bSOS = addSOScompatibility(settings.Sets, usedSlots, state);
@@ -177,8 +177,8 @@ namespace UnderThere
                     currentRace.EditorID == null || 
                     settings.NonPatchableRaces.Contains(currentRace.EditorID) || 
                     Auxil.isNonHumanoid(npc, currentRace, state.LinkCache) || 
-                    (settings.bPatchSummonedNPCs == false && npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Summonable)) ||
-                    (settings.bPatchGhosts == false && isGhost) ||
+                    (settings.PatchSummonedNPCs == false && npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Summonable)) ||
+                    (settings.PatchGhosts == false && isGhost) ||
                     currentRace.EditorID.Contains("Child") ||
                     (settings.PatchableRaces.Contains(currentRace.EditorID) == false && isInventoryTemplate == false) ||
                     NPCassignment.isBlocked(npc.FormKey, settings.BlockedNPCs))
@@ -187,11 +187,11 @@ namespace UnderThere
                 }
 
                 // check if NPC gender should be patched
-                if (npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Female) && settings.bPatchFemales == false)
+                if (npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Female) && settings.PatchFemales == false)
                 {
                     continue;
                 }
-                else if (!npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Female) && settings.bPatchMales == false)
+                else if (!npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Female) && settings.PatchMales == false)
                 {
                     continue;
                 }
@@ -217,7 +217,7 @@ namespace UnderThere
                     {
                         continue;
                     }
-                    else if (settings.bPatchNakedNPCs == false && specificAssignment.isNull)
+                    else if (settings.PatchNakedNPCs == false && specificAssignment.isNull)
                     {
                         continue;
                     }
@@ -228,7 +228,7 @@ namespace UnderThere
                 }
                 else
                 {
-                    if (state.LinkCache.TryResolve<IOutfitGetter>(npc.DefaultOutfit.FormKey, out var NPCoutfit) && NPCoutfit != null && NPCoutfit.Items != null && NPCoutfit.Items.Count == 0 && settings.bPatchNakedNPCs == false)
+                    if (state.LinkCache.TryResolve<IOutfitGetter>(npc.DefaultOutfit.FormKey, out var NPCoutfit) && NPCoutfit != null && NPCoutfit.Items != null && NPCoutfit.Items.Count == 0 && settings.PatchNakedNPCs == false)
                     {
                         continue;
                     }
@@ -584,9 +584,9 @@ namespace UnderThere
         {
             foreach (UTitem item in items)
             {
-                if (uniqueFormKeys.Contains(item.formKey) == false)
+                if (uniqueFormKeys.Contains(item.FormKey) == false)
                 {
-                    uniqueFormKeys.Add(item.formKey);
+                    uniqueFormKeys.Add(item.FormKey);
                 }
             }
         }
@@ -698,7 +698,7 @@ namespace UnderThere
         {
             foreach (var item in items)
             {
-                if (item.IsBottom == true && state.LinkCache.TryResolve<IArmor>(item.formKey, out var moddedItem) && moddedItem != null)
+                if (item.IsBottom == true && state.LinkCache.TryResolve<IArmor>(item.FormKey, out var moddedItem) && moddedItem != null)
                 {
                     foreach (var aa in moddedItem.Armature)
                     {
@@ -718,14 +718,14 @@ namespace UnderThere
 
     public class UTconfig
     {
-        public bool bVerboseMode {get; set;}
+        public bool VerboseMode {get; set;}
         public string AssignmentMode { get; set; }
-        public bool bPatchMales { get; set; }
-        public bool bPatchFemales { get; set; }
-        public bool bPatchNakedNPCs { get; set; }
-        public bool bPatchSummonedNPCs { get; set; }
-        public bool bPatchGhosts { get; set; }
-        public bool bMakeItemsEquippable { get; set; }
+        public bool PatchMales { get; set; }
+        public bool PatchFemales { get; set; }
+        public bool PatchNakedNPCs { get; set; }
+        public bool PatchSummonedNPCs { get; set; }
+        public bool PatchGhosts { get; set; }
+        public bool MakeItemsEquippable { get; set; }
         public List<string> PatchableRaces { get; set; }
         public List<string> NonPatchableRaces { get; set; }
         public Dictionary<string, List<string>> ClassDefinitions { get; set; }
@@ -739,13 +739,13 @@ namespace UnderThere
 
         public UTconfig()
         {
-            bVerboseMode = false;
+            VerboseMode = false;
             AssignmentMode = "";
-            bPatchMales = true;
-            bPatchFemales = true;
-            bPatchNakedNPCs = true;
-            bPatchSummonedNPCs = false;
-            bPatchGhosts = true;
+            PatchMales = true;
+            PatchFemales = true;
+            PatchNakedNPCs = true;
+            PatchSummonedNPCs = false;
+            PatchGhosts = true;
             PatchableRaces = new List<string>();
             NonPatchableRaces = new List<string>();
             ClassDefinitions = new Dictionary<string, List<string>>();
@@ -785,7 +785,7 @@ namespace UnderThere
         public float Weight { get; set; }
         public UInt32 Value { get; set; }
         public List<int> Slots { get; set; }
-        public FormKey formKey { get; set; }
+        public FormKey FormKey { get; set; }
         public UTitem()
         {
             Record = "";
@@ -794,7 +794,7 @@ namespace UnderThere
             Weight = -1;
             Value = 4294967295; // max uInt32 value
             Slots = new List<int>();
-            formKey = new FormKey();
+            FormKey = new FormKey();
         }
     }
 
