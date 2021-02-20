@@ -8,6 +8,7 @@ using Mutagen.Bethesda.Skyrim;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using Noggog;
 
 namespace UnderThere
@@ -153,8 +154,8 @@ namespace UnderThere
         public static void assignOutfits(UTconfig settings, FormKey UT_DefaultItem, Dictionary<string, FormKey> UT_LeveledItemsByWealth, FormKey UT_LeveledItemsAll, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             string npcGroup = "";
-            FormKey currentOutfitKey = new FormKey();
-            FormKey currentUWkey = new FormKey();
+            FormKey currentOutfitKey = FormKey.Null;
+            FormKey currentUWkey = FormKey.Null;
             List<string> GroupLookupFailures = new List<string>();
             List<string> NPClookupFailures = new List<string>();
             Dictionary<FormKey, Dictionary<string, Outfit>> OutfitMap = new Dictionary<FormKey, Dictionary<string, Outfit>>();
@@ -171,7 +172,11 @@ namespace UnderThere
 
                 // check if NPC race should be patched
                 bool isInventoryTemplate = !npc.DefaultOutfit.IsNull && !npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Inventory);
-                bool isGhost = npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.IsGhost) || npc.Voice.FormKey.ToString() == "0854EC:Skyrim.esm" || npc.Voice.FormKey.ToString() == "0854ED:Skyrim.esm" || Auxil.hasGhostAbility(npc) || Auxil.hasGhostScript(npc);
+                bool isGhost = npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.IsGhost)
+                    || npc.Voice.FormKey == Skyrim.VoiceType.FemaleUniqueGhost
+                    || npc.Voice.FormKey == Skyrim.VoiceType.MaleUniqueGhost
+                    || Auxil.hasGhostAbility(npc) 
+                    || Auxil.hasGhostScript(npc);
 
                 if (!state.LinkCache.TryResolve<IRaceGetter>(npc.Race.FormKey, out var currentRace) ||
                     currentRace == null ||
@@ -204,7 +209,7 @@ namespace UnderThere
                 }
 
                 // check if NPC is player
-                if (npc.FormKey.ToString() == "000007:Skyrim.esm" || npc.FormKey.ToString() == "0361F3:Skyrim.esm")
+                if (npc.FormKey == Skyrim.Npc.Player  || npc.FormKey == Skyrim.Npc.PlayerInventory)
                 {
                     continue;
                 }
@@ -262,7 +267,7 @@ namespace UnderThere
                         case "class":
                             if (state.LinkCache.TryResolve<IClassGetter>(npc.Class.FormKey, out var NPCclass) && NPCclass != null && NPCclass.EditorID != null)
                             {
-                                if (npc.EditorID == "Hroki" && npc.FormKey.IDString() == "01339E")
+                                if (npc.EditorID == "Hroki" && npc.FormKey == Skyrim.Npc.Hroki)
                                 {
                                     npcGroup = "Default"; // hardcoded due to a particular idiosyncratic issue caused by Bethesda's weird choice of Class for Hroki.
                                     break;
@@ -511,26 +516,13 @@ namespace UnderThere
             utItemFixEffect.VirtualMachineAdapter.Scripts.Add(UTinventoryFixScript);
 
             // create Spell
-
-            //the following does not fix the issue - check later if it's deletable
-
-            if (!FormKey.TryFactory("013F44:skyrim.esm", out var equipTypeEitherHandKey) || equipTypeEitherHandKey.IsNull)
-            {
-                throw new Exception("Could not create FormKey 013F44:skyrim.esm");
-            }
-            if (!state.LinkCache.TryResolve<IEquipTypeGetter>(equipTypeEitherHandKey, out var equipTypeEitherHand) || equipTypeEitherHand == null)
-            {
-                throw new Exception("Could not resolve FormKey 013F44:skyrim.esm");
-            }
-            ///
-
             Spell utItemFixSpell = state.PatchMod.Spells.AddNew();
             utItemFixSpell.EditorID = "UT_SPEL_GenderedInventoryFix";
             utItemFixSpell.Name = "Fixes gendered UnderThere inventory";
             utItemFixSpell.CastType = CastType.ConstantEffect;
             utItemFixSpell.TargetType = TargetType.Self;
             utItemFixSpell.Type = SpellType.Ability;
-            utItemFixSpell.EquipmentType = equipTypeEitherHandKey;
+            utItemFixSpell.EquipmentType = Skyrim.EquipType.EitherHand;
             Effect utItemFixShellEffect = new Effect();
             utItemFixShellEffect.BaseEffect = utItemFixEffect;
             utItemFixShellEffect.Data = new EffectData();
@@ -596,11 +588,6 @@ namespace UnderThere
 
         public static void patchBodyARMAslots(List<BipedObjectFlag> usedSlots, List<string> patchableRaces, IPatcherState<ISkyrimMod, ISkyrimModGetter> state, bool bVerboseMode)
         {
-            if (!FormKey.TryFactory("000019:Skyrim.esm", out var defaultRaceKey) || defaultRaceKey.IsNull)
-            {
-                throw new Exception("Could not get FormKey " + defaultRaceKey.ToString());
-            }
-
             foreach (var arma in state.LoadOrder.PriorityOrder.WinningOverrides<IArmorAddonGetter>())
             {
                 if (!state.LinkCache.TryResolve<IRaceGetter>(arma.Race.FormKey, out var armaRace) || armaRace == null || armaRace.EditorID == null || armaRace.EditorID.Contains("Child"))
@@ -608,7 +595,7 @@ namespace UnderThere
                     continue;
                 }
 
-                if (arma.Race.FormKey == defaultRaceKey || patchableRaces.Contains(armaRace.EditorID))
+                if (arma.Race.FormKey == Skyrim.Race.DefaultRace || patchableRaces.Contains(armaRace.EditorID))
                 {
                     if (arma.BodyTemplate != null && arma.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Body))
                     {

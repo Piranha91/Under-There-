@@ -5,7 +5,7 @@ using Mutagen.Bethesda;
 using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Skyrim;
 using System.IO;
-
+using Mutagen.Bethesda.FormKeys.SkyrimSE;
 
 namespace UnderThere
 {
@@ -52,7 +52,7 @@ namespace UnderThere
                 }
             }
 
-            if (npcRace.EditorID != null && npcRace.EditorID.ToLower().Contains("atronach"))
+            if (npcRace.EditorID != null && npcRace.EditorID.Contains("atronach", StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -73,7 +73,7 @@ namespace UnderThere
             if (npc.ActorEffect == null) return false;
             foreach (var ability in npc.ActorEffect)
             {
-                if (ability.FormKey.ToString() == "05030B:Skyrim.esm")
+                if (ability.FormKey == Skyrim.ASpell.GhostAbility)
                 {
                     return true;
                 }
