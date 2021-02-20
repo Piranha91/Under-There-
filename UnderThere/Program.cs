@@ -6,8 +6,6 @@ using Mutagen.Bethesda;
 using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Skyrim;
 using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using Noggog;
 
