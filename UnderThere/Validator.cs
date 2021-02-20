@@ -12,8 +12,10 @@ namespace UnderThere
         public static void validateSettings(UTconfig settings)
         {
             // assignment mode
-            settings.AssignmentMode = settings.AssignmentMode.ToLower();
-            List<string> validModes = new List<string> { "default", "random", "class", "faction" };
+            var validModes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) 
+            { 
+                "default", "random", "class", "faction" 
+            };
             if (!validModes.Contains(settings.AssignmentMode))
             {
                 throw new Exception("AssignmentMode can only contain one of the following: default, random, class, faction.");
@@ -83,7 +85,7 @@ namespace UnderThere
                     throw new Exception("ClassDefinitions: Definition " + def + " was not found in Assignments.");
                 }
             }
-            if (settings.AssignmentMode == "class" && settings.Assignments.Keys.Count - 1 != settings.ClassDefinitions.Keys.Count) // - 1 because Assignments also includes "Default"
+            if (settings.AssignmentMode.Equals("class", StringComparison.OrdinalIgnoreCase) && settings.Assignments.Keys.Count - 1 != settings.ClassDefinitions.Keys.Count) // - 1 because Assignments also includes "Default"
             {
                 throw new Exception("ClassDefinitions: All definitions must have a corresponding Assignment and vice-versa");
             }
@@ -96,7 +98,7 @@ namespace UnderThere
                     throw new Exception("FactionDefinitions: Definition " + def + " was not found in Assignments.");
                 }
             }
-            if (settings.AssignmentMode == "faction" && settings.Assignments.Keys.Count - 1 != settings.FactionDefinitions.Keys.Count)
+            if (settings.AssignmentMode.Equals("faction", StringComparison.OrdinalIgnoreCase) && settings.Assignments.Keys.Count - 1 != settings.FactionDefinitions.Keys.Count)
             {
                 throw new Exception("FactionDefinitions: All definitions must have a corresponding Assignment and vice-versa");
             }

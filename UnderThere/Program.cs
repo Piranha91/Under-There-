@@ -184,7 +184,7 @@ namespace UnderThere
                     Auxil.isNonHumanoid(npc, currentRace, state.LinkCache) ||
                     (!settings.PatchSummonedNPCs && npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Summonable)) ||
                     (!settings.PatchGhosts && isGhost) ||
-                    currentRace.EditorID.Contains("Child") ||
+                    currentRace.EditorID.Contains("Child", StringComparison.OrdinalIgnoreCase) ||
                     (!settings.PatchableRaces.Contains(currentRace.EditorID) && !isInventoryTemplate) ||
                     NPCassignment.isBlocked(npc.FormKey, settings.BlockedNPCs))
                 {
@@ -589,7 +589,7 @@ namespace UnderThere
         {
             foreach (var arma in state.LoadOrder.PriorityOrder.WinningOverrides<IArmorAddonGetter>())
             {
-                if (!state.LinkCache.TryResolve<IRaceGetter>(arma.Race.FormKey, out var armaRace) || armaRace.EditorID == null || armaRace.EditorID.Contains("Child"))
+                if (!state.LinkCache.TryResolve<IRaceGetter>(arma.Race.FormKey, out var armaRace) || armaRace.EditorID == null || armaRace.EditorID.Contains("Child", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
