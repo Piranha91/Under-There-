@@ -11,7 +11,7 @@ namespace UnderThere.Settings
     public class UTconfig
     {
         public bool VerboseMode { get; set; }
-        public string AssignmentMode { get; set; } = string.Empty;
+        public AssignmentMode AssignmentMode { get; set; } = AssignmentMode.Faction;
         public bool PatchMales { get; set; } = true;
         public bool PatchFemales { get; set; } = true;
         public bool PatchNakedNPCs { get; set; } = true;

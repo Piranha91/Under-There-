@@ -159,8 +159,6 @@ namespace UnderThere
             List<string> NPClookupFailures = new List<string>();
             Dictionary<FormKey, Dictionary<string, Outfit>> OutfitMap = new Dictionary<FormKey, Dictionary<string, Outfit>>();
 
-            string mode = settings.AssignmentMode.ToLower();
-
             Outfit underwearOnly = state.PatchMod.Outfits.AddNew();
             underwearOnly.EditorID = "No_Clothes";
             underwearOnly.Items = new ExtendedList<IFormLink<IOutfitTargetGetter>>();
@@ -257,12 +255,12 @@ namespace UnderThere
                 else
                 {
                     // get the wealth of current NPC
-                    switch (mode)
+                    switch (Settings.Value.AssignmentMode)
                     {
-                        case "default":
+                        case AssignmentMode.Default:
                             npcGroup = "Default";
                             currentUW = UT_DefaultItem; break;
-                        case "class":
+                        case AssignmentMode.Class:
                             if (state.LinkCache.TryResolve<IClassGetter>(npc.Class.FormKey, out var NPCclass) && NPCclass.EditorID != null)
                             {
                                 if (npc.EditorID == "Hroki" && npc.FormKey == Skyrim.Npc.Hroki)
@@ -275,12 +273,12 @@ namespace UnderThere
                                 if (npcGroup == "Default") { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
                             }
                             break;
-                        case "faction":
+                        case AssignmentMode.Faction:
                             npcGroup = getWealthGroupByFactions(npc, settings.FactionDefinitions, settings.FallBackFactionDefinitions, settings.IgnoreFactionsWhenScoring, GroupLookupFailures, state);
                             currentUW = UT_LeveledItemsByWealth[npcGroup];
                             if (npcGroup == "Default") { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
                             break;
-                        case "random":
+                        case AssignmentMode.Random:
                             npcGroup = "Random";
                             currentUW = UT_LeveledItemsAll;
                             break;
