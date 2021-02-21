@@ -15,8 +15,6 @@ namespace UnderThere
         {
             deepCopyItems(settings.Sets, UWsourcePlugins, state); // copy all armor records along with their linked subrecords into PatchMod to get rid of dependencies on the original plugins. Sets[i].FormKeyObject will now point to the new FormKey in PatchMod
 
-            List<IFormLink<IRaceGetter>> patchableRaceFormLinks = Auxil.getRaceFormLinksFromEDID(settings.PatchableRaces, state); // get race formlinks to update armor addons
-
             // create a leveled list entry for each set
             foreach (var set in settings.Sets)
             {
@@ -25,11 +23,11 @@ namespace UnderThere
                 currentItems.Flags |= LeveledItem.Flag.UseAll;
                 currentItems.Entries = new ExtendedList<LeveledItemEntry>();
 
-                editAndStoreUTitems(set.Items_Mutual, currentItems, settings.MakeItemsEquippable, patchableRaceFormLinks, state);
-                editAndStoreUTitems(set.Items_Male, currentItems, settings.MakeItemsEquippable, patchableRaceFormLinks, state);
-                editAndStoreUTitems(set.Items_Female, currentItems, settings.MakeItemsEquippable, patchableRaceFormLinks, state);
+                editAndStoreUTitems(set.Items_Mutual, currentItems, settings.MakeItemsEquippable, settings.PatchableRaces, state);
+                editAndStoreUTitems(set.Items_Male, currentItems, settings.MakeItemsEquippable, settings.PatchableRaces, state);
+                editAndStoreUTitems(set.Items_Female, currentItems, settings.MakeItemsEquippable, settings.PatchableRaces, state);
 
-                set.LeveledListFormKey = currentItems.FormKey;
+                set.LeveledList = currentItems.FormKey;
             }
         }
 
@@ -79,22 +77,19 @@ namespace UnderThere
         {
             foreach (var item in UTitemList)
             {
-                if (FormKey.TryFactory(item.Record, out var origFormKey) && !origFormKey.IsNull)
+                if (!item.Record.TryResolve(lk, out var origItem))
                 {
-                    if (!lk.TryResolve<IArmorGetter>(origFormKey, out var origItem))
-                    {
-                        throw new Exception("Could not find item with formKey " + origFormKey + ". Please make sure that " + origFormKey.ModKey.ToString() + " is active in your load order.");
-                    }
-
-                    foreach (FormLinkInformation FLI in origItem.ContainedFormLinks)
-                    {
-                        if (FLI.FormKey.ModKey == origItem.FormKey.ModKey) // only copy subrecord as new record if it comes from the same mod as the armor itself
-                        {
-                            recordsToDup.Add(FLI);
-                        }
-                    }
-                    recordsToDup.Add(origItem.ToFormLinkInformation());
+                    throw new Exception("Could not find item with formKey " + item.Record.FormKey + ". Please make sure that " + item.Record.FormKey.ModKey.ToString() + " is active in your load order.");
                 }
+
+                foreach (FormLinkInformation FLI in origItem.ContainedFormLinks)
+                {
+                    if (FLI.FormKey.ModKey == origItem.FormKey.ModKey) // only copy subrecord as new record if it comes from the same mod as the armor itself
+                    {
+                        recordsToDup.Add(FLI);
+                    }
+                }
+                recordsToDup.Add(origItem.ToFormLinkInformation());
             }
         }
 
@@ -102,17 +97,16 @@ namespace UnderThere
         {
             foreach (var item in UTitemList)
             {
-                FormKey.TryFactory(item.Record, out var origFormKey);
-                item.FormKey = remap[origFormKey];
+                item.Record = new FormLink<IArmorGetter>(remap[item.Record.FormKey]);
             }
         }
 
-        public static void editAndStoreUTitems(List<UTitem> items, LeveledItem currentItems, bool bMakeItemsEquipable, List<IFormLink<IRaceGetter>> patchableRaceFormLinks, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void editAndStoreUTitems(List<UTitem> items, LeveledItem currentItems, bool bMakeItemsEquipable, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaceFormLinks, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             if (currentItems.Entries == null) return;
             foreach (UTitem item in items)
             {
-                if (state.LinkCache.TryResolve<IArmor>(item.FormKey, out var moddedItem))
+                if (item.Record.TryResolve<IArmor>(state.LinkCache, out var moddedItem))
                 {
                     moddedItem.Name = item.DispName;
                     moddedItem.EditorID = "UT_" + moddedItem.EditorID;
@@ -151,7 +145,7 @@ namespace UnderThere
             }
         }
 
-        public static void modifyArmature (IArmor moddedItem, List<int> slots, List<IFormLink<IRaceGetter>> patchableRaceFormLinks, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void modifyArmature (IArmor moddedItem, List<int> slots, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaceFormLinks, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             foreach (var aa in moddedItem.Armature)
             {
@@ -177,7 +171,7 @@ namespace UnderThere
             }
         }
 
-        public static void setAdditionalRaces(IArmorAddon moddedAA, List<IFormLink<IRaceGetter>> patchableRaceFormLinks)
+        public static void setAdditionalRaces(IArmorAddon moddedAA, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaceFormLinks)
         {
             // get missing PatchableRaces
             List<IFormLink<IRaceGetter>> addedRaces = new List<IFormLink<IRaceGetter>>();
@@ -205,7 +199,7 @@ namespace UnderThere
         }
 
         /*
-        public static void setAdditionalRaces(List<UTitem> items, List<IFormLink<IRaceGetter>> patchableRaceFormLinks, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void setAdditionalRaces(List<UTitem> items, IReadOnlyCollection<IFormLink<IRaceGetter>> patchableRaceFormLinks, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             foreach (UTitem item in items)
             {

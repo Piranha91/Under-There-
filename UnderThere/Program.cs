@@ -49,9 +49,9 @@ namespace UnderThere
             ItemImport.createItems(settings, UWsourcePlugins, state);
 
             // created leveled item lists (to be added to outfits)
-            FormKey UT_DefaultItem = getDefaultItemFormKey(settings.Sets, settings.Assignments, state.LinkCache, state.PatchMod);
-            FormKey UT_LeveledItemsAll = createLeveledList_AllItems(settings.Sets, state.LinkCache, state.PatchMod);
-            Dictionary<string, FormKey> UT_LeveledItemsByWealth = createLeveledList_ByWealth(settings.Sets, settings.Assignments, state.LinkCache, state.PatchMod);
+            FormLink<ILeveledItemGetter> UT_DefaultItem = getDefaultItemFormKey(settings.Sets, settings.Assignments, state.LinkCache, state.PatchMod);
+            FormLink<ILeveledItemGetter> UT_LeveledItemsAll = createLeveledList_AllItems(settings.Sets, state.LinkCache, state.PatchMod);
+            Dictionary<string, FormLink<ILeveledItemGetter>> UT_LeveledItemsByWealth = createLeveledList_ByWealth(settings.Sets, settings.Assignments, state.LinkCache, state.PatchMod);
 
             // modify NPC outfits
             assignOutfits(settings, UT_DefaultItem, UT_LeveledItemsByWealth, UT_LeveledItemsAll, state);
@@ -75,7 +75,7 @@ namespace UnderThere
             Console.WriteLine("\nEnjoy the underwear. Goodbye.");
         }
 
-        public static FormKey getDefaultItemFormKey(List<UTSet> sets, Dictionary<string, List<string>> assignments, ILinkCache lk, ISkyrimMod PatchMod)
+        public static FormLink<ILeveledItemGetter> getDefaultItemFormKey(List<UTSet> sets, Dictionary<string, List<string>> assignments, ILinkCache lk, ISkyrimMod PatchMod)
         {
             if (assignments["Default"] == null || assignments["Default"].Count == 0)
             {
@@ -88,14 +88,14 @@ namespace UnderThere
             {
                 if (set.Name == defaultUWname)
                 {
-                    return set.LeveledListFormKey;
+                    return set.LeveledList;
                 }
             }
 
             throw new Exception("Error: Could not find a Set with name " + defaultUWname);
         }
 
-        public static FormKey createLeveledList_AllItems(List<UTSet> sets, ILinkCache lk, ISkyrimMod PatchMod)
+        public static FormLink<ILeveledItemGetter> createLeveledList_AllItems(List<UTSet> sets, ILinkCache lk, ISkyrimMod PatchMod)
         {
             var allItems = PatchMod.LeveledItems.AddNew();
             allItems.EditorID = "UnderThereAllItems";
@@ -104,19 +104,19 @@ namespace UnderThere
             {
                 LeveledItemEntry entry = new LeveledItemEntry();
                 LeveledItemEntryData data = new LeveledItemEntryData();
-                data.Reference = set.LeveledListFormKey;
+                data.Reference = new FormLink<IItemGetter>(set.LeveledList.FormKey);
                 data.Level = 1;
                 data.Count = 1;
                 entry.Data = data;
                 allItems.Entries.Add(entry);
             }
 
-            return allItems.FormKey;
+            return allItems.AsLink();
         }
 
-        public static Dictionary<string, FormKey> createLeveledList_ByWealth(List<UTSet> sets, Dictionary<string, List<string>> assignments, ILinkCache lk, ISkyrimMod PatchMod)
+        public static Dictionary<string, FormLink<ILeveledItemGetter>> createLeveledList_ByWealth(List<UTSet> sets, Dictionary<string, List<string>> assignments, ILinkCache lk, ISkyrimMod PatchMod)
         {
-            Dictionary<string, FormKey> itemsByWealth = new Dictionary<string, FormKey>();
+            Dictionary<string, FormLink<ILeveledItemGetter>> itemsByWealth = new Dictionary<string, FormLink<ILeveledItemGetter>>();
 
             foreach (KeyValuePair<string, List<string>> assignment in assignments)
             {
@@ -135,7 +135,7 @@ namespace UnderThere
                     {
                         LeveledItemEntry entry = new LeveledItemEntry();
                         LeveledItemEntryData data = new LeveledItemEntryData();
-                        data.Reference = set.LeveledListFormKey;
+                        data.Reference = new FormLink<IItemGetter>(set.LeveledList.FormKey);
                         data.Level = 1;
                         data.Count = 1;
                         entry.Data = data;
@@ -143,17 +143,17 @@ namespace UnderThere
                     }
                 }
 
-                itemsByWealth[assignment.Key] = currentItems.FormKey;
+                itemsByWealth[assignment.Key] = currentItems.AsLink();
             }
 
             return itemsByWealth;
         }
 
-        public static void assignOutfits(UTconfig settings, FormKey UT_DefaultItem, Dictionary<string, FormKey> UT_LeveledItemsByWealth, FormKey UT_LeveledItemsAll, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void assignOutfits(UTconfig settings, FormLink<ILeveledItemGetter> UT_DefaultItem, Dictionary<string, FormLink<ILeveledItemGetter>> UT_LeveledItemsByWealth, FormLink<ILeveledItemGetter> UT_LeveledItemsAll, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             string npcGroup = "";
             FormKey currentOutfitKey = FormKey.Null;
-            FormKey currentUWkey = FormKey.Null;
+            FormLink<ILeveledItemGetter> currentUW = FormKey.Null;
             List<string> GroupLookupFailures = new List<string>();
             List<string> NPClookupFailures = new List<string>();
             Dictionary<FormKey, Dictionary<string, Outfit>> OutfitMap = new Dictionary<FormKey, Dictionary<string, Outfit>>();
@@ -178,12 +178,12 @@ namespace UnderThere
 
                 if (!state.LinkCache.TryResolve<IRaceGetter>(npc.Race.FormKey, out var currentRace) ||
                     currentRace.EditorID == null ||
-                    settings.NonPatchableRaces.Contains(currentRace.EditorID) ||
+                    settings.NonPatchableRaces.Contains(currentRace) ||
                     Auxil.isNonHumanoid(npc, currentRace, state.LinkCache) ||
                     (!settings.PatchSummonedNPCs && npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Summonable)) ||
                     (!settings.PatchGhosts && isGhost) ||
                     currentRace.EditorID.Contains("Child", StringComparison.OrdinalIgnoreCase) ||
-                    (!settings.PatchableRaces.Contains(currentRace.EditorID) && !isInventoryTemplate) ||
+                    (!settings.PatchableRaces.Contains(currentRace) && !isInventoryTemplate) ||
                     NPCassignment.isBlocked(npc.FormKey, settings.BlockedNPCs))
                 {
                     continue;
@@ -245,11 +245,11 @@ namespace UnderThere
                     {
                         case "set":
                             npcGroup = specificAssignment.Assignment_Set;
-                            currentUWkey = specificAssignment.AssignmentSet_Obj.LeveledListFormKey;
+                            currentUW = specificAssignment.AssignmentSet_Obj.LeveledList;
                             break;
                         case "group":
                             npcGroup = specificAssignment.Assignment_Group;
-                            currentUWkey = UT_LeveledItemsByWealth[npcGroup];
+                            currentUW = UT_LeveledItemsByWealth[npcGroup];
                             break;
                     }
                 }
@@ -260,7 +260,7 @@ namespace UnderThere
                     {
                         case "default":
                             npcGroup = "Default";
-                            currentUWkey = UT_DefaultItem; break;
+                            currentUW = UT_DefaultItem; break;
                         case "class":
                             if (state.LinkCache.TryResolve<IClassGetter>(npc.Class.FormKey, out var NPCclass) && NPCclass.EditorID != null)
                             {
@@ -270,18 +270,18 @@ namespace UnderThere
                                     break;
                                 }
                                 npcGroup = getWealthGroupByEDID(NPCclass.EditorID, settings.ClassDefinitions, GroupLookupFailures);
-                                currentUWkey = UT_LeveledItemsByWealth[npcGroup];
+                                currentUW = UT_LeveledItemsByWealth[npcGroup];
                                 if (npcGroup == "Default") { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
                             }
                             break;
                         case "faction":
                             npcGroup = getWealthGroupByFactions(npc, settings.FactionDefinitions, settings.FallBackFactionDefinitions, settings.IgnoreFactionsWhenScoring, GroupLookupFailures, state);
-                            currentUWkey = UT_LeveledItemsByWealth[npcGroup];
+                            currentUW = UT_LeveledItemsByWealth[npcGroup];
                             if (npcGroup == "Default") { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
                             break;
                         case "random":
                             npcGroup = "Random";
-                            currentUWkey = UT_LeveledItemsAll;
+                            currentUW = UT_LeveledItemsAll;
                             break;
                     }
                 }
@@ -298,7 +298,7 @@ namespace UnderThere
                     }
                     if (newOutfit.Items != null)
                     {
-                        newOutfit.Items.Add(currentUWkey);
+                        newOutfit.Items.Add(currentUW);
                     }
                     if (!OutfitMap.ContainsKey(currentOutfitKey))
                     {
@@ -317,7 +317,7 @@ namespace UnderThere
             }
         }
 
-        public static string getWealthGroupByFactions(INpcGetter npc, Dictionary<string, List<string>> factionDefinitions, Dictionary<string, List<string>> fallbackFactionDefinitions, List<string> ignoredFactions, List<string> GroupLookupFailures, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static string getWealthGroupByFactions(INpcGetter npc, Dictionary<string, List<string>> factionDefinitions, Dictionary<string, List<string>> fallbackFactionDefinitions, HashSet<FormLink<IFactionGetter>> ignoredFactions, List<string> GroupLookupFailures, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             Dictionary<string, int> wealthCounts = new Dictionary<string, int>();
             Dictionary<string, int> fallBackwealthCounts = new Dictionary<string, int>();
@@ -338,7 +338,7 @@ namespace UnderThere
             {
                 if (!state.LinkCache.TryResolve<IFactionGetter>(fact.Faction.FormKey, out var currentFaction) || currentFaction.EditorID == null) continue;
 
-                if (ignoredFactions.Contains(currentFaction.EditorID))
+                if (ignoredFactions.Contains(fact.Faction))
                 {
                     wealthCounts["Default"]++; // "Default" will be ignored if other factions are matched
                     continue;
@@ -466,19 +466,19 @@ namespace UnderThere
         public static void createInventoryFixSpell(List<UTSet> sets, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             // get all gendered items
-            Dictionary<string, List<FormKey>> genderedItems = getGenderedItems(sets);
+            var genderedItems = getGenderedItems(sets);
 
             // create gendered item FormLists
             FormList maleItems = state.PatchMod.FormLists.AddNew();
             maleItems.EditorID = "UT_FLST_MaleOnly";
-            foreach (var fk in genderedItems["male"])
+            foreach (var fk in genderedItems.Male)
             {
                 maleItems.Items.Add(fk);
             }
 
             FormList femaleItems = state.PatchMod.FormLists.AddNew();
             femaleItems.EditorID = "UT_FLST_FemaleOnly";
-            foreach (var fk in genderedItems["female"])
+            foreach (var fk in genderedItems.Female)
             {
                 femaleItems.Items.Add(fk);
             }
@@ -539,51 +539,37 @@ namespace UnderThere
             }
         }
 
-        public static Dictionary<string, List<FormKey>> getGenderedItems(List<UTSet> sets)
+        public static (HashSet<FormLink<IArmorGetter>> Male, HashSet<FormLink<IArmorGetter>> Female) getGenderedItems(List<UTSet> sets)
         {
-            Dictionary<string, List<FormKey>> genderedItems = new Dictionary<string, List<FormKey>>();
-            genderedItems["male"] = new List<FormKey>();
-            genderedItems["female"] = new List<FormKey>();
+            var male = new HashSet<FormLink<IArmorGetter>>();
+            var female = new HashSet<FormLink<IArmorGetter>>();
 
             foreach (UTSet set in sets)
             {
-                getGenderedItemsFromList(set.Items_Male, genderedItems["male"]);
-                getGenderedItemsFromList(set.Items_Female, genderedItems["female"]);
+                male.Add(set.Items_Male.Select(m => m.Record));
+                female.Add(set.Items_Female.Select(m => m.Record));
             }
 
             //make sure that gendered items aren't mixed
-            foreach (FormKey maleItem in genderedItems["male"])
+            foreach (var maleItem in male)
             {
-                if (genderedItems["female"].Contains(maleItem))
+                if (female.Contains(maleItem))
                 {
                     throw new Exception("Error: found item " + maleItem.ToString() + " in both Items_Male and Items_Female. Please move it to Items_Mutual.");
                 }
             }
-            foreach (FormKey femaleItem in genderedItems["female"])
+            foreach (var femaleItem in female)
             {
-                if (genderedItems["male"].Contains(femaleItem))
+                if (male.Contains(femaleItem))
                 {
                     throw new Exception("Error: found item " + femaleItem.ToString() + " in both Items_Male and Items_Female. Please move it to Items_Mutual.");
                 }
             }
 
-            return genderedItems;
+            return (male, female);
         }
 
-        public static void getGenderedItemsFromList(List<UTitem> items, List<FormKey> uniqueFormKeys)
-        {
-            foreach (UTitem item in items)
-            {
-                if (!uniqueFormKeys.Contains(item.FormKey))
-                {
-                    uniqueFormKeys.Add(item.FormKey);
-                }
-            }
-        }
-
-
-
-        public static void patchBodyARMAslots(List<BipedObjectFlag> usedSlots, List<string> patchableRaces, IPatcherState<ISkyrimMod, ISkyrimModGetter> state, bool bVerboseMode)
+        public static void patchBodyARMAslots(List<BipedObjectFlag> usedSlots, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaces, IPatcherState<ISkyrimMod, ISkyrimModGetter> state, bool bVerboseMode)
         {
             foreach (var arma in state.LoadOrder.PriorityOrder.WinningOverrides<IArmorAddonGetter>())
             {
@@ -592,7 +578,7 @@ namespace UnderThere
                     continue;
                 }
 
-                if (arma.Race.FormKey == Skyrim.Race.DefaultRace || patchableRaces.Contains(armaRace.EditorID))
+                if (arma.Race.FormKey == Skyrim.Race.DefaultRace || patchableRaces.Contains(armaRace.AsLink()))
                 {
                     if (arma.BodyTemplate != null && arma.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Body))
                     {
@@ -601,7 +587,7 @@ namespace UnderThere
                             Console.WriteLine("Patching armor addon: {0}", arma.FormKey.ToString());
                         }
                         var patchedAA = state.PatchMod.ArmorAddons.GetOrAddAsOverride(arma);
-                        if (patchedAA.BodyTemplate == null) { continue; }
+                        if (patchedAA.BodyTemplate == null) continue;
                         foreach (var uwSlot in usedSlots)
                         {
                             try
@@ -683,7 +669,7 @@ namespace UnderThere
         {
             foreach (var item in items)
             {
-                if (item.IsBottom && state.LinkCache.TryResolve<IArmor>(item.FormKey, out var moddedItem))
+                if (item.IsBottom && item.Record.TryResolve<IArmor>(state.LinkCache, out var moddedItem))
                 {
                     foreach (var aa in moddedItem.Armature)
                     {
@@ -711,12 +697,12 @@ namespace UnderThere
         public bool PatchSummonedNPCs { get; set; }
         public bool PatchGhosts { get; set; } = true;
         public bool MakeItemsEquippable { get; set; }
-        public List<string> PatchableRaces { get; set; } = new List<string>();
-        public List<string> NonPatchableRaces { get; set; } = new List<string>();
+        public HashSet<FormLink<IRaceGetter>> PatchableRaces { get; set; } = new HashSet<FormLink<IRaceGetter>>();
+        public HashSet<FormLink<IRaceGetter>> NonPatchableRaces { get; set; } = new HashSet<FormLink<IRaceGetter>>();
         public Dictionary<string, List<string>> ClassDefinitions { get; set; } = new Dictionary<string, List<string>>();
         public Dictionary<string, List<string>> FactionDefinitions { get; set; } = new Dictionary<string, List<string>>();
         public Dictionary<string, List<string>> FallBackFactionDefinitions { get; set; } = new Dictionary<string, List<string>>();
-        public List<string> IgnoreFactionsWhenScoring { get; set; } = new List<string>();
+        public HashSet<FormLink<IFactionGetter>> IgnoreFactionsWhenScoring { get; set; } = new HashSet<FormLink<IFactionGetter>>();
         public List<NPCassignment> SpecificNPCs { get; set; } = new List<NPCassignment>();
         public List<NPCassignment> BlockedNPCs { get; set; } = new List<NPCassignment>();
         public Dictionary<string, List<string>> Assignments { get; set; } = new Dictionary<string, List<string>>();
@@ -729,36 +715,34 @@ namespace UnderThere
         public List<UTitem> Items_Mutual { get; set; } = new List<UTitem>();
         public List<UTitem> Items_Male { get; set; } = new List<UTitem>();
         public List<UTitem> Items_Female { get; set; } = new List<UTitem>();
-        public FormKey LeveledListFormKey { get; set; }
+        public FormLink<ILeveledItemGetter> LeveledList { get; set; }
     }
 
     public class UTitem
     {
-        public string Record { get; set; } = string.Empty;
+        public FormLink<IArmorGetter> Record { get; set; } = FormLink<IArmorGetter>.Null;
         public string DispName { get; set; } = string.Empty;
         public bool IsBottom { get; set; }
         public float Weight { get; set; } = -1;
         public UInt32 Value { get; set; } = int.MaxValue;
         public List<int> Slots { get; set; } = new List<int>();
-        public FormKey FormKey { get; set; }
     }
 
     public class NPCassignment
     {
         public string Name { get; set; } = string.Empty;
-        public string FormKey { get; set; } = string.Empty;
+        public FormLink<INpcGetter> Record { get; set; }
         public string Type { get; set; } = string.Empty;
         public string Assignment_Set { get; set; } = string.Empty;
         public string Assignment_Group { get; set; } = string.Empty;
         public UTSet AssignmentSet_Obj { get; set; } = new UTSet();
-        public FormKey FormKeyObj { get; set; }
         public bool isNull { get; set; } = true;
 
         public static NPCassignment getSpecificNPC(FormKey fk, List<NPCassignment> assigments)
         {
             foreach (var assignment in assigments)
             {
-                if (assignment.FormKeyObj == fk)
+                if (assignment.Record.FormKey == fk)
                 {
                     return assignment;
                 }
@@ -771,7 +755,7 @@ namespace UnderThere
         {
             foreach (var assignment in assigments)
             {
-                if (assignment.FormKeyObj == fk)
+                if (assignment.Record.FormKey == fk)
                 {
                     return true;
                 }
