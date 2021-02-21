@@ -106,11 +106,6 @@ namespace UnderThere.Settings
                     }
                 }
             }
-            // Assignments - make sure there is a default variant
-            if (settings.Assignments["Default"].Count == 0)
-            {
-                throw new Exception("Assignments: could not find \"Default\" assignment category.");
-            }
 
             // Sets - make sure each set has at least one item for each patchable gender
             foreach (var set in settings.Sets)

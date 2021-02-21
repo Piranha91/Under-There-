@@ -50,12 +50,11 @@ namespace UnderThere
             ItemImport.createItems(settings, UWsourcePlugins, state);
 
             // created leveled item lists (to be added to outfits)
-            FormLink<ILeveledItemGetter> UT_DefaultItem = getDefaultItemFormKey(settings.Sets, settings.Assignments, state.LinkCache, state.PatchMod);
             FormLink<ILeveledItemGetter> UT_LeveledItemsAll = createLeveledList_AllItems(settings.Sets, state.LinkCache, state.PatchMod);
             Dictionary<string, FormLink<ILeveledItemGetter>> UT_LeveledItemsByWealth = createLeveledList_ByWealth(settings.Sets, settings.Assignments, state.LinkCache, state.PatchMod);
 
             // modify NPC outfits
-            assignOutfits(settings, UT_DefaultItem, UT_LeveledItemsByWealth, UT_LeveledItemsAll, state);
+            assignOutfits(settings, settings.DefaultSet.LeveledList, UT_LeveledItemsByWealth, UT_LeveledItemsAll, state);
 
             // Add slots used by underwear items to clothes and armors with 32 - Body slot active
             List<BipedObjectFlag> usedSlots = Auxil.getItemSetARMAslots(settings.Sets, state.LinkCache);
@@ -74,26 +73,6 @@ namespace UnderThere
 
             Console.WriteLine("\nDon't forget to install Spell Perk Item Distributor to properly manage gender-specific items.");
             Console.WriteLine("\nEnjoy the underwear. Goodbye.");
-        }
-
-        public static FormLink<ILeveledItemGetter> getDefaultItemFormKey(List<UTSet> sets, Dictionary<string, List<string>> assignments, ILinkCache lk, ISkyrimMod PatchMod)
-        {
-            if (assignments["Default"] == null || assignments["Default"].Count == 0)
-            {
-                throw new Exception("Error: could not find a default underwear defined in the settings file.");
-            }
-
-            string defaultUWname = assignments["Default"][0];
-
-            foreach (UTSet set in sets)
-            {
-                if (set.Name == defaultUWname)
-                {
-                    return set.LeveledList;
-                }
-            }
-
-            throw new Exception("Error: Could not find a Set with name " + defaultUWname);
         }
 
         public static FormLink<ILeveledItemGetter> createLeveledList_AllItems(List<UTSet> sets, ILinkCache lk, ISkyrimMod PatchMod)

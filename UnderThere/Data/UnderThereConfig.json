@@ -90,34 +90,12 @@
     ],
     "Assignments":
     {
-        "Default": ["Default Variant"],
         "Poor": ["Poor Variant 1", "Poor Variant 2", "Poor Variant 3"],
         "Medium": ["Medium Variant 1", "Medium Variant 2", "Medium Variant 3"],
         "Rich": ["Rich Variant 1", "Rich Variant 2", "Rich Variant 3"]
     },
     "Sets":
     [
-        {
-            "Name": "Default Variant",
-            "Items_Mutual": [
-                {
-                "Record": "000821:underwearforeveryone.esp",
-                "DispName": "Undergarment",
-                "IsBottom": true,
-                "Weight": 0.5,
-                "Value": 25
-                }
-            ],
-            "Items_Male": [],
-            "Items_Female": [
-                {
-                    "Record": "000820:underwearforeveryone.esp",
-                    "DispName": "Undergarment",
-                    "Weight": 0.5,
-                    "Value": 25
-                }
-            ]
-        },
         {
             "Name": "Poor Variant 1",
             "Items_Mutual": [

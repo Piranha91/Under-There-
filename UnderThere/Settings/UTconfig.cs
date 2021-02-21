@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Mutagen.Bethesda.FormKeys.SkyrimSE;
 
 namespace UnderThere.Settings
 {
@@ -27,6 +28,30 @@ namespace UnderThere.Settings
         public List<NPCassignment> SpecificNPCs { get; set; } = new List<NPCassignment>();
         public List<NPCassignment> BlockedNPCs { get; set; } = new List<NPCassignment>();
         public Dictionary<string, List<string>> Assignments { get; set; } = new Dictionary<string, List<string>>();
+        public UTSet DefaultSet = new UTSet()
+        {
+            Items_Mutual = new List<UTitem>()
+            {
+                new UTitem()
+                {
+                     DispName = "Undergarment",
+                     IsBottom = true,
+                     Weight = 0.5f,
+                     Value = 25,
+                     Record = underwearforeveryone.Armor.UFE_UnderwearBottom
+                }
+            },
+            Items_Female = new List<UTitem>()
+            {
+                new UTitem()
+                {
+                    DispName = "Undergarment",
+                    Weight = 0.5f,
+                    Value = 25,
+                    Record = underwearforeveryone.Armor.UFE_UnderwearTop
+                }
+            }
+        };
         public List<UTSet> Sets { get; set; } = new List<UTSet>();
     }
 }
