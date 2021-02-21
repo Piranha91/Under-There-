@@ -6,6 +6,7 @@ using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Skyrim;
 using System.IO;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
+using UnderThere.Settings;
 
 namespace UnderThere
 {

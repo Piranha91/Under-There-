@@ -8,6 +8,7 @@ using Mutagen.Bethesda.Skyrim;
 using System.IO;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using Noggog;
+using UnderThere.Settings;
 
 namespace UnderThere
 {
@@ -684,84 +685,6 @@ namespace UnderThere
                     }
                 }
             }
-        }
-    }
-
-    public class UTconfig
-    {
-        public bool VerboseMode { get; set; }
-        public string AssignmentMode { get; set; } = string.Empty;
-        public bool PatchMales { get; set; } = true;
-        public bool PatchFemales { get; set; } = true;
-        public bool PatchNakedNPCs { get; set; } = true;
-        public bool PatchSummonedNPCs { get; set; }
-        public bool PatchGhosts { get; set; } = true;
-        public bool MakeItemsEquippable { get; set; }
-        public HashSet<FormLink<IRaceGetter>> PatchableRaces { get; set; } = new HashSet<FormLink<IRaceGetter>>();
-        public HashSet<FormLink<IRaceGetter>> NonPatchableRaces { get; set; } = new HashSet<FormLink<IRaceGetter>>();
-        public Dictionary<string, List<string>> ClassDefinitions { get; set; } = new Dictionary<string, List<string>>();
-        public Dictionary<string, List<string>> FactionDefinitions { get; set; } = new Dictionary<string, List<string>>();
-        public Dictionary<string, List<string>> FallBackFactionDefinitions { get; set; } = new Dictionary<string, List<string>>();
-        public HashSet<FormLink<IFactionGetter>> IgnoreFactionsWhenScoring { get; set; } = new HashSet<FormLink<IFactionGetter>>();
-        public List<NPCassignment> SpecificNPCs { get; set; } = new List<NPCassignment>();
-        public List<NPCassignment> BlockedNPCs { get; set; } = new List<NPCassignment>();
-        public Dictionary<string, List<string>> Assignments { get; set; } = new Dictionary<string, List<string>>();
-        public List<UTSet> Sets { get; set; } = new List<UTSet>();
-    }
-
-    public class UTSet
-    {
-        public string Name { get; set; } = string.Empty;
-        public List<UTitem> Items_Mutual { get; set; } = new List<UTitem>();
-        public List<UTitem> Items_Male { get; set; } = new List<UTitem>();
-        public List<UTitem> Items_Female { get; set; } = new List<UTitem>();
-        public FormLink<ILeveledItemGetter> LeveledList { get; set; }
-    }
-
-    public class UTitem
-    {
-        public FormLink<IArmorGetter> Record { get; set; } = FormLink<IArmorGetter>.Null;
-        public string DispName { get; set; } = string.Empty;
-        public bool IsBottom { get; set; }
-        public float Weight { get; set; } = -1;
-        public UInt32 Value { get; set; } = int.MaxValue;
-        public List<int> Slots { get; set; } = new List<int>();
-    }
-
-    public class NPCassignment
-    {
-        public string Name { get; set; } = string.Empty;
-        public FormLink<INpcGetter> Record { get; set; }
-        public string Type { get; set; } = string.Empty;
-        public string Assignment_Set { get; set; } = string.Empty;
-        public string Assignment_Group { get; set; } = string.Empty;
-        public UTSet AssignmentSet_Obj { get; set; } = new UTSet();
-        public bool isNull { get; set; } = true;
-
-        public static NPCassignment getSpecificNPC(FormKey fk, List<NPCassignment> assigments)
-        {
-            foreach (var assignment in assigments)
-            {
-                if (assignment.Record.FormKey == fk)
-                {
-                    return assignment;
-                }
-            }
-
-            return new NPCassignment();
-        }
-
-        public static bool isBlocked(FormKey fk, List<NPCassignment> assigments)
-        {
-            foreach (var assignment in assigments)
-            {
-                if (assignment.Record.FormKey == fk)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
 }

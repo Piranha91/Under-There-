@@ -6,6 +6,7 @@ using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Skyrim;
 using System.Linq;
 using Noggog;
+using UnderThere.Settings;
 
 namespace UnderThere
 {
