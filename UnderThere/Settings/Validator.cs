@@ -16,10 +16,9 @@ namespace UnderThere.Settings
             {
                 string npcID = npc.Name + " (" + npc + ")";
 
-                npc.Type = npc.Type.ToLower();
                 switch (npc.Type)
                 {
-                    case "set":
+                    case NpcAssignmentType.Set:
                         bool bFound = false;
                         foreach (UTSet set in settings.Sets)
                         {
@@ -36,14 +35,14 @@ namespace UnderThere.Settings
                         }
                         break;
 
-                    case "group":
+                    case NpcAssignmentType.Group:
                         if (!settings.Assignments.ContainsKey(npc.Assignment_Group))
                         {
                             throw new Exception("Specific NPC Assignment " + npcID + "'s Assignemnt_Group could not be matched to one of the defined Assignments.");
                         }
                         break;
                     default:
-                        throw new Exception("Specific NPC Assignment " + npcID + "'s Type must be either \"set\" or \"group\"");
+                        throw new NotImplementedException();
                 }
 
                 npc.isNull = false;

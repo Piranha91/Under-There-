@@ -12,7 +12,7 @@ namespace UnderThere.Settings
     {
         public string Name { get; set; } = string.Empty;
         public FormLink<INpcGetter> Record { get; set; }
-        public string Type { get; set; } = string.Empty;
+        public NpcAssignmentType Type { get; set; }
         public string Assignment_Set { get; set; } = string.Empty;
         public string Assignment_Group { get; set; } = string.Empty;
         public UTSet AssignmentSet_Obj { get; set; } = new UTSet();

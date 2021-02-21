@@ -242,14 +242,16 @@ namespace UnderThere
                 {
                     switch (specificAssignment.Type)
                     {
-                        case "set":
+                        case NpcAssignmentType.Set:
                             npcGroup = specificAssignment.Assignment_Set;
                             currentUW = specificAssignment.AssignmentSet_Obj.LeveledList;
                             break;
-                        case "group":
+                        case NpcAssignmentType.Group:
                             npcGroup = specificAssignment.Assignment_Group;
                             currentUW = UT_LeveledItemsByWealth[npcGroup];
                             break;
+                        default:
+                            throw new NotImplementedException();
                     }
                 }
                 else
