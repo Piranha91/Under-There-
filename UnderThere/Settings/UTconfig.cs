@@ -1,4 +1,4 @@
-using Mutagen.Bethesda;
+﻿using Mutagen.Bethesda;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using Mutagen.Bethesda.Skyrim;
 using System;
@@ -140,7 +140,6 @@ namespace UnderThere.Settings
                 Dragonborn.Class.DLC2NelothClassTrainer,
                 Skyrim.Class.EncClassVampire,
                 Skyrim.Class.AAAPlayerSpellswordClass,
-                Skyrim.Class.CombatMystic
             }
             },
             { Quality.Rich, new HashSet<FormLink<IClassGetter>>()
@@ -206,6 +205,7 @@ namespace UnderThere.Settings
                 Skyrim.Class.TrainerBlockMaster,
                 Dragonborn.Class.DLC2EncClassMiraak,
                 Dawnguard.Class.DLC1CClassVyrthur,
+                Skyrim.Class.CombatMystic,
             }
             }
         };
