@@ -14,6 +14,7 @@ namespace UnderThere
 {
     public class Program
     {
+        const string Default = "Default";
         static Lazy<UTconfig> Settings = null!;
 
         public static async Task<int> Main(string[] args)
@@ -50,22 +51,23 @@ namespace UnderThere
             ItemImport.createItems(settings, UWsourcePlugins, state);
 
             // created leveled item lists (to be added to outfits)
-            FormLink<ILeveledItemGetter> UT_LeveledItemsAll = createLeveledList_AllItems(settings.Sets, state.LinkCache, state.PatchMod);
-            Dictionary<string, FormLink<ILeveledItemGetter>> UT_LeveledItemsByWealth = createLeveledList_ByWealth(settings.Sets, settings.Assignments, state.LinkCache, state.PatchMod);
+            FormLink<ILeveledItemGetter> UT_LeveledItemsAll = createLeveledList_AllItems(settings.AllSets, state.LinkCache, state.PatchMod);
+            var UT_LeveledItemsByWealth = createLeveledList_ByWealth(settings.Sets, state.LinkCache, state.PatchMod);
+            UT_LeveledItemsByWealth[AssignmentQuality.Default] = CreateLList(Default, settings.DefaultSet.AsEnumerable(), state.PatchMod);
 
             // modify NPC outfits
             assignOutfits(settings, settings.DefaultSet.LeveledList, UT_LeveledItemsByWealth, UT_LeveledItemsAll, state);
 
             // Add slots used by underwear items to clothes and armors with 32 - Body slot active
-            List<BipedObjectFlag> usedSlots = Auxil.getItemSetARMAslots(settings.Sets, state.LinkCache);
+            List<BipedObjectFlag> usedSlots = Auxil.getItemSetARMAslots(settings.AllSets, state.LinkCache);
             patchBodyARMAslots(usedSlots, settings.PatchableRaces, state, settings.VerboseMode);
 
             // set SOS compatibiilty if needed
-            bool bSOS = addSOScompatibility(settings.Sets, usedSlots, state);
+            bool bSOS = addSOScompatibility(settings.AllSets, usedSlots, state);
 
             // create and distribute gendered item inventory spell 
             copyUTScript(state);
-            createInventoryFixSpell(settings.Sets, state);
+            createInventoryFixSpell(settings.AllSets, state);
 
             // message user
             reportARMAslots(usedSlots, bSOS);
@@ -75,7 +77,7 @@ namespace UnderThere
             Console.WriteLine("\nEnjoy the underwear. Goodbye.");
         }
 
-        public static FormLink<ILeveledItemGetter> createLeveledList_AllItems(List<UTSet> sets, ILinkCache lk, ISkyrimMod PatchMod)
+        public static FormLink<ILeveledItemGetter> createLeveledList_AllItems(IEnumerable<UTSet> sets, ILinkCache lk, ISkyrimMod PatchMod)
         {
             var allItems = PatchMod.LeveledItems.AddNew();
             allItems.EditorID = "UnderThereAllItems";
@@ -94,47 +96,50 @@ namespace UnderThere
             return allItems.AsLink();
         }
 
-        public static Dictionary<string, FormLink<ILeveledItemGetter>> createLeveledList_ByWealth(List<UTSet> sets, Dictionary<string, List<string>> assignments, ILinkCache lk, ISkyrimMod PatchMod)
+        public static Dictionary<AssignmentQuality, FormLink<ILeveledItemGetter>> createLeveledList_ByWealth(IEnumerable<UTQualitySet> sets, ILinkCache lk, ISkyrimMod PatchMod)
         {
-            Dictionary<string, FormLink<ILeveledItemGetter>> itemsByWealth = new Dictionary<string, FormLink<ILeveledItemGetter>>();
+            var itemsByWealth = new Dictionary<AssignmentQuality, FormLink<ILeveledItemGetter>>();
 
-            foreach (KeyValuePair<string, List<string>> assignment in assignments)
+            foreach (var group in sets.GroupBy(s => s.Quality))
             {
-                if (assignment.Value.Count == 0)
-                {
-                    continue;
-                }
-
-                var currentItems = PatchMod.LeveledItems.AddNew();
-                currentItems.EditorID = "UnderThereItems_" + assignment.Key;
-                currentItems.Entries = new ExtendedList<LeveledItemEntry>();
-
-                foreach (UTSet set in sets)
-                {
-                    if (assignment.Value.Contains(set.Name))
-                    {
-                        LeveledItemEntry entry = new LeveledItemEntry();
-                        LeveledItemEntryData data = new LeveledItemEntryData();
-                        data.Reference = new FormLink<IItemGetter>(set.LeveledList.FormKey);
-                        data.Level = 1;
-                        data.Count = 1;
-                        entry.Data = data;
-                        currentItems.Entries.Add(entry);
-                    }
-                }
-
-                itemsByWealth[assignment.Key] = currentItems.AsLink();
+                itemsByWealth[group.Key.ToAssignmentQuality()] = CreateLList(group.Key.ToString(), group, PatchMod);
             }
 
             return itemsByWealth;
         }
 
-        public static void assignOutfits(UTconfig settings, FormLink<ILeveledItemGetter> UT_DefaultItem, Dictionary<string, FormLink<ILeveledItemGetter>> UT_LeveledItemsByWealth, FormLink<ILeveledItemGetter> UT_LeveledItemsAll, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static LeveledItem CreateLList(string nickname, IEnumerable<UTSet> sets, ISkyrimMod PatchMod)
+        {
+            var currentItems = PatchMod.LeveledItems.AddNew();
+            currentItems.EditorID = "UnderThereItems_" + nickname;
+            currentItems.Entries = new ExtendedList<LeveledItemEntry>();
+
+            foreach (var set in sets)
+            {
+                LeveledItemEntry entry = new LeveledItemEntry();
+                LeveledItemEntryData data = new LeveledItemEntryData();
+                data.Reference = new FormLink<IItemGetter>(set.LeveledList.FormKey);
+                data.Level = 1;
+                data.Count = 1;
+                entry.Data = data;
+                currentItems.Entries.Add(entry);
+            }
+
+            return currentItems;
+        }
+
+        public static void assignOutfits(
+            UTconfig settings,
+            FormLink<ILeveledItemGetter> UT_DefaultItem, 
+            Dictionary<AssignmentQuality,
+            FormLink<ILeveledItemGetter>> UT_LeveledItemsByWealth,
+            FormLink<ILeveledItemGetter> UT_LeveledItemsAll, 
+            IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             string npcGroup = "";
             FormKey currentOutfitKey = FormKey.Null;
             FormLink<ILeveledItemGetter> currentUW = FormKey.Null;
-            List<string> GroupLookupFailures = new List<string>();
+            var GroupLookupFailures = new HashSet<IFormLink>();
             List<string> NPClookupFailures = new List<string>();
             Dictionary<FormKey, Dictionary<string, Outfit>> OutfitMap = new Dictionary<FormKey, Dictionary<string, Outfit>>();
 
@@ -222,12 +227,12 @@ namespace UnderThere
                     switch (specificAssignment.Type)
                     {
                         case NpcAssignmentType.Set:
-                            npcGroup = specificAssignment.Assignment_Set;
+                            npcGroup = specificAssignment.Assignment_Set.ToString();
                             currentUW = specificAssignment.AssignmentSet_Obj.LeveledList;
                             break;
                         case NpcAssignmentType.Group:
-                            npcGroup = specificAssignment.Assignment_Group;
-                            currentUW = UT_LeveledItemsByWealth[npcGroup];
+                            npcGroup = specificAssignment.Assignment_Group.ToString();
+                            currentUW = UT_LeveledItemsByWealth[specificAssignment.Assignment_Group];
                             break;
                         default:
                             throw new NotImplementedException();
@@ -236,28 +241,28 @@ namespace UnderThere
                 else
                 {
                     // get the wealth of current NPC
+                    AssignmentQuality quality;
                     switch (Settings.Value.AssignmentMode)
                     {
                         case AssignmentMode.Default:
-                            npcGroup = "Default";
+                            npcGroup = Default;
                             currentUW = UT_DefaultItem; break;
                         case AssignmentMode.Class:
-                            if (state.LinkCache.TryResolve<IClassGetter>(npc.Class.FormKey, out var NPCclass) && NPCclass.EditorID != null)
+                            if (npc.FormKey == Skyrim.Npc.Hroki)
                             {
-                                if (npc.EditorID == "Hroki" && npc.FormKey == Skyrim.Npc.Hroki)
-                                {
-                                    npcGroup = "Default"; // hardcoded due to a particular idiosyncratic issue caused by Bethesda's weird choice of Class for Hroki.
-                                    break;
-                                }
-                                npcGroup = getWealthGroupByEDID(NPCclass.EditorID, settings.ClassDefinitions, GroupLookupFailures);
-                                currentUW = UT_LeveledItemsByWealth[npcGroup];
-                                if (npcGroup == "Default") { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
+                                npcGroup = Default; // hardcoded due to a particular idiosyncratic issue caused by Bethesda's weird choice of Class for Hroki.
+                                break;
                             }
+                            quality = getWealthGroup(npc.Class, settings.ClassDefinitions, GroupLookupFailures);
+                            currentUW = UT_LeveledItemsByWealth.GetOrDefault(quality);
+                            npcGroup = quality.ToString();
+                            if (npcGroup == Default) { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
                             break;
                         case AssignmentMode.Faction:
-                            npcGroup = getWealthGroupByFactions(npc, settings.FactionDefinitions, settings.FallBackFactionDefinitions, settings.IgnoreFactionsWhenScoring, GroupLookupFailures, state);
-                            currentUW = UT_LeveledItemsByWealth[npcGroup];
-                            if (npcGroup == "Default") { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
+                            quality = getWealthGroupByFactions(npc, settings.FactionDefinitions, settings.FallBackFactionDefinitions, settings.IgnoreFactionsWhenScoring, GroupLookupFailures);
+                            currentUW = UT_LeveledItemsByWealth[quality];
+                            npcGroup = quality.ToString();
+                            if (npcGroup == Default) { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
                             break;
                         case AssignmentMode.Random:
                             npcGroup = "Random";
@@ -297,43 +302,46 @@ namespace UnderThere
             }
         }
 
-        public static string getWealthGroupByFactions(INpcGetter npc, Dictionary<string, List<string>> factionDefinitions, Dictionary<string, List<string>> fallbackFactionDefinitions, HashSet<FormLink<IFactionGetter>> ignoredFactions, List<string> GroupLookupFailures, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static AssignmentQuality getWealthGroupByFactions(
+            INpcGetter npc, 
+            Dictionary<Quality, HashSet<FormLink<IFactionGetter>>> factionDefinitions, 
+            Dictionary<Quality, HashSet<FormLink<IFactionGetter>>> fallbackFactionDefinitions,
+            HashSet<FormLink<IFactionGetter>> ignoredFactions, 
+            HashSet<IFormLink> GroupLookupFailures)
         {
-            Dictionary<string, int> wealthCounts = new Dictionary<string, int>();
-            Dictionary<string, int> fallBackwealthCounts = new Dictionary<string, int>();
+            var wealthCounts = new Dictionary<AssignmentQuality, int>();
+            var fallBackwealthCounts = new Dictionary<AssignmentQuality, int>();
 
-            string tmpWealthGroup = "";
+            AssignmentQuality tmpWealthGroup;
             bool bPrimaryWealthGroupFound = false;
 
             // initialize wealth counts
-            foreach (KeyValuePair<string, List<string>> Def in factionDefinitions)
+            foreach (var Def in factionDefinitions)
             {
-                wealthCounts.Add(Def.Key, 0);
-                fallBackwealthCounts.Add(Def.Key, 0);
+                wealthCounts.Add(Def.Key.ToAssignmentQuality(), 0);
+                fallBackwealthCounts.Add(Def.Key.ToAssignmentQuality(), 0);
             }
-            wealthCounts.Add("Default", 0);
+            wealthCounts.Add(AssignmentQuality.Default, 0);
 
             // add each faction by appropriate wealth count
             foreach (var fact in npc.Factions)
             {
-                if (!state.LinkCache.TryResolve<IFactionGetter>(fact.Faction.FormKey, out var currentFaction) || currentFaction.EditorID == null) continue;
-
                 if (ignoredFactions.Contains(fact.Faction))
                 {
-                    wealthCounts["Default"]++; // "Default" will be ignored if other factions are matched
+                    wealthCounts[AssignmentQuality.Default]++; // "Default" will be ignored if other factions are matched
                     continue;
                 }
 
-                tmpWealthGroup = getWealthGroupByEDID(currentFaction.EditorID, factionDefinitions, GroupLookupFailures);
+                tmpWealthGroup = getWealthGroup(fact.Faction, factionDefinitions, GroupLookupFailures);
 
                 if (wealthCounts.ContainsKey(tmpWealthGroup))
                 {
                     wealthCounts[tmpWealthGroup]++;
                 }
 
-                if (tmpWealthGroup == "Default") // check fallback factions
+                if (tmpWealthGroup == AssignmentQuality.Default) // check fallback factions
                 {
-                    tmpWealthGroup = getWealthGroupByEDID(currentFaction.EditorID, fallbackFactionDefinitions, GroupLookupFailures);
+                    tmpWealthGroup = getWealthGroup(fact.Faction, fallbackFactionDefinitions, GroupLookupFailures);
                     if (fallBackwealthCounts.ContainsKey(tmpWealthGroup))
                     {
                         fallBackwealthCounts[tmpWealthGroup]++;
@@ -348,15 +356,15 @@ namespace UnderThere
             // fallback if NPC has no factions
             if (npc.Factions == null || npc.Factions.Count == 0)
             {
-                tmpWealthGroup = getWealthGroupByEDID("*NONE", factionDefinitions, GroupLookupFailures);
+                tmpWealthGroup = Settings.Value.QualityForNoFaction.ToAssignmentQuality();
                 if (wealthCounts.ContainsKey(tmpWealthGroup))
                 {
                     wealthCounts[tmpWealthGroup]++;
                 }
 
-                if (tmpWealthGroup == "Default")
+                if (tmpWealthGroup == AssignmentQuality.Default)
                 {
-                    tmpWealthGroup = getWealthGroupByEDID("*NONE", fallbackFactionDefinitions, GroupLookupFailures);
+                    tmpWealthGroup = Settings.Value.QualityForNoFactionFallback.ToAssignmentQuality();
                     if (fallBackwealthCounts.ContainsKey(tmpWealthGroup))
                     {
                         fallBackwealthCounts[tmpWealthGroup]++;
@@ -377,19 +385,19 @@ namespace UnderThere
             }
 
             // first remove the "Default" wealth group if others are populated
-            foreach (string wGroup in wealthCounts.Keys)
+            foreach (var wGroup in wealthCounts.Keys)
             {
-                if (wGroup != "Default" && wealthCounts[wGroup] > 0)
+                if (wGroup != AssignmentQuality.Default && wealthCounts[wGroup] > 0)
                 {
-                    wealthCounts.Remove("Default");
+                    wealthCounts.Remove(AssignmentQuality.Default);
                     break;
                 }
             } // if "Default" was the only matched wealth group, then it remains in the wealthCounts dictionary and will necessarily be chosen
 
             // then figure out which wealth group was matched to the highest number of factions
             int maxFactionsMatched = wealthCounts.Values.Max();
-            List<string> bestMatches = new List<string>();
-            foreach (string x in wealthCounts.Keys)
+            var bestMatches = new List<AssignmentQuality>();
+            foreach (var x in wealthCounts.Keys)
             {
                 if (wealthCounts[x] == maxFactionsMatched)
                 {
@@ -402,23 +410,19 @@ namespace UnderThere
             return bestMatches[random.Next(bestMatches.Count)];
         }
 
-        public static string getWealthGroupByEDID(string EDID, Dictionary<string, List<string>> Definitions, List<string> GroupLookupFailures)
+        public static AssignmentQuality getWealthGroup<T>(FormLink<T> link, Dictionary<Quality, HashSet<FormLink<T>>> Definitions, HashSet<IFormLink> GroupLookupFailures)
+            where T : class, IMajorRecordCommonGetter
         {
-            foreach (KeyValuePair<string, List<string>> Def in Definitions)
+            foreach (var Def in Definitions)
             {
-                if (Def.Value.Contains(EDID))
+                if (Def.Value.Contains(link))
                 {
-                    return Def.Key;
+                    return Def.Key.ToAssignmentQuality();
                 }
             }
 
-            // if EDID wasn't found in definitions
-            if (!GroupLookupFailures.Contains(EDID))
-            {
-                GroupLookupFailures.Add(EDID);
-            }
-
-            return "Default";
+            GroupLookupFailures.Add(link);
+            return AssignmentQuality.Default;
         }
 
         public static void copyUTScript(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
@@ -443,7 +447,7 @@ namespace UnderThere
             }
         }
 
-        public static void createInventoryFixSpell(List<UTSet> sets, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void createInventoryFixSpell(IEnumerable<UTSet> sets, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             // get all gendered items
             var genderedItems = getGenderedItems(sets);
@@ -519,15 +523,15 @@ namespace UnderThere
             }
         }
 
-        public static (HashSet<FormLink<IArmorGetter>> Male, HashSet<FormLink<IArmorGetter>> Female) getGenderedItems(List<UTSet> sets)
+        public static (HashSet<FormLink<IArmorGetter>> Male, HashSet<FormLink<IArmorGetter>> Female) getGenderedItems(IEnumerable<UTSet> sets)
         {
             var male = new HashSet<FormLink<IArmorGetter>>();
             var female = new HashSet<FormLink<IArmorGetter>>();
 
             foreach (UTSet set in sets)
             {
-                male.Add(set.Items_Male.Select(m => m.Record));
-                female.Add(set.Items_Female.Select(m => m.Record));
+                male.Add(set.Items.Where(i => i.Gender == GenderTarget.Male).Select(m => m.Record));
+                female.Add(set.Items.Where(i => i.Gender == GenderTarget.Female).Select(m => m.Record));
             }
 
             //make sure that gendered items aren't mixed
@@ -610,7 +614,7 @@ namespace UnderThere
             }
         }
 
-        public static bool addSOScompatibility(List<UTSet> sets, List<BipedObjectFlag> usedSlots, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static bool addSOScompatibility(IEnumerable<UTSet> sets, List<BipedObjectFlag> usedSlots, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             bool bSOSdetected = false;
             foreach (var mod in state.LoadOrder)
@@ -638,9 +642,7 @@ namespace UnderThere
             // patch all bottoms to use slot 52
             foreach (var set in sets)
             {
-                addSOSslot(set.Items_Male, state);
-                addSOSslot(set.Items_Mutual, state);
-                addSOSslot(set.Items_Female, state); // just in case...
+                addSOSslot(set.Items, state);
             }
             return true;
         }

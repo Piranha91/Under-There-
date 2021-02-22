@@ -7,6 +7,7 @@ using Mutagen.Bethesda.Skyrim;
 using System.IO;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using UnderThere.Settings;
+using System.Linq;
 
 namespace UnderThere
 {
@@ -96,15 +97,13 @@ namespace UnderThere
             return false;
         }
 
-        public static List<BipedObjectFlag> getItemSetARMAslots(List<UTSet> sets, ILinkCache lk)
+        public static List<BipedObjectFlag> getItemSetARMAslots(IEnumerable<UTSet> sets, ILinkCache lk)
         {
             List<BipedObjectFlag> usedSlots = new List<BipedObjectFlag>();
 
             foreach (UTSet set in sets)
             {
-                getContainedSlots(set.Items_Mutual, usedSlots, lk);
-                getContainedSlots(set.Items_Male, usedSlots, lk);
-                getContainedSlots(set.Items_Female, usedSlots, lk);
+                getContainedSlots(set.Items, usedSlots, lk);
             }
 
             return usedSlots;
@@ -262,7 +261,7 @@ namespace UnderThere
             }
         }
 
-        public static void LogDefaultNPCs(List<string> failedNPClookups, List<string> failedGroupLookups, string extraSettingsPath)
+        public static void LogDefaultNPCs(List<string> failedNPClookups, ICollection<IFormLink> failedGroupLookups, string extraSettingsPath)
         {
             string logPath = Path.Combine(extraSettingsPath, "failedAssignmentLog.txt");
             List<string> logLines = new List<string>();
@@ -279,7 +278,7 @@ namespace UnderThere
             {
                 Console.WriteLine(failedGroupLookups.Count + " classifiers could not be matched to any group definitions defined in the settings file.");
                 logLines.Add("The following classifiers could not be matched to any group definitions within the settings file.");
-                logLines.AddRange(failedGroupLookups);
+                logLines.AddRange(failedGroupLookups.Select(i => i.ToString() ?? string.Empty));
             }
             if (failedGroupLookups.Count > 0 || failedNPClookups.Count > 0)
             {

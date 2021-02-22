@@ -13,8 +13,8 @@ namespace UnderThere.Settings
         public string Name { get; set; } = string.Empty;
         public FormLink<INpcGetter> Record { get; set; }
         public NpcAssignmentType Type { get; set; }
-        public string Assignment_Set { get; set; } = string.Empty;
-        public string Assignment_Group { get; set; } = string.Empty;
+        public AssignmentQuality Assignment_Set { get; set; }
+        public AssignmentQuality Assignment_Group { get; set; }
         public UTSet AssignmentSet_Obj { get; set; } = new UTSet();
         public bool isNull { get; set; } = true;
 
