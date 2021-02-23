@@ -5,7 +5,9 @@ using Mutagen.Bethesda;
 using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Skyrim;
 using System.IO;
-
+using Mutagen.Bethesda.FormKeys.SkyrimSE;
+using UnderThere.Settings;
+using System.Linq;
 
 namespace UnderThere
 {
@@ -30,7 +32,7 @@ namespace UnderThere
                         break;
                     }
                 }
-                if (bMatched == false)
+                if (!bMatched)
                 {
                     throw new Exception("Could not find Race \"" + EDID + "\" in your load order.");
                 }
@@ -45,19 +47,19 @@ namespace UnderThere
             List<string> nonHumanoidAttackRaces = new List<string> { "DwarvenSphereRace", "DwarvenSpiderRace" };
             foreach (var fact in npc.Factions)
             {
-                if (!lk.TryResolve<IFactionGetter>(fact.Faction.FormKey, out var currentFaction) || currentFaction == null || currentFaction.EditorID == null) { continue; }
+                if (!lk.TryResolve<IFactionGetter>(fact.Faction.FormKey, out var currentFaction) || currentFaction.EditorID == null) { continue; }
                 if (nonHumanoidFactions.Contains(currentFaction.EditorID))
                 {
                     return true;
                 }
             }
 
-            if (npcRace.EditorID != null && npcRace.EditorID.ToLower().Contains("atronach"))
+            if (npcRace.EditorID != null && npcRace.EditorID.Contains("atronach", StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
 
-            if (lk.TryResolve<IRaceGetter>(npc.AttackRace.FormKey, out var currentAttackRace) && currentAttackRace != null && currentAttackRace.EditorID != null)
+            if (lk.TryResolve<IRaceGetter>(npc.AttackRace.FormKey, out var currentAttackRace) && currentAttackRace.EditorID != null)
             {
                 if (nonHumanoidAttackRaces.Contains(currentAttackRace.EditorID))
                 {
@@ -70,10 +72,10 @@ namespace UnderThere
 
         public static bool hasGhostAbility(INpcGetter npc)
         {
-            if (npc.ActorEffect == null) { return false; }
+            if (npc.ActorEffect == null) return false;
             foreach (var ability in npc.ActorEffect)
             {
-                if (ability.FormKey.ToString() == "05030B:Skyrim.esm")
+                if (ability.FormKey == Skyrim.ASpell.GhostAbility)
                 {
                     return true;
                 }
@@ -84,28 +86,24 @@ namespace UnderThere
 
         public static bool hasGhostScript(INpcGetter npc)
         {
-            if (npc.VirtualMachineAdapter == null) { return false; }
+            if (npc.VirtualMachineAdapter == null) return false;
+            foreach (var script in npc.VirtualMachineAdapter.Scripts)
             {
-                foreach (var script in npc.VirtualMachineAdapter.Scripts)
+                if (script.Name == "defaultGhostScript")
                 {
-                    if (script.Name == "defaultGhostScript")
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
             return false;
         }
 
-        public static List<BipedObjectFlag> getItemSetARMAslots(List<UTSet> sets, ILinkCache lk)
+        public static List<BipedObjectFlag> getItemSetARMAslots(IEnumerable<UTSet> sets, ILinkCache lk)
         {
             List<BipedObjectFlag> usedSlots = new List<BipedObjectFlag>();
 
             foreach (UTSet set in sets)
             {
-                getContainedSlots(set.Items_Mutual, usedSlots, lk);
-                getContainedSlots(set.Items_Male, usedSlots, lk);
-                getContainedSlots(set.Items_Female, usedSlots, lk);
+                getContainedSlots(set.Items, usedSlots, lk);
             }
 
             return usedSlots;
@@ -115,14 +113,14 @@ namespace UnderThere
         {
             foreach (UTitem item in items)
             {
-                if (!lk.TryResolve<IArmor>(item.formKey, out var itemObj) || itemObj == null)
+                if (!item.Record.TryResolve(lk, out var itemObj))
                 {
                     continue;
                 }
 
                 foreach (IFormLink<IArmorAddonGetter> AAgetter in itemObj.Armature)
                 {
-                    if (!lk.TryResolve<IArmorAddon>(AAgetter.FormKey, out var ARMAobj) || ARMAobj == null || ARMAobj.BodyTemplate == null)
+                    if (!lk.TryResolve<IArmorAddon>(AAgetter.FormKey, out var ARMAobj) || ARMAobj.BodyTemplate == null)
                     {
                         continue;
                     }
@@ -130,7 +128,7 @@ namespace UnderThere
                     List<BipedObjectFlag> currentUsedSlots = getARMAslots(ARMAobj.BodyTemplate);
                     foreach (var usedFlag in currentUsedSlots)
                     {
-                        if (usedSlots.Contains(usedFlag) == false)
+                        if (!usedSlots.Contains(usedFlag))
                         {
                             usedSlots.Add(usedFlag);
                         }
@@ -263,7 +261,7 @@ namespace UnderThere
             }
         }
 
-        public static void LogDefaultNPCs(List<string> failedNPClookups, List<string> failedGroupLookups, string extraSettingsPath)
+        public static void LogDefaultNPCs(List<string> failedNPClookups, ICollection<IFormLink> failedGroupLookups, string extraSettingsPath)
         {
             string logPath = Path.Combine(extraSettingsPath, "failedAssignmentLog.txt");
             List<string> logLines = new List<string>();
@@ -280,7 +278,7 @@ namespace UnderThere
             {
                 Console.WriteLine(failedGroupLookups.Count + " classifiers could not be matched to any group definitions defined in the settings file.");
                 logLines.Add("The following classifiers could not be matched to any group definitions within the settings file.");
-                logLines.AddRange(failedGroupLookups);
+                logLines.AddRange(failedGroupLookups.Select(i => i.ToString() ?? string.Empty));
             }
             if (failedGroupLookups.Count > 0 || failedNPClookups.Count > 0)
             {
