@@ -42,12 +42,15 @@ namespace UnderThere
                 throw new Exception("Spell Perk Item Distributor was not detected at " + SPIDpath + "\nAborting patch");
             }
 
+<<<<<<< HEAD
             //temp
             //var settingsPath = Path.Combine(state.ExtraSettingsDataPath, "UnderThereConfig.json");
             //UTconfig settings = new UTconfig();
             //settings = JsonUtils.FromJson<UTconfig>(settingsPath);
             //
 
+=======
+>>>>>>> parent of 805253f (1.3c)
             UTconfig settings = Settings.Value;
 
             Validator.validateSettings(settings);
