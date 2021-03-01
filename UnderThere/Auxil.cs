@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Mutagen.Bethesda;
@@ -7,6 +7,7 @@ using Mutagen.Bethesda.Skyrim;
 using System.IO;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using UnderThere.Settings;
+using System.Linq;
 
 namespace UnderThere
 {
@@ -262,7 +263,7 @@ namespace UnderThere
             }
         }
 
-        public static void LogDefaultNPCs(List<string> failedNPClookups, List<string> failedGroupLookups, string extraSettingsPath)
+        public static void LogDefaultNPCs(List<string> failedNPClookups, HashSet<IFormLink> failedGroupLookups, string extraSettingsPath)
         {
             string logPath = Path.Combine(extraSettingsPath, "failedAssignmentLog.txt");
             List<string> logLines = new List<string>();
@@ -279,7 +280,7 @@ namespace UnderThere
             {
                 Console.WriteLine(failedGroupLookups.Count + " classifiers could not be matched to any group definitions defined in the settings file.");
                 logLines.Add("The following classifiers could not be matched to any group definitions within the settings file.");
-                logLines.AddRange(failedGroupLookups);
+                logLines.AddRange(failedGroupLookups.Select(x => x.ToString() ?? string.Empty));
             }
             if (failedGroupLookups.Count > 0 || failedNPClookups.Count > 0)
             {

@@ -136,7 +136,7 @@ namespace UnderThere
             string npcGroup = "";
             FormKey currentOutfitKey = FormKey.Null;
             FormLink<ILeveledItemGetter> currentUW = FormKey.Null;
-            List<string> GroupLookupFailures = new List<string>();
+            var GroupLookupFailures = new HashSet<IFormLink>();
             List<string> NPClookupFailures = new List<string>();
             Dictionary<FormKey, Dictionary<string, Outfit>> OutfitMap = new Dictionary<FormKey, Dictionary<string, Outfit>>();
 
@@ -244,20 +244,17 @@ namespace UnderThere
                             npcGroup = Default;
                             currentUW = UT_DefaultItem; break;
                         case AssignmentMode.Class:
-                            if (state.LinkCache.TryResolve<IClassGetter>(npc.Class.FormKey, out var NPCclass) && NPCclass.EditorID != null)
+                            if (npc.FormKey == Skyrim.Npc.Hroki)
                             {
-                                if (npc.EditorID == "Hroki" && npc.FormKey == Skyrim.Npc.Hroki)
-                                {
-                                    npcGroup = Default; // hardcoded due to a particular idiosyncratic issue caused by Bethesda's weird choice of Class for Hroki.
-                                    break;
-                                }
-                                npcGroup = getWealthGroupByEDID(NPCclass.EditorID, settings.ClassDefinitions, GroupLookupFailures);
-                                currentUW = UT_LeveledItemsByWealth[npcGroup];
-                                if (npcGroup == Default) { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
+                                npcGroup = Default; // hardcoded due to a particular idiosyncratic issue caused by Bethesda's weird choice of Class for Hroki.
+                                break;
                             }
+                            npcGroup = getWealthGroup(npc.Class, settings.ClassDefinitions, GroupLookupFailures);
+                            currentUW = UT_LeveledItemsByWealth[npcGroup];
+                            if (npcGroup == Default) { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
                             break;
                         case AssignmentMode.Faction:
-                            npcGroup = getWealthGroupByFactions(npc, settings.FactionDefinitions, settings.FallBackFactionDefinitions, settings.IgnoreFactionsWhenScoring, GroupLookupFailures, state);
+                            npcGroup = getWealthGroupByFactions(npc, settings.FactionDefinitions, settings.FallBackFactionDefinitions, settings.IgnoreFactionsWhenScoring, GroupLookupFailures);
                             currentUW = UT_LeveledItemsByWealth[npcGroup];
                             if (npcGroup == Default) { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
                             break;
@@ -299,7 +296,7 @@ namespace UnderThere
             }
         }
 
-        public static string getWealthGroupByFactions(INpcGetter npc, Dictionary<string, List<string>> factionDefinitions, Dictionary<string, List<string>> fallbackFactionDefinitions, HashSet<FormLink<IFactionGetter>> ignoredFactions, List<string> GroupLookupFailures, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static string getWealthGroupByFactions(INpcGetter npc, Dictionary<string, HashSet<FormLink<IFactionGetter>>> factionDefinitions, Dictionary<string, HashSet<FormLink<IFactionGetter>>> fallbackFactionDefinitions, HashSet<FormLink<IFactionGetter>> ignoredFactions, HashSet<IFormLink> GroupLookupFailures)
         {
             Dictionary<string, int> wealthCounts = new Dictionary<string, int>();
             Dictionary<string, int> fallBackwealthCounts = new Dictionary<string, int>();
@@ -308,25 +305,23 @@ namespace UnderThere
             bool bPrimaryWealthGroupFound = false;
 
             // initialize wealth counts
-            foreach (KeyValuePair<string, List<string>> Def in factionDefinitions)
+            foreach (var k in factionDefinitions.Keys)
             {
-                wealthCounts.Add(Def.Key, 0);
-                fallBackwealthCounts.Add(Def.Key, 0);
+                wealthCounts.Add(k, 0);
+                fallBackwealthCounts.Add(k, 0);
             }
             wealthCounts.Add(Default, 0);
 
             // add each faction by appropriate wealth count
             foreach (var fact in npc.Factions)
             {
-                if (!state.LinkCache.TryResolve<IFactionGetter>(fact.Faction.FormKey, out var currentFaction) || currentFaction.EditorID == null) continue;
-
                 if (ignoredFactions.Contains(fact.Faction))
                 {
                     wealthCounts[Default]++; // "Default" will be ignored if other factions are matched
                     continue;
                 }
 
-                tmpWealthGroup = getWealthGroupByEDID(currentFaction.EditorID, factionDefinitions, GroupLookupFailures);
+                tmpWealthGroup = getWealthGroup(fact.Faction, factionDefinitions, GroupLookupFailures);
 
                 if (wealthCounts.ContainsKey(tmpWealthGroup))
                 {
@@ -335,7 +330,7 @@ namespace UnderThere
 
                 if (tmpWealthGroup == Default) // check fallback factions
                 {
-                    tmpWealthGroup = getWealthGroupByEDID(currentFaction.EditorID, fallbackFactionDefinitions, GroupLookupFailures);
+                    tmpWealthGroup = getWealthGroup(fact.Faction, fallbackFactionDefinitions, GroupLookupFailures);
                     if (fallBackwealthCounts.ContainsKey(tmpWealthGroup))
                     {
                         fallBackwealthCounts[tmpWealthGroup]++;
@@ -403,22 +398,18 @@ namespace UnderThere
             return bestMatches[Random.Value.Next(bestMatches.Count)];
         }
 
-        public static string getWealthGroupByEDID(string EDID, Dictionary<string, List<string>> Definitions, List<string> GroupLookupFailures)
+        public static string getWealthGroup<T>(FormLink<T> link, Dictionary<string, HashSet<FormLink<T>>> Definitions, HashSet<IFormLink> GroupLookupFailures)
+            where T : class, IMajorRecordCommonGetter
         {
-            foreach (KeyValuePair<string, List<string>> Def in Definitions)
+            foreach (var Def in Definitions)
             {
-                if (Def.Value.Contains(EDID))
+                if (Def.Value.Contains(link))
                 {
                     return Def.Key;
                 }
             }
 
-            // if EDID wasn't found in definitions
-            if (!GroupLookupFailures.Contains(EDID))
-            {
-                GroupLookupFailures.Add(EDID);
-            }
-
+            GroupLookupFailures.Add(link);
             return Default;
         }
 
