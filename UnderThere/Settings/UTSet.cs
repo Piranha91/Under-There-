@@ -13,9 +13,6 @@ namespace UnderThere.Settings
     public class UTSet
     {
         [SynthesisOrder]
-        public string Category { get; set; } = string.Empty;
-
-        [SynthesisOrder]
         public string Name { get; set; } = string.Empty;
 
         [SynthesisOrder]
@@ -23,5 +20,13 @@ namespace UnderThere.Settings
 
         [SynthesisIgnoreSetting]
         public FormLink<ILeveledItemGetter> LeveledList { get; set; }
+    }
+
+    [SynthesisObjectNameMember(nameof(Category))]
+    [SynthesisObjectNameMember(nameof(Name))]
+    public class UTCategorySet : UTSet
+    {
+        [SynthesisOrder]
+        public string Category { get; set; } = string.Empty;
     }
 }

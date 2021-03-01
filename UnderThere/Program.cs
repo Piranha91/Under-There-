@@ -100,7 +100,7 @@ namespace UnderThere
         {
             var itemsByWealth = new Dictionary<string, FormLink<ILeveledItemGetter>>();
 
-            foreach (var group in sets.GroupBy(s => s.Category))
+            foreach (var group in sets.WhereCastable<UTSet, UTCategorySet>().GroupBy(s => s.Category))
             {
                 itemsByWealth[group.Key] = CreateLList(group.Key, group, PatchMod);
             }

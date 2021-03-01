@@ -562,10 +562,10 @@ namespace UnderThere.Settings
         #endregion
 
         [SynthesisOrder]
-        public List<UTSet> Sets { get; set; } = new()
+        public List<UTCategorySet> Sets { get; set; } = new()
         #region Defaults
         {
-            new UTSet()
+            new UTCategorySet()
             {
                 Name = "Poor Variant 1",
                 Category = Poor,
@@ -587,7 +587,7 @@ namespace UnderThere.Settings
                     },
                 },
             },
-            new UTSet()
+            new UTCategorySet()
             {
                 Name = "Poor Variant 2",
                 Category = Poor,
@@ -609,7 +609,7 @@ namespace UnderThere.Settings
                     },
                 },
             },
-            new UTSet()
+            new UTCategorySet()
             {
                 Name = "Poor Variant 3",
                 Category = Poor,
@@ -631,7 +631,7 @@ namespace UnderThere.Settings
                     },
                 },
             },
-            new UTSet()
+            new UTCategorySet()
             {
                 Name = "Medium Variant 1",
                 Category = Medium,
@@ -653,7 +653,7 @@ namespace UnderThere.Settings
                     },
                 },
             },
-            new UTSet()
+            new UTCategorySet()
             {
                 Name = "Medium Variant 2",
                 Category = Medium,
@@ -675,7 +675,7 @@ namespace UnderThere.Settings
                     },
                 },
             },
-            new UTSet()
+            new UTCategorySet()
             {
                 Name = "Medium Variant 3",
                 Category = Medium,
@@ -697,7 +697,7 @@ namespace UnderThere.Settings
                     },
                 },
             },
-            new UTSet()
+            new UTCategorySet()
             {
                 Name = "Rich Variant 1",
                 Category = Rich,
@@ -719,7 +719,7 @@ namespace UnderThere.Settings
                     },
                 },
             },
-            new UTSet()
+            new UTCategorySet()
             {
                 Name = "Rich Variant 2",
                 Category = Rich,
@@ -741,7 +741,7 @@ namespace UnderThere.Settings
                     },
                 },
             },
-            new UTSet()
+            new UTCategorySet()
             {
                 Name = "Rich Variant 3",
                 Category = Rich,
