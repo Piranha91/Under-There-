@@ -21,7 +21,7 @@ namespace UnderThere.Settings
                 {
                     case NpcAssignmentType.Set:
                         bool bFound = false;
-                        foreach (UTSet set in settings.Sets)
+                        foreach (UTSet set in settings.AllSets)
                         {
                             if (set.Name == npc.Assignment_Set)
                             {
@@ -94,7 +94,7 @@ namespace UnderThere.Settings
                 foreach(string variant in assignedGroup)
                 {
                     bool bFound = false;
-                    foreach (var set in settings.Sets)
+                    foreach (var set in settings.AllSets)
                     {
                         if (set.Name == variant)
                         {
@@ -109,7 +109,7 @@ namespace UnderThere.Settings
             }
 
             // Sets - make sure each set has at least one item for each patchable gender
-            foreach (var set in settings.Sets)
+            foreach (var set in settings.AllSets)
             {
                 if (settings.PatchMales)
                 {

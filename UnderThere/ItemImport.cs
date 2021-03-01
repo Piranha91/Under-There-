@@ -14,10 +14,10 @@ namespace UnderThere
     {
         public static void createItems(UTconfig settings, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            deepCopyItems(settings.Sets, UWsourcePlugins, state); // copy all armor records along with their linked subrecords into PatchMod to get rid of dependencies on the original plugins. Sets[i].FormKeyObject will now point to the new FormKey in PatchMod
+            deepCopyItems(settings.AllSets, UWsourcePlugins, state); // copy all armor records along with their linked subrecords into PatchMod to get rid of dependencies on the original plugins. Sets[i].FormKeyObject will now point to the new FormKey in PatchMod
 
             // create a leveled list entry for each set
-            foreach (var set in settings.Sets)
+            foreach (var set in settings.AllSets)
             {
                 var currentItems = state.PatchMod.LeveledItems.AddNew();
                 currentItems.EditorID = "LItems_" + set.Name;
@@ -30,7 +30,7 @@ namespace UnderThere
             }
         }
 
-        public static void deepCopyItems(List<UTSet> Sets, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void deepCopyItems(IEnumerable<UTSet> Sets, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             var recordsToDup = new HashSet<FormLinkInformation>();
 

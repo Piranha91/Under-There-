@@ -52,22 +52,22 @@ namespace UnderThere
             ItemImport.createItems(settings, UWsourcePlugins, state);
 
             // created leveled item lists (to be added to outfits)
-            FormLink<ILeveledItemGetter> UT_LeveledItemsAll = createLeveledList_AllItems(settings.Sets, state.LinkCache, state.PatchMod);
-            Dictionary<string, FormLink<ILeveledItemGetter>> UT_LeveledItemsByWealth = createLeveledList_ByWealth(settings.Sets, settings.Assignments, state.LinkCache, state.PatchMod);
+            FormLink<ILeveledItemGetter> UT_LeveledItemsAll = createLeveledList_AllItems(settings.AllSets, state.LinkCache, state.PatchMod);
+            Dictionary<string, FormLink<ILeveledItemGetter>> UT_LeveledItemsByWealth = createLeveledList_ByWealth(settings.AllSets, settings.Assignments, state.LinkCache, state.PatchMod);
 
             // modify NPC outfits
             assignOutfits(settings, settings.DefaultSet.LeveledList, UT_LeveledItemsByWealth, UT_LeveledItemsAll, state);
 
             // Add slots used by underwear items to clothes and armors with 32 - Body slot active
-            List<BipedObjectFlag> usedSlots = Auxil.getItemSetARMAslots(settings.Sets, state.LinkCache);
+            List<BipedObjectFlag> usedSlots = Auxil.getItemSetARMAslots(settings.AllSets, state.LinkCache);
             patchBodyARMAslots(usedSlots, settings.PatchableRaces, state, settings.VerboseMode);
 
             // set SOS compatibiilty if needed
-            bool bSOS = addSOScompatibility(settings.Sets, usedSlots, state);
+            bool bSOS = addSOScompatibility(settings.AllSets, usedSlots, state);
 
             // create and distribute gendered item inventory spell 
             copyUTScript(state);
-            createInventoryFixSpell(settings.Sets, state);
+            createInventoryFixSpell(settings.AllSets, state);
 
             // message user
             reportARMAslots(usedSlots, bSOS);
@@ -77,7 +77,7 @@ namespace UnderThere
             Console.WriteLine("\nEnjoy the underwear. Goodbye.");
         }
 
-        public static FormLink<ILeveledItemGetter> createLeveledList_AllItems(List<UTSet> sets, ILinkCache lk, ISkyrimMod PatchMod)
+        public static FormLink<ILeveledItemGetter> createLeveledList_AllItems(IEnumerable<UTSet> sets, ILinkCache lk, ISkyrimMod PatchMod)
         {
             var allItems = PatchMod.LeveledItems.AddNew();
             allItems.EditorID = "UnderThereAllItems";
@@ -96,7 +96,7 @@ namespace UnderThere
             return allItems.AsLink();
         }
 
-        public static Dictionary<string, FormLink<ILeveledItemGetter>> createLeveledList_ByWealth(List<UTSet> sets, Dictionary<string, List<string>> assignments, ILinkCache lk, ISkyrimMod PatchMod)
+        public static Dictionary<string, FormLink<ILeveledItemGetter>> createLeveledList_ByWealth(IEnumerable<UTSet> sets, Dictionary<string, List<string>> assignments, ILinkCache lk, ISkyrimMod PatchMod)
         {
             Dictionary<string, FormLink<ILeveledItemGetter>> itemsByWealth = new Dictionary<string, FormLink<ILeveledItemGetter>>();
 
@@ -435,7 +435,7 @@ namespace UnderThere
             }
         }
 
-        public static void createInventoryFixSpell(List<UTSet> sets, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void createInventoryFixSpell(IEnumerable<UTSet> sets, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             // get all gendered items
             var genderedItems = getGenderedItems(sets);
@@ -511,7 +511,7 @@ namespace UnderThere
             }
         }
 
-        public static (HashSet<FormLink<IArmorGetter>> Male, HashSet<FormLink<IArmorGetter>> Female) getGenderedItems(List<UTSet> sets)
+        public static (HashSet<FormLink<IArmorGetter>> Male, HashSet<FormLink<IArmorGetter>> Female) getGenderedItems(IEnumerable<UTSet> sets)
         {
             var male = new HashSet<FormLink<IArmorGetter>>();
             var female = new HashSet<FormLink<IArmorGetter>>();
@@ -602,7 +602,7 @@ namespace UnderThere
             }
         }
 
-        public static bool addSOScompatibility(List<UTSet> sets, List<BipedObjectFlag> usedSlots, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static bool addSOScompatibility(IEnumerable<UTSet> sets, List<BipedObjectFlag> usedSlots, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             bool bSOSdetected = false;
             foreach (var mod in state.LoadOrder)

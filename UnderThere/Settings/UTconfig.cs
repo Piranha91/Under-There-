@@ -522,6 +522,8 @@ namespace UnderThere.Settings
             }
         };
         public List<UTSet> Sets { get; set; } = new List<UTSet>();
+        public IEnumerable<UTSet> AllSets => Sets.And(DefaultSet);
+
         public bool VerboseMode { get; set; }
         public int RandomSeed { get; set; } = 1753;
     }
