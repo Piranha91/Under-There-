@@ -14,6 +14,7 @@ namespace UnderThere
 {
     public class Program
     {
+        const string Default = "Default";
         static Lazy<UTconfig> Settings = null!;
         static Lazy<Random> Random = new Lazy<Random>(() => new Random(Settings.Value.RandomSeed));
 
@@ -240,25 +241,25 @@ namespace UnderThere
                     switch (Settings.Value.AssignmentMode)
                     {
                         case AssignmentMode.Default:
-                            npcGroup = "Default";
+                            npcGroup = Default;
                             currentUW = UT_DefaultItem; break;
                         case AssignmentMode.Class:
                             if (state.LinkCache.TryResolve<IClassGetter>(npc.Class.FormKey, out var NPCclass) && NPCclass.EditorID != null)
                             {
                                 if (npc.EditorID == "Hroki" && npc.FormKey == Skyrim.Npc.Hroki)
                                 {
-                                    npcGroup = "Default"; // hardcoded due to a particular idiosyncratic issue caused by Bethesda's weird choice of Class for Hroki.
+                                    npcGroup = Default; // hardcoded due to a particular idiosyncratic issue caused by Bethesda's weird choice of Class for Hroki.
                                     break;
                                 }
                                 npcGroup = getWealthGroupByEDID(NPCclass.EditorID, settings.ClassDefinitions, GroupLookupFailures);
                                 currentUW = UT_LeveledItemsByWealth[npcGroup];
-                                if (npcGroup == "Default") { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
+                                if (npcGroup == Default) { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
                             }
                             break;
                         case AssignmentMode.Faction:
                             npcGroup = getWealthGroupByFactions(npc, settings.FactionDefinitions, settings.FallBackFactionDefinitions, settings.IgnoreFactionsWhenScoring, GroupLookupFailures, state);
                             currentUW = UT_LeveledItemsByWealth[npcGroup];
-                            if (npcGroup == "Default") { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
+                            if (npcGroup == Default) { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
                             break;
                         case AssignmentMode.Random:
                             npcGroup = "Random";
@@ -312,7 +313,7 @@ namespace UnderThere
                 wealthCounts.Add(Def.Key, 0);
                 fallBackwealthCounts.Add(Def.Key, 0);
             }
-            wealthCounts.Add("Default", 0);
+            wealthCounts.Add(Default, 0);
 
             // add each faction by appropriate wealth count
             foreach (var fact in npc.Factions)
@@ -321,7 +322,7 @@ namespace UnderThere
 
                 if (ignoredFactions.Contains(fact.Faction))
                 {
-                    wealthCounts["Default"]++; // "Default" will be ignored if other factions are matched
+                    wealthCounts[Default]++; // "Default" will be ignored if other factions are matched
                     continue;
                 }
 
@@ -332,7 +333,7 @@ namespace UnderThere
                     wealthCounts[tmpWealthGroup]++;
                 }
 
-                if (tmpWealthGroup == "Default") // check fallback factions
+                if (tmpWealthGroup == Default) // check fallback factions
                 {
                     tmpWealthGroup = getWealthGroupByEDID(currentFaction.EditorID, fallbackFactionDefinitions, GroupLookupFailures);
                     if (fallBackwealthCounts.ContainsKey(tmpWealthGroup))
@@ -355,7 +356,7 @@ namespace UnderThere
                     wealthCounts[tmpWealthGroup]++;
                 }
 
-                if (tmpWealthGroup == "Default")
+                if (tmpWealthGroup == Default)
                 {
                     tmpWealthGroup = getWealthGroupByEDID("*NONE", fallbackFactionDefinitions, GroupLookupFailures);
                     if (fallBackwealthCounts.ContainsKey(tmpWealthGroup))
@@ -380,9 +381,9 @@ namespace UnderThere
             // first remove the "Default" wealth group if others are populated
             foreach (string wGroup in wealthCounts.Keys)
             {
-                if (wGroup != "Default" && wealthCounts[wGroup] > 0)
+                if (wGroup != Default && wealthCounts[wGroup] > 0)
                 {
-                    wealthCounts.Remove("Default");
+                    wealthCounts.Remove(Default);
                     break;
                 }
             } // if "Default" was the only matched wealth group, then it remains in the wealthCounts dictionary and will necessarily be chosen
@@ -418,7 +419,7 @@ namespace UnderThere
                 GroupLookupFailures.Add(EDID);
             }
 
-            return "Default";
+            return Default;
         }
 
         public static void copyUTScript(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
