@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 
 namespace UnderThere.Settings
 {
+    [SynthesisObjectNameMember(nameof(DispName))]
+    [SynthesisObjectNameMember(nameof(Record))]
     public class UTitem
     {
         [SynthesisOrder]

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace UnderThere.Settings
 {
+    [SynthesisObjectNameMember(nameof(Name))]
     public class UTSet
     {
         [SynthesisOrder]
