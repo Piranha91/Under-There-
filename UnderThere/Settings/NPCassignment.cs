@@ -1,5 +1,6 @@
 ﻿using Mutagen.Bethesda;
 using Mutagen.Bethesda.Skyrim;
+using Mutagen.Bethesda.Synthesis.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,12 +11,25 @@ namespace UnderThere.Settings
 {
     public class NPCassignment
     {
+        [SynthesisOrder]
         public string Name { get; set; } = string.Empty;
+
+        [SynthesisOrder]
         public FormLink<INpcGetter> Record { get; set; }
+
+        [SynthesisOrder]
         public NpcAssignmentType Type { get; set; }
+
+        [SynthesisOrder]
         public string Assignment_Set { get; set; } = string.Empty;
+
+        [SynthesisOrder]
         public string Assignment_Group { get; set; } = string.Empty;
+
+        [SynthesisOrder]
         public UTSet AssignmentSet_Obj { get; set; } = new UTSet();
+
+        [SynthesisIgnoreSetting]
         public bool isNull { get; set; } = true;
 
         public static NPCassignment getSpecificNPC(FormKey fk, List<NPCassignment> assigments)

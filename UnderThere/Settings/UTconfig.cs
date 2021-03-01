@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using Noggog;
+using Mutagen.Bethesda.Synthesis.Settings;
 
 namespace UnderThere.Settings
 {
@@ -17,13 +18,28 @@ namespace UnderThere.Settings
         public const string Medium = "Medium";
         public const string Rich = "Rich";
 
+        [SynthesisOrder]
         public AssignmentMode AssignmentMode { get; set; } = AssignmentMode.Faction;
+
+        [SynthesisOrder]
         public bool PatchMales { get; set; } = true;
+
+        [SynthesisOrder]
         public bool PatchFemales { get; set; } = true;
+
+        [SynthesisOrder]
         public bool PatchNakedNPCs { get; set; } = true;
+
+        [SynthesisOrder]
         public bool PatchSummonedNPCs { get; set; }
+
+        [SynthesisOrder]
         public bool PatchGhosts { get; set; } = true;
+
+        [SynthesisOrder]
         public bool MakeItemsEquippable { get; set; } = true;
+
+        [SynthesisOrder]
         public HashSet<FormLink<IRaceGetter>> PatchableRaces { get; set; } = new()
         #region Defaults
         {
@@ -51,6 +67,8 @@ namespace UnderThere.Settings
             Skyrim.Race.ElderRaceVampire,
         };
         #endregion
+
+        [SynthesisOrder]
         public HashSet<FormLink<IRaceGetter>> NonPatchableRaces { get; set; } = new()
         #region Defaults
         {
@@ -69,6 +87,8 @@ namespace UnderThere.Settings
             Skyrim.Race.ManakinRace,
         };
         #endregion
+
+        [SynthesisOrder]
         public Dictionary<string, HashSet<FormLink<IClassGetter>>> ClassDefinitions { get; set; } = new()
         #region Defaults
         {
@@ -214,6 +234,8 @@ namespace UnderThere.Settings
             }
         };
         #endregion
+
+        [SynthesisOrder]
         public Dictionary<string, HashSet<FormLink<IFactionGetter>>> FactionDefinitions { get; set; } = new()
         #region Defaults
         {
@@ -321,7 +343,11 @@ namespace UnderThere.Settings
             }
         };
         #endregion
+
+        [SynthesisOrder]
         public string QualityForNoFaction = Medium;
+
+        [SynthesisOrder]
         public Dictionary<string, HashSet<FormLink<IFactionGetter>>> FallBackFactionDefinitions { get; set; } = new()
         #region Defaults
         {
@@ -480,7 +506,11 @@ namespace UnderThere.Settings
             }
         };
         #endregion
+
+        [SynthesisOrder]
         public string QualityForNoFactionFallback = string.Empty;
+
+        [SynthesisOrder]
         public HashSet<FormLink<IFactionGetter>> IgnoreFactionsWhenScoring { get; set; } = new HashSet<FormLink<IFactionGetter>>()
         #region Defaults
         {
@@ -496,8 +526,14 @@ namespace UnderThere.Settings
             Dragonborn.Faction.DLC2ServicesThirskHalbarn
         };
         #endregion
+
+        [SynthesisOrder]
         public List<NPCassignment> SpecificNPCs { get; set; } = new List<NPCassignment>();
+
+        [SynthesisOrder]
         public List<NPCassignment> BlockedNPCs { get; set; } = new List<NPCassignment>();
+
+        [SynthesisOrder]
         public UTSet DefaultSet = new UTSet()
         #region Defaults
         {
@@ -524,6 +560,8 @@ namespace UnderThere.Settings
             }
         };
         #endregion
+
+        [SynthesisOrder]
         public List<UTSet> Sets { get; set; } = new()
         #region Defaults
         {
@@ -729,7 +767,11 @@ namespace UnderThere.Settings
         #endregion
         public IEnumerable<UTSet> AllSets => Sets.And(DefaultSet);
 
+
+        [SynthesisOrder]
         public bool VerboseMode { get; set; }
+
+        [SynthesisOrder]
         public int RandomSeed { get; set; } = 1753;
     }
 }
