@@ -11,6 +11,7 @@ namespace UnderThere.Settings
     public class UTitem
     {
         public FormLink<IArmorGetter> Record { get; set; } = FormLink<IArmorGetter>.Null;
+        public GenderTarget Gender = GenderTarget.Mutual;
         public string DispName { get; set; } = string.Empty;
         public bool IsBottom { get; set; }
         public float Weight { get; set; } = -1;

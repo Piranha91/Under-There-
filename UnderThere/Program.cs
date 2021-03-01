@@ -518,8 +518,8 @@ namespace UnderThere
 
             foreach (UTSet set in sets)
             {
-                male.Add(set.Items_Male.Select(m => m.Record));
-                female.Add(set.Items_Female.Select(m => m.Record));
+                male.Add(set.Items.Where(i => i.Gender == GenderTarget.Male).Select(m => m.Record));
+                female.Add(set.Items.Where(i => i.Gender == GenderTarget.Female).Select(m => m.Record));
             }
 
             //make sure that gendered items aren't mixed
@@ -630,9 +630,7 @@ namespace UnderThere
             // patch all bottoms to use slot 52
             foreach (var set in sets)
             {
-                addSOSslot(set.Items_Male, state);
-                addSOSslot(set.Items_Mutual, state);
-                addSOSslot(set.Items_Female, state); // just in case...
+                addSOSslot(set.Items, state);
             }
             return true;
         }

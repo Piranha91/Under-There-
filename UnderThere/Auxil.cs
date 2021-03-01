@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using Mutagen.Bethesda;
@@ -97,15 +97,13 @@ namespace UnderThere
             return false;
         }
 
-        public static List<BipedObjectFlag> getItemSetARMAslots(List<UTSet> sets, ILinkCache lk)
+        public static List<BipedObjectFlag> getItemSetARMAslots(IEnumerable<UTSet> sets, ILinkCache lk)
         {
             List<BipedObjectFlag> usedSlots = new List<BipedObjectFlag>();
 
             foreach (UTSet set in sets)
             {
-                getContainedSlots(set.Items_Mutual, usedSlots, lk);
-                getContainedSlots(set.Items_Male, usedSlots, lk);
-                getContainedSlots(set.Items_Female, usedSlots, lk);
+                getContainedSlots(set.Items, usedSlots, lk);
             }
 
             return usedSlots;

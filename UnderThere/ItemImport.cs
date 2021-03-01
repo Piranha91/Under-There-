@@ -24,9 +24,7 @@ namespace UnderThere
                 currentItems.Flags |= LeveledItem.Flag.UseAll;
                 currentItems.Entries = new ExtendedList<LeveledItemEntry>();
 
-                editAndStoreUTitems(set.Items_Mutual, currentItems, settings.MakeItemsEquippable, settings.PatchableRaces, state);
-                editAndStoreUTitems(set.Items_Male, currentItems, settings.MakeItemsEquippable, settings.PatchableRaces, state);
-                editAndStoreUTitems(set.Items_Female, currentItems, settings.MakeItemsEquippable, settings.PatchableRaces, state);
+                editAndStoreUTitems(set.Items, currentItems, settings.MakeItemsEquippable, settings.PatchableRaces, state);
 
                 set.LeveledList = currentItems.FormKey;
             }
@@ -38,9 +36,7 @@ namespace UnderThere
 
             foreach (var set in Sets)
             {
-                getFormLinksToDuplicate(set.Items_Mutual, recordsToDup, state.LinkCache);
-                getFormLinksToDuplicate(set.Items_Male, recordsToDup, state.LinkCache);
-                getFormLinksToDuplicate(set.Items_Female, recordsToDup, state.LinkCache);
+                getFormLinksToDuplicate(set.Items, recordsToDup, state.LinkCache);
             }
 
             // store the original source mod names to notify user that they can be disabled.
@@ -68,9 +64,7 @@ namespace UnderThere
             // remap Set formlinks to the duplicated ones
             foreach (UTSet set in Sets)
             {
-                remapSetItemList(set.Items_Mutual, remap);
-                remapSetItemList(set.Items_Male, remap);
-                remapSetItemList(set.Items_Female, remap);
+                remapSetItemList(set.Items, remap);
             }
         }
 

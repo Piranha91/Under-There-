@@ -500,7 +500,7 @@ namespace UnderThere.Settings
         public Dictionary<string, List<string>> Assignments { get; set; } = new Dictionary<string, List<string>>();
         public UTSet DefaultSet = new UTSet()
         {
-            Items_Mutual = new List<UTitem>()
+            Items = new List<UTitem>()
             {
                 new UTitem()
                 {
@@ -508,16 +508,15 @@ namespace UnderThere.Settings
                      IsBottom = true,
                      Weight = 0.5f,
                      Value = 25,
+                     Gender = GenderTarget.Mutual,
                      Record = underwearforeveryone.Armor.UFE_UnderwearBottom
-                }
-            },
-            Items_Female = new List<UTitem>()
-            {
+                },
                 new UTitem()
                 {
                     DispName = "Undergarment",
                     Weight = 0.5f,
                     Value = 25,
+                    Gender = GenderTarget.Female,
                     Record = underwearforeveryone.Armor.UFE_UnderwearTop
                 }
             }
