@@ -10,6 +10,7 @@ namespace UnderThere.Settings
 {
     public class UTSet
     {
+        public string Category { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public List<UTitem> Items { get; set; } = new List<UTitem>();
         public FormLink<ILeveledItemGetter> LeveledList { get; set; }

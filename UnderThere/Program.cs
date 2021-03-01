@@ -53,7 +53,7 @@ namespace UnderThere
 
             // created leveled item lists (to be added to outfits)
             FormLink<ILeveledItemGetter> UT_LeveledItemsAll = createLeveledList_AllItems(settings.AllSets, state.LinkCache, state.PatchMod);
-            Dictionary<string, FormLink<ILeveledItemGetter>> UT_LeveledItemsByWealth = createLeveledList_ByWealth(settings.AllSets, settings.Assignments, state.LinkCache, state.PatchMod);
+            Dictionary<string, FormLink<ILeveledItemGetter>> UT_LeveledItemsByWealth = createLeveledList_ByWealth(settings.AllSets, state.PatchMod);
 
             // modify NPC outfits
             assignOutfits(settings, settings.DefaultSet.LeveledList, UT_LeveledItemsByWealth, UT_LeveledItemsAll, state);
@@ -96,39 +96,36 @@ namespace UnderThere
             return allItems.AsLink();
         }
 
-        public static Dictionary<string, FormLink<ILeveledItemGetter>> createLeveledList_ByWealth(IEnumerable<UTSet> sets, Dictionary<string, List<string>> assignments, ILinkCache lk, ISkyrimMod PatchMod)
+        public static Dictionary<string, FormLink<ILeveledItemGetter>> createLeveledList_ByWealth(IEnumerable<UTSet> sets, ISkyrimMod PatchMod)
         {
-            Dictionary<string, FormLink<ILeveledItemGetter>> itemsByWealth = new Dictionary<string, FormLink<ILeveledItemGetter>>();
+            var itemsByWealth = new Dictionary<string, FormLink<ILeveledItemGetter>>();
 
-            foreach (KeyValuePair<string, List<string>> assignment in assignments)
+            foreach (var group in sets.GroupBy(s => s.Category))
             {
-                if (assignment.Value.Count == 0)
-                {
-                    continue;
-                }
-
-                var currentItems = PatchMod.LeveledItems.AddNew();
-                currentItems.EditorID = "UnderThereItems_" + assignment.Key;
-                currentItems.Entries = new ExtendedList<LeveledItemEntry>();
-
-                foreach (UTSet set in sets)
-                {
-                    if (assignment.Value.Contains(set.Name))
-                    {
-                        LeveledItemEntry entry = new LeveledItemEntry();
-                        LeveledItemEntryData data = new LeveledItemEntryData();
-                        data.Reference = new FormLink<IItemGetter>(set.LeveledList.FormKey);
-                        data.Level = 1;
-                        data.Count = 1;
-                        entry.Data = data;
-                        currentItems.Entries.Add(entry);
-                    }
-                }
-
-                itemsByWealth[assignment.Key] = currentItems.AsLink();
+                itemsByWealth[group.Key] = CreateLList(group.Key, group, PatchMod);
             }
 
             return itemsByWealth;
+        }
+
+        public static LeveledItem CreateLList(string nickname, IEnumerable<UTSet> sets, ISkyrimMod PatchMod)
+        {
+            var currentItems = PatchMod.LeveledItems.AddNew();
+            currentItems.EditorID = "UnderThereItems_" + nickname;
+            currentItems.Entries = new ExtendedList<LeveledItemEntry>();
+
+            foreach (var set in sets)
+            {
+                LeveledItemEntry entry = new LeveledItemEntry();
+                LeveledItemEntryData data = new LeveledItemEntryData();
+                data.Reference = new FormLink<IItemGetter>(set.LeveledList.FormKey);
+                data.Level = 1;
+                data.Count = 1;
+                entry.Data = data;
+                currentItems.Entries.Add(entry);
+            }
+
+            return currentItems;
         }
 
         public static void assignOutfits(UTconfig settings, FormLink<ILeveledItemGetter> UT_DefaultItem, Dictionary<string, FormLink<ILeveledItemGetter>> UT_LeveledItemsByWealth, FormLink<ILeveledItemGetter> UT_LeveledItemsAll, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
+using Noggog;
 
 namespace UnderThere.Settings
 {
@@ -497,9 +498,10 @@ namespace UnderThere.Settings
         #endregion
         public List<NPCassignment> SpecificNPCs { get; set; } = new List<NPCassignment>();
         public List<NPCassignment> BlockedNPCs { get; set; } = new List<NPCassignment>();
-        public Dictionary<string, List<string>> Assignments { get; set; } = new Dictionary<string, List<string>>();
         public UTSet DefaultSet = new UTSet()
+        #region Defaults
         {
+            Name = "Default Variant",
             Items = new List<UTitem>()
             {
                 new UTitem()
@@ -521,7 +523,210 @@ namespace UnderThere.Settings
                 }
             }
         };
-        public List<UTSet> Sets { get; set; } = new List<UTSet>();
+        #endregion
+        public List<UTSet> Sets { get; set; } = new()
+        #region Defaults
+        {
+            new UTSet()
+            {
+                Name = "Poor Variant 1",
+                Category = Poor,
+                Items = new List<UTitem>()
+                {
+                    new UTitem()
+                    {
+                        DispName = "Cheap Undergarment",
+                        IsBottom = true,
+                        Gender = GenderTarget.Mutual,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_0,
+                    },
+                    new UTitem()
+                    {
+                        DispName = "Cheap Undergarment",
+                        IsBottom = false,
+                        Gender = GenderTarget.Female,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_0,
+                    },
+                },
+            },
+            new UTSet()
+            {
+                Name = "Poor Variant 2",
+                Category = Poor,
+                Items = new List<UTitem>()
+                {
+                    new UTitem()
+                    {
+                        DispName = "Cheap Undergarment",
+                        IsBottom = true,
+                        Gender = GenderTarget.Mutual,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_1,
+                    },
+                    new UTitem()
+                    {
+                        DispName = "Cheap Undergarment",
+                        IsBottom = false,
+                        Gender = GenderTarget.Female,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_1,
+                    },
+                },
+            },
+            new UTSet()
+            {
+                Name = "Poor Variant 3",
+                Category = Poor,
+                Items = new List<UTitem>()
+                {
+                    new UTitem()
+                    {
+                        DispName = "Cheap Undergarment",
+                        IsBottom = true,
+                        Gender = GenderTarget.Mutual,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_2,
+                    },
+                    new UTitem()
+                    {
+                        DispName = "Cheap Undergarment",
+                        IsBottom = false,
+                        Gender = GenderTarget.Female,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_2,
+                    },
+                },
+            },
+            new UTSet()
+            {
+                Name = "Medium Variant 1",
+                Category = Medium,
+                Items = new List<UTitem>()
+                {
+                    new UTitem()
+                    {
+                        DispName = "Undergarment",
+                        IsBottom = true,
+                        Gender = GenderTarget.Mutual,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_3,
+                    },
+                    new UTitem()
+                    {
+                        DispName = "Undergarment",
+                        IsBottom = false,
+                        Gender = GenderTarget.Female,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_3,
+                    },
+                },
+            },
+            new UTSet()
+            {
+                Name = "Medium Variant 2",
+                Category = Medium,
+                Items = new List<UTitem>()
+                {
+                    new UTitem()
+                    {
+                        DispName = "Undergarment",
+                        IsBottom = true,
+                        Gender = GenderTarget.Mutual,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_4,
+                    },
+                    new UTitem()
+                    {
+                        DispName = "Undergarment",
+                        IsBottom = false,
+                        Gender = GenderTarget.Female,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_4,
+                    },
+                },
+            },
+            new UTSet()
+            {
+                Name = "Medium Variant 3",
+                Category = Medium,
+                Items = new List<UTitem>()
+                {
+                    new UTitem()
+                    {
+                        DispName = "Undergarment",
+                        IsBottom = true,
+                        Gender = GenderTarget.Mutual,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_5,
+                    },
+                    new UTitem()
+                    {
+                        DispName = "Undergarment",
+                        IsBottom = false,
+                        Gender = GenderTarget.Female,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_5,
+                    },
+                },
+            },
+            new UTSet()
+            {
+                Name = "Rich Variant 1",
+                Category = Rich,
+                Items = new List<UTitem>()
+                {
+                    new UTitem()
+                    {
+                        DispName = "Fine Undergarment",
+                        IsBottom = true,
+                        Gender = GenderTarget.Mutual,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_6,
+                    },
+                    new UTitem()
+                    {
+                        DispName = "Fine Undergarment",
+                        IsBottom = false,
+                        Gender = GenderTarget.Female,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_6,
+                    },
+                },
+            },
+            new UTSet()
+            {
+                Name = "Rich Variant 2",
+                Category = Rich,
+                Items = new List<UTitem>()
+                {
+                    new UTitem()
+                    {
+                        DispName = "Fine Undergarment",
+                        IsBottom = true,
+                        Gender = GenderTarget.Mutual,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_7,
+                    },
+                    new UTitem()
+                    {
+                        DispName = "Fine Undergarment",
+                        IsBottom = false,
+                        Gender = GenderTarget.Female,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_7,
+                    },
+                },
+            },
+            new UTSet()
+            {
+                Name = "Rich Variant 3",
+                Category = Rich,
+                Items = new List<UTitem>()
+                {
+                    new UTitem()
+                    {
+                        DispName = "Fine Undergarment",
+                        IsBottom = true,
+                        Gender = GenderTarget.Mutual,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_8,
+                    },
+                    new UTitem()
+                    {
+                        DispName = "Fine Undergarment",
+                        IsBottom = false,
+                        Gender = GenderTarget.Female,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_8,
+                    },
+                },
+            },
+        };
+        #endregion
         public IEnumerable<UTSet> AllSets => Sets.And(DefaultSet);
 
         public bool VerboseMode { get; set; }
