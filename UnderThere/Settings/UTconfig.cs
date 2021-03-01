@@ -1,4 +1,5 @@
-﻿using Mutagen.Bethesda;
+using Mutagen.Bethesda;
+using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using Mutagen.Bethesda.Skyrim;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,6 @@ namespace UnderThere.Settings
 {
     public class UTconfig
     {
-        public bool VerboseMode { get; set; }
         public AssignmentMode AssignmentMode { get; set; } = AssignmentMode.Faction;
         public bool PatchMales { get; set; } = true;
         public bool PatchFemales { get; set; } = true;
@@ -53,5 +53,7 @@ namespace UnderThere.Settings
             }
         };
         public List<UTSet> Sets { get; set; } = new List<UTSet>();
+        public bool VerboseMode { get; set; }
+        public int RandomSeed { get; set; } = 1753;
     }
 }

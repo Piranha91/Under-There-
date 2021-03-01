@@ -15,6 +15,7 @@ namespace UnderThere
     public class Program
     {
         static Lazy<UTconfig> Settings = null!;
+        static Lazy<Random> Random = new Lazy<Random>(() => new Random(Settings.Value.RandomSeed));
 
         public static async Task<int> Main(string[] args)
         {
@@ -398,8 +399,7 @@ namespace UnderThere
             }
 
             // return the wealth group that was matched to the highest number of factions (choose random if tied)
-            var random = new Random();
-            return bestMatches[random.Next(bestMatches.Count)];
+            return bestMatches[Random.Value.Next(bestMatches.Count)];
         }
 
         public static string getWealthGroupByEDID(string EDID, Dictionary<string, List<string>> Definitions, List<string> GroupLookupFailures)
