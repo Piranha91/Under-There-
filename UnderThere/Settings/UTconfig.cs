@@ -23,7 +23,9 @@ namespace UnderThere.Settings
         public HashSet<FormLink<IRaceGetter>> NonPatchableRaces { get; set; } = new HashSet<FormLink<IRaceGetter>>();
         public Dictionary<string, List<string>> ClassDefinitions { get; set; } = new Dictionary<string, List<string>>();
         public Dictionary<string, List<string>> FactionDefinitions { get; set; } = new Dictionary<string, List<string>>();
+        public string QualityForNoFaction = "Medium";
         public Dictionary<string, List<string>> FallBackFactionDefinitions { get; set; } = new Dictionary<string, List<string>>();
+        public string QualityForNoFactionFallback = string.Empty;
         public HashSet<FormLink<IFactionGetter>> IgnoreFactionsWhenScoring { get; set; } = new HashSet<FormLink<IFactionGetter>>();
         public List<NPCassignment> SpecificNPCs { get; set; } = new List<NPCassignment>();
         public List<NPCassignment> BlockedNPCs { get; set; } = new List<NPCassignment>();

@@ -350,7 +350,7 @@ namespace UnderThere
             // fallback if NPC has no factions
             if (npc.Factions == null || npc.Factions.Count == 0)
             {
-                tmpWealthGroup = getWealthGroupByEDID("*NONE", factionDefinitions, GroupLookupFailures);
+                tmpWealthGroup = Settings.Value.QualityForNoFaction;
                 if (wealthCounts.ContainsKey(tmpWealthGroup))
                 {
                     wealthCounts[tmpWealthGroup]++;
@@ -358,7 +358,7 @@ namespace UnderThere
 
                 if (tmpWealthGroup == Default)
                 {
-                    tmpWealthGroup = getWealthGroupByEDID("*NONE", fallbackFactionDefinitions, GroupLookupFailures);
+                    tmpWealthGroup = Settings.Value.QualityForNoFactionFallback;
                     if (fallBackwealthCounts.ContainsKey(tmpWealthGroup))
                     {
                         fallBackwealthCounts[tmpWealthGroup]++;
