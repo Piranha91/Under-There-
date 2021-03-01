@@ -28,10 +28,10 @@ namespace UnderThere.Settings
         public bool PatchFemales { get; set; } = true;
 
         [SynthesisOrder]
-        public bool PatchNakedNPCs { get; set; } = true;
+        public bool PatchNakedNpcs { get; set; } = true;
 
         [SynthesisOrder]
-        public bool PatchSummonedNPCs { get; set; }
+        public bool PatchSummonedNpcs { get; set; }
 
         [SynthesisOrder]
         public bool PatchGhosts { get; set; } = true;
@@ -528,10 +528,10 @@ namespace UnderThere.Settings
         #endregion
 
         [SynthesisOrder]
-        public List<NPCassignment> SpecificNPCs { get; set; } = new List<NPCassignment>();
+        public List<NPCassignment> SpecificNpcs { get; set; } = new List<NPCassignment>();
 
         [SynthesisOrder]
-        public List<NPCassignment> BlockedNPCs { get; set; } = new List<NPCassignment>();
+        public List<NPCassignment> BlockedNpcs { get; set; } = new List<NPCassignment>();
 
         [SynthesisOrder]
         public UTSet DefaultSet = new UTSet()

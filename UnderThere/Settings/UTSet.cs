@@ -21,7 +21,7 @@ namespace UnderThere.Settings
         [SynthesisOrder]
         public List<UTitem> Items { get; set; } = new List<UTitem>();
 
-        [SynthesisOrder]
+        [SynthesisIgnoreSetting]
         public FormLink<ILeveledItemGetter> LeveledList { get; set; }
     }
 }

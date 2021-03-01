@@ -143,7 +143,7 @@ namespace UnderThere
 
             foreach (var npc in state.LoadOrder.PriorityOrder.WinningOverrides<INpcGetter>())
             {
-                NPCassignment specificAssignment = NPCassignment.getSpecificNPC(npc.FormKey, settings.SpecificNPCs);
+                NPCassignment specificAssignment = NPCassignment.getSpecificNPC(npc.FormKey, settings.SpecificNpcs);
 
                 // check if NPC race should be patched
                 bool isInventoryTemplate = !npc.DefaultOutfit.IsNull && !npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Inventory);
@@ -157,11 +157,11 @@ namespace UnderThere
                     currentRace.EditorID == null ||
                     settings.NonPatchableRaces.Contains(currentRace) ||
                     Auxil.isNonHumanoid(npc, currentRace, state.LinkCache) ||
-                    (!settings.PatchSummonedNPCs && npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Summonable)) ||
+                    (!settings.PatchSummonedNpcs && npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Summonable)) ||
                     (!settings.PatchGhosts && isGhost) ||
                     currentRace.EditorID.Contains("Child", StringComparison.OrdinalIgnoreCase) ||
                     (!settings.PatchableRaces.Contains(currentRace) && !isInventoryTemplate) ||
-                    NPCassignment.isBlocked(npc.FormKey, settings.BlockedNPCs))
+                    NPCassignment.isBlocked(npc.FormKey, settings.BlockedNpcs))
                 {
                     continue;
                 }
@@ -197,7 +197,7 @@ namespace UnderThere
                     {
                         continue;
                     }
-                    else if (!settings.PatchNakedNPCs && specificAssignment.isNull)
+                    else if (!settings.PatchNakedNpcs && specificAssignment.isNull)
                     {
                         continue;
                     }
@@ -208,7 +208,7 @@ namespace UnderThere
                 }
                 else
                 {
-                    if (state.LinkCache.TryResolve<IOutfitGetter>(npc.DefaultOutfit.FormKey, out var NPCoutfit) && NPCoutfit.Items != null && NPCoutfit.Items.Count == 0 && !settings.PatchNakedNPCs)
+                    if (state.LinkCache.TryResolve<IOutfitGetter>(npc.DefaultOutfit.FormKey, out var NPCoutfit) && NPCoutfit.Items != null && NPCoutfit.Items.Count == 0 && !settings.PatchNakedNpcs)
                     {
                         continue;
                     }
@@ -221,11 +221,11 @@ namespace UnderThere
                     switch (specificAssignment.Type)
                     {
                         case NpcAssignmentType.Set:
-                            npcGroup = specificAssignment.Assignment_Set;
+                            npcGroup = specificAssignment.AssignmentSet;
                             currentUW = specificAssignment.AssignmentSet_Obj.LeveledList;
                             break;
                         case NpcAssignmentType.Group:
-                            npcGroup = specificAssignment.Assignment_Group;
+                            npcGroup = specificAssignment.AssignmentGroup;
                             currentUW = UT_LeveledItemsByWealth[npcGroup];
                             break;
                         default:

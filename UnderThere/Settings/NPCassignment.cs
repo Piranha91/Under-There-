@@ -21,12 +21,12 @@ namespace UnderThere.Settings
         public NpcAssignmentType Type { get; set; }
 
         [SynthesisOrder]
-        public string Assignment_Set { get; set; } = string.Empty;
+        public string AssignmentSet { get; set; } = string.Empty;
 
         [SynthesisOrder]
-        public string Assignment_Group { get; set; } = string.Empty;
+        public string AssignmentGroup { get; set; } = string.Empty;
 
-        [SynthesisOrder]
+        [SynthesisIgnoreSetting]
         public UTSet AssignmentSet_Obj { get; set; } = new UTSet();
 
         [SynthesisIgnoreSetting]

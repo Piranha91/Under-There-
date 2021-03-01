@@ -10,7 +10,7 @@ namespace UnderThere.Settings
         public static void validateSettings(UTconfig settings)
         {
             // specific NPCs
-            foreach (var npc in settings.SpecificNPCs)
+            foreach (var npc in settings.SpecificNpcs)
             {
                 string npcID = npc.Name + " (" + npc.Record.FormKey + ")";
 
@@ -21,7 +21,7 @@ namespace UnderThere.Settings
                         bool bFound = false;
                         foreach (UTSet set in settings.Sets)
                         {
-                            if (set.Name == npc.Assignment_Set)
+                            if (set.Name == npc.AssignmentSet)
                             {
                                 bFound = true;
                                 npc.AssignmentSet_Obj = set;
@@ -42,6 +42,7 @@ namespace UnderThere.Settings
 
                 npc.isNull = false;
             }
+
 
             // FallBackFaction definitions - make sure each is matched to an assignment
             foreach (var def in settings.FallBackFactionDefinitions.Keys)
