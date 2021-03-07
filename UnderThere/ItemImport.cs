@@ -105,14 +105,29 @@ namespace UnderThere
                 {
                     moddedItem.Name = item.DispName;
                     moddedItem.EditorID = "UT_" + moddedItem.EditorID;
-                    if (item.Weight >= 0) // if not defined in config file, keep the original item's weight
+                    if (item.Weight != "") // if not defined in config file, keep the original item's weight
                     {
-                        moddedItem.Weight = item.Weight;
+                        try
+                        {
+                            moddedItem.Weight = float.Parse(item.Weight);
+                        }
+                        catch
+                        {
+                            throw new Exception("Could not convert weight \"" + item.Weight + "\" to a number for item: " + item.DispName);
+                        }
                     }
-                    if (item.Value != 4294967295) // if not defined in config file, keep the original item's value
+                    if (item.Value != "") // if not defined in config file, keep the original item's value
                     {
-                        moddedItem.Value = item.Value;
+                        try
+                        {
+                            moddedItem.Value = Convert.ToUInt32(item.Value);
+                        }
+                        catch
+                        {
+                            throw new Exception("Could not convert value \"" + item.Value + "\" to a number for item: " + item.DispName);
+                        }
                     }
+                
                     if (item.Slots.Count > 0 && moddedItem.BodyTemplate != null) // if not defined in config file, keep the original item's slots
                     {
                         moddedItem.BodyTemplate.FirstPersonFlags = new BipedObjectFlag();

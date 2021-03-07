@@ -515,7 +515,7 @@ namespace UnderThere.Settings
             }
         };
         #endregion
-        
+
         [SynthesisOrder]
         [SynthesisTooltip("If assigned, NPCs that cannot be matched to a class or faction category will receive underwear from this category. Otherwise, these NPCs will receive the Default underwear set.")]
         public string QualityForNoFaction = Medium;
@@ -547,8 +547,13 @@ namespace UnderThere.Settings
         public List<NPCassignment> SpecificNpcs { get; set; } = new List<NPCassignment>();
 
         [SynthesisOrder]
-        [SynthesisTooltip("Sub-Menu for blocking specific NPCs from underwear assignment.")]
-        public List<NPCassignment> BlockedNpcs { get; set; } = new List<NPCassignment>();
+        [SynthesisTooltip("List of NPCs blocked from underwear assignment.")]
+        public HashSet<FormLink<INpcGetter>> BlockedNpcs { get; set; } = new HashSet<FormLink<INpcGetter>>()
+        #region Defaults
+        {
+            Skyrim.Npc.DA09Meridia
+        };
+        #endregion
 
         [SynthesisOrder]
         [SynthesisTooltip("Default underwear set. Used if Assignment Mode is set to Default, or if no class/faction group could be assigned for the given NPC and no Quality for no Assignment was set.")]
@@ -562,16 +567,16 @@ namespace UnderThere.Settings
                 {
                      DispName = "Undergarment",
                      IsBottom = true,
-                     Weight = 0.5f,
-                     Value = 25,
+                     Weight = "",
+                     Value = "",
                      Gender = GenderTarget.Mutual,
                      Record = underwearforeveryone.Armor.UFE_UnderwearBottom
                 },
                 new UTitem()
                 {
                     DispName = "Undergarment",
-                    Weight = 0.5f,
-                    Value = 25,
+                    Weight = "",
+                    Value = "",
                     Gender = GenderTarget.Female,
                     Record = underwearforeveryone.Armor.UFE_UnderwearTop
                 }

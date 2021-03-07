@@ -98,7 +98,10 @@ namespace UnderThere
 
         public static Dictionary<string, FormLink<ILeveledItemGetter>> createLeveledList_ByWealth(IEnumerable<UTSet> sets, ISkyrimMod PatchMod)
         {
-            var itemsByWealth = new Dictionary<string, FormLink<ILeveledItemGetter>>();
+            var itemsByWealth = new Dictionary<string, FormLink<ILeveledItemGetter>>()
+            {
+                { Default, Settings.Value.DefaultSet.LeveledList }
+            };
 
             foreach (var group in sets.WhereCastable<UTSet, UTCategorySet>().GroupBy(s => s.Category))
             {
@@ -161,7 +164,7 @@ namespace UnderThere
                     (!settings.PatchGhosts && isGhost) ||
                     currentRace.EditorID.Contains("Child", StringComparison.OrdinalIgnoreCase) ||
                     (!settings.PatchableRaces.Contains(currentRace) && !isInventoryTemplate) ||
-                    NPCassignment.isBlocked(npc.FormKey, settings.BlockedNpcs))
+                    settings.BlockedNpcs.Contains(npc))
                 {
                     continue;
                 }

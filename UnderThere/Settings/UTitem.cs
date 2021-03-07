@@ -30,15 +30,15 @@ namespace UnderThere.Settings
         public string DispName { get; set; } = string.Empty;
 
         [SynthesisOrder]
-        [SynthesisTooltip("Weight of this underwear in-game.")]
-        public float Weight { get; set; } = 0.5f;
+        [SynthesisTooltip("Weight of this underwear in-game (if blank, will use the weight of the imported record).")]
+        public string Weight { get; set; } = "";
 
         [SynthesisOrder]
-        [SynthesisTooltip("Value of this underwear in-game.")]
-        public UInt32 Value { get; set; } = 25;
+        [SynthesisTooltip("Value of this underwear in-game (if blank, will use the value of the imported record).")]
+        public string Value { get; set; } = "";
 
         [SynthesisOrder]
-        [SynthesisTooltip("Armor & Armor Addon Slots to be used by this underwear (if empty, will keep the ones from the source mod).")]
+        [SynthesisTooltip("Armor & Armor Addon Slots to be used by this underwear (if blank, will use the slots of the imported record).")]
         public List<int> Slots { get; set; } = new List<int>();
     }
 }
