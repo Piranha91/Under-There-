@@ -13,9 +13,11 @@ namespace UnderThere.Settings
     public class UTSet
     {
         [SynthesisOrder]
+        [SynthesisTooltip("Name of this underwear set in patcher menu (not shown in-game).")]
         public string Name { get; set; } = string.Empty;
 
         [SynthesisOrder]
+        [SynthesisTooltip("Underwear items to include with this underwear set. Must have at least one item for both male and female NPCs.")]
         public List<UTitem> Items { get; set; } = new List<UTitem>();
 
         [SynthesisIgnoreSetting]
@@ -27,6 +29,7 @@ namespace UnderThere.Settings
     public class UTCategorySet : UTSet
     {
         [SynthesisOrder]
+        [SynthesisTooltip("Class or Faction category to which this set should be assigned.")]
         public string Category { get; set; } = string.Empty;
     }
 }

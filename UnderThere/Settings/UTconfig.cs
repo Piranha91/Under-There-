@@ -19,27 +19,35 @@ namespace UnderThere.Settings
         public const string Rich = "Rich";
 
         [SynthesisOrder]
+        [SynthesisTooltip("Default: All NPCs get the Default underwear set\nRandom: All NPCs get a randomly assigned underwear set\nClass: NPC underwear sets will be assigned depending on the NPC's class\nFaction: NPC underwear sets will be assigned depending on the NPC's faction")]
         public AssignmentMode AssignmentMode { get; set; } = AssignmentMode.Faction;
 
         [SynthesisOrder]
+        [SynthesisTooltip("If unchecked, male NPCs will not be patched. Note: this may lead to some leveled female NPCs not having underwear. Recommended to leave enabled.")]
         public bool PatchMales { get; set; } = true;
 
         [SynthesisOrder]
+        [SynthesisTooltip("If unchecked, female NPCs will not be patched. Note: this may lead to some leveled male NPCs not having underwear. Recommended to leave enabled.")]
         public bool PatchFemales { get; set; } = true;
 
         [SynthesisOrder]
+        [SynthesisTooltip("If checked, NPCs meant to spawn as naked (no clothes or armor) will receive underwear. If false, these NPCs will not receive underwear.")]
         public bool PatchNakedNpcs { get; set; } = true;
 
         [SynthesisOrder]
+        [SynthesisTooltip("If checked, summoned NPCs will receive underwear.")]
         public bool PatchSummonedNpcs { get; set; }
 
         [SynthesisOrder]
+        [SynthesisTooltip("If checked, ghost NPCs will receive underwear.")]
         public bool PatchGhosts { get; set; } = true;
 
         [SynthesisOrder]
+        [SynthesisTooltip("If checked, underwear will be lootable by player. If unchecked, underwear will not be lootable but will still be removable by mods that undress actors via script.")]
         public bool MakeItemsEquippable { get; set; } = true;
 
         [SynthesisOrder]
+        [SynthesisTooltip("NPCs belonging to these races will always receive underwear. NPCs belonging to other races may receive underwear depending on if they serve as a template for NPCs of these races.")]
         public HashSet<FormLink<IRaceGetter>> PatchableRaces { get; set; } = new()
         #region Defaults
         {
@@ -69,6 +77,7 @@ namespace UnderThere.Settings
         #endregion
 
         [SynthesisOrder]
+        [SynthesisTooltip("NPCs belonging to these races will never receive underwear, even if they are templates for NPCs of other races.")]
         public HashSet<FormLink<IRaceGetter>> NonPatchableRaces { get; set; } = new()
         #region Defaults
         {
@@ -89,6 +98,7 @@ namespace UnderThere.Settings
         #endregion
 
         [SynthesisOrder]
+        [SynthesisTooltip("Category:Class dictionary to determine which underwear sets go to which NPC Classes.")]
         public Dictionary<string, HashSet<FormLink<IClassGetter>>> ClassDefinitions { get; set; } = new()
         #region Defaults
         {
@@ -236,6 +246,7 @@ namespace UnderThere.Settings
         #endregion
 
         [SynthesisOrder]
+        [SynthesisTooltip("Category:Faction dictionary to determine which underwear sets go to which NPC Factions.")]
         public Dictionary<string, HashSet<FormLink<IFactionGetter>>> FactionDefinitions { get; set; } = new()
         #region Defaults
         {
@@ -345,9 +356,7 @@ namespace UnderThere.Settings
         #endregion
 
         [SynthesisOrder]
-        public string QualityForNoFaction = Medium;
-
-        [SynthesisOrder]
+        [SynthesisTooltip("Additional faction definitions that are only used if the NPC belongs to none of the factions in Faction Definitions.")]
         public Dictionary<string, HashSet<FormLink<IFactionGetter>>> FallBackFactionDefinitions { get; set; } = new()
         #region Defaults
         {
@@ -506,11 +515,17 @@ namespace UnderThere.Settings
             }
         };
         #endregion
+        
+        [SynthesisOrder]
+        [SynthesisTooltip("If assigned, NPCs that cannot be matched to a class or faction category will receive underwear from this category. Otherwise, these NPCs will receive the Default underwear set.")]
+        public string QualityForNoFaction = Medium;
 
         [SynthesisOrder]
+        [SynthesisTooltip("This should be removed.")]
         public string QualityForNoFactionFallback = string.Empty;
 
         [SynthesisOrder]
+        [SynthesisTooltip("These factions will be ignored when assigning NPCs to a faction category, and no warning will be generated when Under There fails to match them.")]
         public HashSet<FormLink<IFactionGetter>> IgnoreFactionsWhenScoring { get; set; } = new HashSet<FormLink<IFactionGetter>>()
         #region Defaults
         {
@@ -528,12 +543,15 @@ namespace UnderThere.Settings
         #endregion
 
         [SynthesisOrder]
+        [SynthesisTooltip("Sub-Menu for assigning specific underwear items or class/faction categories to specific NPCs.")]
         public List<NPCassignment> SpecificNpcs { get; set; } = new List<NPCassignment>();
 
         [SynthesisOrder]
+        [SynthesisTooltip("Sub-Menu for blocking specific NPCs from underwear assignment.")]
         public List<NPCassignment> BlockedNpcs { get; set; } = new List<NPCassignment>();
 
         [SynthesisOrder]
+        [SynthesisTooltip("Default underwear set. Used if Assignment Mode is set to Default, or if no class/faction group could be assigned for the given NPC and no Quality for no Assignment was set.")]
         public UTSet DefaultSet = new UTSet()
         #region Defaults
         {
@@ -562,6 +580,7 @@ namespace UnderThere.Settings
         #endregion
 
         [SynthesisOrder]
+        [SynthesisTooltip("Sub-Menu for editing underwear sets to be assigned to NPCs.")]
         public List<UTCategorySet> Sets { get; set; } = new()
         #region Defaults
         {
@@ -769,9 +788,11 @@ namespace UnderThere.Settings
 
 
         [SynthesisOrder]
+        [SynthesisTooltip("If the patcher is crashing, please enable this and submit the resulting log when asking for help.")]
         public bool VerboseMode { get; set; }
 
         [SynthesisOrder]
+        [SynthesisTooltip("Random seed for selecting underwear from categories and breaking ties for faction category assignment.")]
         public int RandomSeed { get; set; } = 1753;
     }
 }
