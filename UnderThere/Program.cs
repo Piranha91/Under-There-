@@ -6,8 +6,9 @@ using Mutagen.Bethesda;
 using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Skyrim;
 using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Mutagen.Bethesda.FormKeys.SkyrimSE;
+using Noggog;
+using UnderThere.Settings;
 
 namespace UnderThere
 {
@@ -37,23 +38,17 @@ namespace UnderThere
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             string SPIDpath = Path.Combine(state.Settings.DataFolderPath, "skse\\plugins\\po3_SpellPerkItemDistributor.dll");
-            if (File.Exists(SPIDpath) == false) //SPIDtest (dual-level pun - whoa!)
+            if (!File.Exists(SPIDpath)) //SPIDtest (dual-level pun - whoa!)
             {
                 throw new Exception("Spell Perk Item Distributor was not detected at " + SPIDpath + "\nAborting patch");
             }
 
-            //temp
-            var settingsPath = Path.Combine(state.ExtraSettingsDataPath, "UnderThereConfig.json");
-            UTconfig settings = new UTconfig();
-            settings = JsonUtils.FromJson<UTconfig>(settingsPath);
-            //
-
-            //UTconfig settings = Settings.Value;
+            UTconfig settings = Settings.Value;
 
             Validator.validateSettings(settings);
 
             // create underwear items
-            List<string> UWsourcePlugins = new List<string>(); // list of source mod names for the underwear (to report to user so that they can be disabled)
+            var UWsourcePlugins = new HashSet<ModKey>(); // set of source mod names for the underwear (to report to user so that they can be disabled)
             ItemImport.createItems(settings, UWsourcePlugins, state);
 
             // created leveled item lists (to be added to outfits)
@@ -61,7 +56,7 @@ namespace UnderThere
             Dictionary<string, FormLink<ILeveledItemGetter>> UT_LeveledItemsByWealth = createLeveledList_ByWealth(settings.AllSets, state.PatchMod);
 
             // modify NPC outfits
-            assignOutfits(settings, UT_DefaultItem, UT_LeveledItemsByWealth, UT_LeveledItemsAll, state);
+            assignOutfits(settings, settings.DefaultSet.LeveledList, UT_LeveledItemsByWealth, UT_LeveledItemsAll, state);
 
             // Add slots used by underwear items to clothes and armors with 32 - Body slot active
             List<BipedObjectFlag> usedSlots = Auxil.getItemSetARMAslots(settings.AllSets, state.LinkCache);
@@ -84,41 +79,21 @@ namespace UnderThere
 
         public static FormLink<ILeveledItemGetter> createLeveledList_AllItems(IEnumerable<UTSet> sets, ILinkCache lk, ISkyrimMod PatchMod)
         {
-            if (assignments["Default"] == null || assignments["Default"].Count == 0)
-            {
-                throw new Exception("Error: could not find a default underwear defined in the settings file.");
-            }
-
-            string defaultUWname = assignments["Default"][0];
-
-            foreach (UTSet set in sets)
-            {
-                if (set.Name == defaultUWname)
-                {
-                    return set.LeveledListFormKey;
-                }
-            }
-
-            throw new Exception("Error: Could not find a Set with name " + defaultUWname);
-        }
-
-        public static FormKey createLeveledList_AllItems(List<UTSet> sets, ILinkCache lk, ISkyrimMod PatchMod)
-        {
             var allItems = PatchMod.LeveledItems.AddNew();
             allItems.EditorID = "UnderThereAllItems";
-            allItems.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
+            allItems.Entries = new ExtendedList<LeveledItemEntry>();
             foreach (UTSet set in sets)
             {
                 LeveledItemEntry entry = new LeveledItemEntry();
                 LeveledItemEntryData data = new LeveledItemEntryData();
-                data.Reference = set.LeveledListFormKey;
+                data.Reference = new FormLink<IItemGetter>(set.LeveledList.FormKey);
                 data.Level = 1;
                 data.Count = 1;
                 entry.Data = data;
                 allItems.Entries.Add(entry);
             }
 
-            return allItems.FormKey;
+            return allItems.AsLink();
         }
 
         public static Dictionary<string, FormLink<ILeveledItemGetter>> createLeveledList_ByWealth(IEnumerable<UTSet> sets, ISkyrimMod PatchMod)
@@ -156,7 +131,7 @@ namespace UnderThere
             return currentItems;
         }
 
-        public static void assignOutfits(UTconfig settings, FormKey UT_DefaultItem, Dictionary<string, FormKey> UT_LeveledItemsByWealth, FormKey UT_LeveledItemsAll, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void assignOutfits(UTconfig settings, FormLink<ILeveledItemGetter> UT_DefaultItem, Dictionary<string, FormLink<ILeveledItemGetter>> UT_LeveledItemsByWealth, FormLink<ILeveledItemGetter> UT_LeveledItemsAll, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             string npcGroup = "";
             FormKey currentOutfitKey = FormKey.Null;
@@ -165,19 +140,21 @@ namespace UnderThere
             List<string> NPClookupFailures = new List<string>();
             Dictionary<FormKey, Dictionary<string, Outfit>> OutfitMap = new Dictionary<FormKey, Dictionary<string, Outfit>>();
 
-            string mode = settings.AssignmentMode.ToLower();
-
             Outfit underwearOnly = state.PatchMod.Outfits.AddNew();
             underwearOnly.EditorID = "No_Clothes";
-            underwearOnly.Items = new Noggog.ExtendedList<IFormLink<IOutfitTargetGetter>>();
+            underwearOnly.Items = new ExtendedList<IFormLink<IOutfitTargetGetter>>();
 
             foreach (var npc in state.LoadOrder.PriorityOrder.WinningOverrides<INpcGetter>())
             {
                 NPCassignment specificAssignment = NPCassignment.getSpecificNPC(npc.FormKey, settings.SpecificNpcs);
 
                 // check if NPC race should be patched
-                bool isInventoryTemplate = npc.DefaultOutfit.IsNull == false && npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Inventory) == false;
-                bool isGhost = npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.IsGhost) || npc.Voice.FormKey.ToString() == "0854EC:Skyrim.esm" || npc.Voice.FormKey.ToString() == "0854ED:Skyrim.esm" || Auxil.hasGhostAbility(npc) || Auxil.hasGhostScript(npc);
+                bool isInventoryTemplate = !npc.DefaultOutfit.IsNull && !npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Inventory);
+                bool isGhost = npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.IsGhost)
+                    || npc.Voice.FormKey == Skyrim.VoiceType.FemaleUniqueGhost
+                    || npc.Voice.FormKey == Skyrim.VoiceType.MaleUniqueGhost
+                    || Auxil.hasGhostAbility(npc) 
+                    || Auxil.hasGhostScript(npc);
 
                 if (!state.LinkCache.TryResolve<IRaceGetter>(npc.Race.FormKey, out var currentRace) ||
                     currentRace.EditorID == null ||
@@ -193,11 +170,11 @@ namespace UnderThere
                 }
 
                 // check if NPC gender should be patched
-                if (npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Female) && settings.bPatchFemales == false)
+                if (npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Female) && !settings.PatchFemales)
                 {
                     continue;
                 }
-                else if (!npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Female) && settings.bPatchMales == false)
+                else if (!npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Female) && !settings.PatchMales)
                 {
                     continue;
                 }
@@ -209,7 +186,7 @@ namespace UnderThere
                 }
 
                 // check if NPC is player
-                if (npc.FormKey.ToString() == "000007:Skyrim.esm" || npc.FormKey.ToString() == "0361F3:Skyrim.esm")
+                if (npc.FormKey == Skyrim.Npc.Player  || npc.FormKey == Skyrim.Npc.PlayerInventory)
                 {
                     continue;
                 }
@@ -244,7 +221,7 @@ namespace UnderThere
 
                 if (!specificAssignment.isNull)
                 {
-                    switch(specificAssignment.Type)
+                    switch (specificAssignment.Type)
                     {
                         case NpcAssignmentType.Set:
                             npcGroup = specificAssignment.AssignmentSet;
@@ -254,12 +231,14 @@ namespace UnderThere
                             npcGroup = specificAssignment.AssignmentGroup;
                             currentUW = UT_LeveledItemsByWealth[npcGroup];
                             break;
-                    }    
+                        default:
+                            throw new NotImplementedException();
+                    }
                 }
                 else
                 {
                     // get the wealth of current NPC
-                    switch (mode)
+                    switch (Settings.Value.AssignmentMode)
                     {
                         case AssignmentMode.Default:
                             npcGroup = Default;
@@ -283,15 +262,15 @@ namespace UnderThere
                             currentUW = UT_LeveledItemsByWealth[npcGroup];
                             if (npcGroup == Default) { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
                             break;
-                        case "random":
+                        case AssignmentMode.Random:
                             npcGroup = "Random";
-                            currentUWkey = UT_LeveledItemsAll;
+                            currentUW = UT_LeveledItemsAll;
                             break;
                     }
                 }
 
                 // if the current outfit modified by the current wealth group doesn't exist, create it
-                if (OutfitMap.ContainsKey(currentOutfitKey) == false || OutfitMap[currentOutfitKey].ContainsKey(npcGroup) == false)
+                if (!OutfitMap.ContainsKey(currentOutfitKey) || !OutfitMap[currentOutfitKey].ContainsKey(npcGroup))
                 {
                     if (!state.LinkCache.TryResolve<IOutfitGetter>(currentOutfitKey, out var NPCoutfit) || NPCoutfit == null) { continue; }
                     Outfit newOutfit = state.PatchMod.Outfits.AddNew();
@@ -302,9 +281,9 @@ namespace UnderThere
                     }
                     if (newOutfit.Items != null)
                     {
-                        newOutfit.Items.Add(currentUWkey);
+                        newOutfit.Items.Add(currentUW);
                     }
-                    if (OutfitMap.ContainsKey(currentOutfitKey) == false)
+                    if (!OutfitMap.ContainsKey(currentOutfitKey))
                     {
                         OutfitMap[currentOutfitKey] = new Dictionary<string, Outfit>();
                     }
@@ -370,7 +349,7 @@ namespace UnderThere
             // get the wealth group with the highest number of corresponding factions.
 
             // If no primary wealth groups were matched, use fallback wealth groups if they were matched
-            if (bPrimaryWealthGroupFound == false && fallBackwealthCounts.Values.Max() > 0)
+            if (!bPrimaryWealthGroupFound && fallBackwealthCounts.Values.Max() > 0)
             {
                 wealthCounts = fallBackwealthCounts;
             }
@@ -431,7 +410,7 @@ namespace UnderThere
         {
             string UTscriptPath = Path.Combine(state.ExtraSettingsDataPath, "UnderThereGenderedItemFix.pex");
 
-            if (File.Exists(UTscriptPath) == false)
+            if (!File.Exists(UTscriptPath))
             {
                 throw new Exception("Could not find " + UTscriptPath);
             }
@@ -452,19 +431,19 @@ namespace UnderThere
         public static void createInventoryFixSpell(IEnumerable<UTSet> sets, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             // get all gendered items
-            Dictionary<string, List<FormKey>> genderedItems = getGenderedItems(sets);
+            var genderedItems = getGenderedItems(sets);
 
             // create gendered item FormLists
             FormList maleItems = state.PatchMod.FormLists.AddNew();
             maleItems.EditorID = "UT_FLST_MaleOnly";
-            foreach (var fk in genderedItems["male"])
+            foreach (var fk in genderedItems.Male)
             {
                 maleItems.Items.Add(fk);
             }
 
             FormList femaleItems = state.PatchMod.FormLists.AddNew();
             femaleItems.EditorID = "UT_FLST_FemaleOnly";
-            foreach (var fk in genderedItems["female"])
+            foreach (var fk in genderedItems.Female)
             {
                 femaleItems.Items.Add(fk);
             }
@@ -499,26 +478,13 @@ namespace UnderThere
             utItemFixEffect.VirtualMachineAdapter.Scripts.Add(UTinventoryFixScript);
 
             // create Spell
-
-            //the following does not fix the issue - check later if it's deletable
-            
-            if (!FormKey.TryFactory("013F44:skyrim.esm", out var equipTypeEitherHandKey) || equipTypeEitherHandKey.IsNull)
-            {
-                throw new Exception("Could not create FormKey 013F44:skyrim.esm");
-            }
-            if (!state.LinkCache.TryResolve<IEquipTypeGetter>(equipTypeEitherHandKey, out var equipTypeEitherHand) || equipTypeEitherHand == null)
-            {
-                throw new Exception("Could not resolve FormKey 013F44:skyrim.esm");
-            }
-            ///
-
             Spell utItemFixSpell = state.PatchMod.Spells.AddNew();
             utItemFixSpell.EditorID = "UT_SPEL_GenderedInventoryFix";
             utItemFixSpell.Name = "Fixes gendered UnderThere inventory";
             utItemFixSpell.CastType = CastType.ConstantEffect;
             utItemFixSpell.TargetType = TargetType.Self;
             utItemFixSpell.Type = SpellType.Ability;
-            utItemFixSpell.EquipmentType = equipTypeEitherHandKey;
+            utItemFixSpell.EquipmentType = Skyrim.EquipType.EitherHand;
             Effect utItemFixShellEffect = new Effect();
             utItemFixShellEffect.BaseEffect = utItemFixEffect;
             utItemFixShellEffect.Data = new EffectData();
@@ -540,9 +506,8 @@ namespace UnderThere
 
         public static (HashSet<FormLink<IArmorGetter>> Male, HashSet<FormLink<IArmorGetter>> Female) getGenderedItems(IEnumerable<UTSet> sets)
         {
-            Dictionary<string, List<FormKey>> genderedItems = new Dictionary<string, List<FormKey>>();
-            genderedItems["male"] = new List<FormKey>();
-            genderedItems["female"] = new List<FormKey>();
+            var male = new HashSet<FormLink<IArmorGetter>>();
+            var female = new HashSet<FormLink<IArmorGetter>>();
 
             foreach (UTSet set in sets)
             {
@@ -551,74 +516,56 @@ namespace UnderThere
             }
 
             //make sure that gendered items aren't mixed
-            foreach (FormKey maleItem in genderedItems["male"])
+            foreach (var maleItem in male)
             {
-                if (genderedItems["female"].Contains(maleItem))
+                if (female.Contains(maleItem))
                 {
                     throw new Exception("Error: found item " + maleItem.ToString() + " in both Items_Male and Items_Female. Please move it to Items_Mutual.");
                 }
             }
-            foreach (FormKey femaleItem in genderedItems["female"])
+            foreach (var femaleItem in female)
             {
-                if (genderedItems["male"].Contains(femaleItem))
+                if (male.Contains(femaleItem))
                 {
                     throw new Exception("Error: found item " + femaleItem.ToString() + " in both Items_Male and Items_Female. Please move it to Items_Mutual.");
                 }
             }
 
-            return genderedItems;
+            return (male, female);
         }
 
-        public static void getGenderedItemsFromList(List<UTitem> items, List<FormKey> uniqueFormKeys)
+        public static void patchBodyARMAslots(List<BipedObjectFlag> usedSlots, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaces, IPatcherState<ISkyrimMod, ISkyrimModGetter> state, bool bVerboseMode)
         {
-            foreach (UTitem item in items)
-            {
-                if (uniqueFormKeys.Contains(item.formKey) == false)
-                {
-                    uniqueFormKeys.Add(item.formKey);
-                }
-            }
-        }
-
-        
-
-        public static void patchBodyARMAslots(List<BipedObjectFlag> usedSlots, List<string> patchableRaces, IPatcherState<ISkyrimMod, ISkyrimModGetter> state, bool bVerboseMode)
-        {
-            if (!FormKey.TryFactory("000019:Skyrim.esm", out var defaultRaceKey) || defaultRaceKey.IsNull)
-            {
-                throw new Exception("Could not get FormKey " + defaultRaceKey.ToString());
-            }
-
             foreach (var arma in state.LoadOrder.PriorityOrder.WinningOverrides<IArmorAddonGetter>())
             {
-                if (!state.LinkCache.TryResolve<IRaceGetter>(arma.Race.FormKey, out var armaRace) || armaRace == null || armaRace.EditorID == null || armaRace.EditorID.Contains("Child"))
+                if (!state.LinkCache.TryResolve<IRaceGetter>(arma.Race.FormKey, out var armaRace) || armaRace.EditorID == null || armaRace.EditorID.Contains("Child", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
 
-                if (arma.Race.FormKey == defaultRaceKey || patchableRaces.Contains(armaRace.EditorID))
-                { 
+                if (arma.Race.FormKey == Skyrim.Race.DefaultRace || patchableRaces.Contains(armaRace.AsLink()))
+                {
                     if (arma.BodyTemplate != null && arma.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Body))
                     {
-                        if (bVerboseMode == true)
+                        if (bVerboseMode)
                         {
                             Console.WriteLine("Patching armor addon: {0}", arma.FormKey.ToString());
                         }
                         var patchedAA = state.PatchMod.ArmorAddons.GetOrAddAsOverride(arma);
-                        if (patchedAA.BodyTemplate == null) { continue; }
+                        if (patchedAA.BodyTemplate == null) continue;
                         foreach (var uwSlot in usedSlots)
                         {
                             try
                             {
                                 patchedAA.BodyTemplate.FirstPersonFlags |= uwSlot;
-                                if (bVerboseMode == true)
+                                if (bVerboseMode)
                                 {
                                     Console.WriteLine("added slot {0}", Auxil.mapSlotToInt(uwSlot));
                                 }
                             }
                             catch
                             {
-                                Console.WriteLine("Failed to add slot {0} to armor addon {1}", Auxil.mapSlotToInt(uwSlot), arma.FormKey.ToString()); 
+                                Console.WriteLine("Failed to add slot {0} to armor addon {1}", Auxil.mapSlotToInt(uwSlot), arma.FormKey.ToString());
                             }
                         }
                     }
@@ -639,10 +586,10 @@ namespace UnderThere
             }
         }
 
-        public static void reportDeactivatablePlugins(List<string> plugins)
+        public static void reportDeactivatablePlugins(IEnumerable<ModKey> plugins)
         {
             Console.WriteLine("\nThe following plugins have been absorbed into the synthesis patch and may now be deactivated. Make sure to keep the associated meshes and textures enabled.");
-            foreach (string p in plugins)
+            foreach (var p in plugins)
             {
                 Console.WriteLine(p);
             }
@@ -659,7 +606,7 @@ namespace UnderThere
                     break;
                 }
             }
-            if (bSOSdetected == false)
+            if (!bSOSdetected)
             {
                 return false;
             }
@@ -685,11 +632,11 @@ namespace UnderThere
         {
             foreach (var item in items)
             {
-                if (item.IsBottom == true && state.LinkCache.TryResolve<IArmor>(item.formKey, out var moddedItem) && moddedItem != null)
+                if (item.IsBottom && item.Record.TryResolve<IArmor>(state.LinkCache, out var moddedItem))
                 {
                     foreach (var aa in moddedItem.Armature)
                     {
-                        if (state.LinkCache.TryResolve<IArmorAddonGetter>(aa.FormKey, out var moddedAA) && moddedAA != null)
+                        if (state.LinkCache.TryResolve<IArmorAddonGetter>(aa.FormKey, out var moddedAA))
                         {
                             var moddedAA_override = state.PatchMod.ArmorAddons.GetOrAddAsOverride(moddedAA);
                             if (moddedAA_override.BodyTemplate != null)
@@ -700,137 +647,6 @@ namespace UnderThere
                     }
                 }
             }
-        }
-    }
-
-    public class UTconfig
-    {
-        public bool bVerboseMode {get; set;}
-        public string AssignmentMode { get; set; }
-        public bool bPatchMales { get; set; }
-        public bool bPatchFemales { get; set; }
-        public bool bPatchNakedNPCs { get; set; }
-        public bool bPatchSummonedNPCs { get; set; }
-        public bool bPatchGhosts { get; set; }
-        public bool bMakeItemsEquippable { get; set; }
-        public List<string> PatchableRaces { get; set; }
-        public List<string> NonPatchableRaces { get; set; }
-        public Dictionary<string, List<string>> ClassDefinitions { get; set; }
-        public Dictionary<string, List<string>> FactionDefinitions { get; set; }
-        public Dictionary<string, List<string>> FallBackFactionDefinitions { get; set; }
-        public List<string> IgnoreFactionsWhenScoring { get; set; }
-        public List<NPCassignment> SpecificNPCs { get; set; }
-        public List<NPCassignment> BlockedNPCs { get; set; }
-        public Dictionary<string, List<string>> Assignments { get; set; }
-        public List<UTSet> Sets { get; set; }
-
-        public UTconfig()
-        {
-            bVerboseMode = false;
-            AssignmentMode = "";
-            bPatchMales = true;
-            bPatchFemales = true;
-            bPatchNakedNPCs = true;
-            bPatchSummonedNPCs = false;
-            bPatchGhosts = true;
-            PatchableRaces = new List<string>();
-            NonPatchableRaces = new List<string>();
-            ClassDefinitions = new Dictionary<string, List<string>>();
-            FactionDefinitions = new Dictionary<string, List<string>>();
-            FallBackFactionDefinitions = new Dictionary<string, List<string>>();
-            IgnoreFactionsWhenScoring = new List<string>();
-            SpecificNPCs = new List<NPCassignment>();
-            BlockedNPCs = new List<NPCassignment>();
-            Assignments = new Dictionary<string, List<string>>();
-            Sets = new List<UTSet>();
-        }
-    }
-
-    public class UTSet
-    {
-        public string Name { get; set; }
-        public List<UTitem> Items_Mutual { get; set; }
-        public List<UTitem> Items_Male { get; set; }
-        public List<UTitem> Items_Female { get; set; }
-        public FormKey LeveledListFormKey { get; set; }
-
-        public UTSet()
-        {
-            Name = "";
-            Items_Mutual = new List<UTitem>();
-            Items_Male = new List<UTitem>();
-            Items_Female = new List<UTitem>();
-            LeveledListFormKey = new FormKey();
-        }
-    }
-    public class UTitem
-    {
-        public string Record { get; set; }
-
-        public string DispName { get; set; }
-        public bool IsBottom { get; set; }
-        public float Weight { get; set; }
-        public UInt32 Value { get; set; }
-        public List<int> Slots { get; set; }
-        public FormKey formKey { get; set; }
-        public UTitem()
-        {
-            Record = "";
-            DispName = "";
-            IsBottom = false;
-            Weight = -1;
-            Value = 4294967295; // max uInt32 value
-            Slots = new List<int>();
-            formKey = new FormKey();
-        }
-    }
-
-    public class NPCassignment
-    {
-        public string Name { get; set; }
-        public string FormKey { get; set; }
-        public string Type { get; set; }
-        public string Assignment_Set { get; set; }
-        public string Assignment_Group { get; set; }
-        public UTSet AssignmentSet_Obj { get; set; }
-        public FormKey FormKeyObj { get; set; }
-        public bool isNull { get; set; }
-        public NPCassignment()
-        {
-            Name = "";
-            FormKey = "";
-            Type = "";
-            Assignment_Set = "";
-            Assignment_Group = "";
-            AssignmentSet_Obj = new UTSet();
-            FormKeyObj = new FormKey();
-            isNull = true;
-        }
-
-        public static NPCassignment getSpecificNPC(FormKey fk, List<NPCassignment> assigments)
-        {
-            foreach (var assignment in assigments)
-            {
-               if (assignment.FormKeyObj == fk)
-               {
-                    return assignment;
-               }
-            }
-
-            return new NPCassignment();
-        }
-
-        public static bool isBlocked(FormKey fk, List<NPCassignment> assigments)
-        {
-            foreach (var assignment in assigments)
-            {
-                if (assignment.FormKeyObj == fk)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
 }
