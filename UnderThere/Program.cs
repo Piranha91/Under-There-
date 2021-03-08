@@ -160,7 +160,7 @@ namespace UnderThere
                     currentRace.EditorID == null ||
                     settings.NonPatchableRaces.Contains(currentRace) ||
                     Auxil.isNonHumanoid(npc, currentRace, state.LinkCache) ||
-                    (!settings.PatchSummonedNpcs && npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Summonable)) ||
+                    (!settings.PatchSummonedNpcs && npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Summonable) && !npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Unique)) || // some unique NPCs like Embry seem to erroneously have "Summonable" flag set, which caused them to be skipped without the "unique" flag checked
                     (!settings.PatchGhosts && isGhost) ||
                     currentRace.EditorID.Contains("Child", StringComparison.OrdinalIgnoreCase) ||
                     (!settings.PatchableRaces.Contains(currentRace) && !isInventoryTemplate) ||
@@ -312,10 +312,15 @@ namespace UnderThere
             }
             wealthCounts.Add(Default, 0);
 
+            if (npc.EditorID == "Saadia")
+            {
+                int z = 0;
+            }
+
             // add each faction by appropriate wealth count
             foreach (var fact in npc.Factions)
             {
-                if (ignoredFactions.Contains(fact.Faction))
+                if (ignoredFactions.Contains(fact.Faction) || fact.Rank == 255) // 255 shows up as -1 in SSEedit
                 {
                     wealthCounts[Default]++; // "Default" will be ignored if other factions are matched
                     continue;
