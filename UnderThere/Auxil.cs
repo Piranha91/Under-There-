@@ -233,7 +233,7 @@ namespace UnderThere
             }
         }
 
-        public static void LogDefaultNPCs(List<string> failedNPClookups, HashSet<IFormLink> failedGroupLookups, string extraSettingsPath)
+        public static void LogDefaultNPCs(List<string> failedNPClookups, HashSet<IFormLink> failedGroupLookups, string extraSettingsPath, string fallBackQuality)
         {
             string logPath = Path.Combine(extraSettingsPath, "failedAssignmentLog.txt");
             List<string> logLines = new List<string>();
@@ -241,7 +241,7 @@ namespace UnderThere
             Console.WriteLine("");
             if (failedNPClookups.Count > 0)
             {
-                Console.WriteLine(failedNPClookups.Count + " NPCs were assigned to the Default group because their definitions could not be matched to any custom groups.");
+                Console.WriteLine(failedNPClookups.Count + " NPCs were assigned to the " + fallBackQuality + " group because their definitions could not be matched to any custom groups.");
                 logLines.Add("The following NPCs were assigned to the Default group:");
                 logLines.AddRange(failedNPClookups);
                 logLines.Add("=================================================================================================");

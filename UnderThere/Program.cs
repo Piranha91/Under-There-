@@ -250,6 +250,10 @@ namespace UnderThere
                                 break;
                             }
                             npcGroup = getWealthGroup(npc.Class, settings.ClassDefinitions, GroupLookupFailures);
+                            if (npcGroup == "Default" && Settings.Value.QualityForNoAssignment.Trim() != "")
+                            {
+                                npcGroup = Settings.Value.QualityForNoAssignment.Trim();
+                            }
                             currentUW = UT_LeveledItemsByWealth[npcGroup];
                             if (npcGroup == Default) { NPClookupFailures.Add(npc.EditorID + " (" + npc.FormKey.ToString() + ")"); }
                             break;
@@ -292,7 +296,7 @@ namespace UnderThere
             //report failed lookups
             if (GroupLookupFailures.Count > 0 || NPClookupFailures.Count > 0)
             {
-                Auxil.LogDefaultNPCs(NPClookupFailures, GroupLookupFailures, state.ExtraSettingsDataPath);
+                Auxil.LogDefaultNPCs(NPClookupFailures, GroupLookupFailures, state.ExtraSettingsDataPath, Settings.Value.QualityForNoAssignment);
             }
         }
 
@@ -311,11 +315,6 @@ namespace UnderThere
                 fallBackwealthCounts.Add(k, 0);
             }
             wealthCounts.Add(Default, 0);
-
-            if (npc.EditorID == "Saadia")
-            {
-                int z = 0;
-            }
 
             // add each faction by appropriate wealth count
             foreach (var fact in npc.Factions)
@@ -336,29 +335,6 @@ namespace UnderThere
                 if (tmpWealthGroup == Default) // check fallback factions
                 {
                     tmpWealthGroup = getWealthGroup(fact.Faction, fallbackFactionDefinitions, GroupLookupFailures);
-                    if (fallBackwealthCounts.ContainsKey(tmpWealthGroup))
-                    {
-                        fallBackwealthCounts[tmpWealthGroup]++;
-                    }
-                }
-                else
-                {
-                    bPrimaryWealthGroupFound = true;
-                }
-            }
-
-            // fallback if NPC has no factions
-            if (npc.Factions == null || npc.Factions.Count == 0)
-            {
-                tmpWealthGroup = Settings.Value.QualityForNoFaction;
-                if (wealthCounts.ContainsKey(tmpWealthGroup))
-                {
-                    wealthCounts[tmpWealthGroup]++;
-                }
-
-                if (tmpWealthGroup == Default)
-                {
-                    tmpWealthGroup = Settings.Value.QualityForNoFactionFallback;
                     if (fallBackwealthCounts.ContainsKey(tmpWealthGroup))
                     {
                         fallBackwealthCounts[tmpWealthGroup]++;
@@ -396,6 +372,18 @@ namespace UnderThere
                 if (wealthCounts[x] == maxFactionsMatched)
                 {
                     bestMatches.Add(x);
+                }
+            }
+
+            if (npc.Factions == null || npc.Factions.Count == 0 || maxFactionsMatched == 0)
+            {
+                if (Settings.Value.QualityForNoAssignment.Trim() != "")
+                {
+                    return Settings.Value.QualityForNoAssignment.Trim();
+                }
+                else
+                {
+                    return "Default";
                 }
             }
 

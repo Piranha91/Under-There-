@@ -299,6 +299,9 @@ namespace UnderThere.Settings
                 Skyrim.Faction.Favor104QuestGiverFaction,
                 Skyrim.Faction.KynesgroveDravyneaFaction,
                 Skyrim.Faction.ServicesKynesgroveDravynea,
+                Skyrim.Faction.MarkarthCastleServantsFaction,
+                Skyrim.Faction.SolitudeBluePalaceServants,
+                Skyrim.Faction.WhiterunDragonsreachServants,
                 Dragonborn.Faction.DLC2RavenRockGuardFaction,
                 Dragonborn.Faction.DLC2RRBulwarkFaction,
                 Dragonborn.Faction.DLC2ThirskNordFaction,
@@ -534,11 +537,7 @@ namespace UnderThere.Settings
 
         [SynthesisOrder]
         [SynthesisTooltip("If assigned, NPCs that cannot be matched to a class or faction category will receive underwear from this category. Otherwise, these NPCs will receive the Default underwear set.")]
-        public string QualityForNoFaction = Medium;
-
-        [SynthesisOrder]
-        [SynthesisTooltip("This should be removed.")]
-        public string QualityForNoFactionFallback = string.Empty;
+        public string QualityForNoAssignment = Medium;
 
         [SynthesisOrder]
         [SynthesisTooltip("These factions will be ignored when assigning NPCs to a faction category, and no warning will be generated when Under There fails to match them.")]
