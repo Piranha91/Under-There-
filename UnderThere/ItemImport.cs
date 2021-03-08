@@ -12,35 +12,31 @@ namespace UnderThere
     {
         public static void createItems(UTconfig settings, List<string> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            deepCopyItems(settings.Sets, UWsourcePlugins, state); // copy all armor records along with their linked subrecords into PatchMod to get rid of dependencies on the original plugins. Sets[i].FormKeyObject will now point to the new FormKey in PatchMod
+            deepCopyItems(settings.AllSets, UWsourcePlugins, state); // copy all armor records along with their linked subrecords into PatchMod to get rid of dependencies on the original plugins. Sets[i].FormKeyObject will now point to the new FormKey in PatchMod
 
             List<IFormLink<IRaceGetter>> patchableRaceFormLinks = Auxil.getRaceFormLinksFromEDID(settings.PatchableRaces, state); // get race formlinks to update armor addons
 
             // create a leveled list entry for each set
-            foreach (var set in settings.Sets)
+            foreach (var set in settings.AllSets)
             {
                 var currentItems = state.PatchMod.LeveledItems.AddNew();
                 currentItems.EditorID = "LItems_" + set.Name;
                 currentItems.Flags |= LeveledItem.Flag.UseAll;
                 currentItems.Entries = new Noggog.ExtendedList<LeveledItemEntry>();
 
-                editAndStoreUTitems(set.Items_Mutual, currentItems, settings.bMakeItemsEquippable, patchableRaceFormLinks, state);
-                editAndStoreUTitems(set.Items_Male, currentItems, settings.bMakeItemsEquippable, patchableRaceFormLinks, state);
-                editAndStoreUTitems(set.Items_Female, currentItems, settings.bMakeItemsEquippable, patchableRaceFormLinks, state);
+                editAndStoreUTitems(set.Items, currentItems, settings.MakeItemsEquippable, settings.PatchableRaces, state);
 
                 set.LeveledListFormKey = currentItems.FormKey;
             }
         }
 
-        public static void deepCopyItems(List<UTSet> Sets, List<string> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void deepCopyItems(IEnumerable<UTSet> Sets, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             var recordsToDup = new HashSet<FormLinkInformation>();
 
             foreach (var set in Sets)
             {
-                getFormLinksToDuplicate(set.Items_Mutual, recordsToDup, state.LinkCache);
-                getFormLinksToDuplicate(set.Items_Male, recordsToDup, state.LinkCache);
-                getFormLinksToDuplicate(set.Items_Female, recordsToDup, state.LinkCache);
+                getFormLinksToDuplicate(set.Items, recordsToDup, state.LinkCache);
             }
 
             // store the original source mod names to notify user that they can be disabled.
@@ -74,9 +70,7 @@ namespace UnderThere
             // remap Set formlinks to the duplicated ones
             foreach (UTSet set in Sets)
             {
-                remapSetItemList(set.Items_Mutual, remap);
-                remapSetItemList(set.Items_Male, remap);
-                remapSetItemList(set.Items_Female, remap);
+                remapSetItemList(set.Items, remap);
             }
         }
 
@@ -120,14 +114,29 @@ namespace UnderThere
                 {
                     moddedItem.Name = item.DispName;
                     moddedItem.EditorID = "UT_" + moddedItem.EditorID;
-                    if (item.Weight >= 0) // if not defined in config file, keep the original item's weight
+                    if (item.Weight != "") // if not defined in config file, keep the original item's weight
                     {
-                        moddedItem.Weight = item.Weight;
+                        try
+                        {
+                            moddedItem.Weight = float.Parse(item.Weight);
+                        }
+                        catch
+                        {
+                            throw new Exception("Could not convert weight \"" + item.Weight + "\" to a number for item: " + item.DispName);
+                        }
                     }
-                    if (item.Value != 4294967295) // if not defined in config file, keep the original item's value
+                    if (item.Value != "") // if not defined in config file, keep the original item's value
                     {
-                        moddedItem.Value = item.Value;
+                        try
+                        {
+                            moddedItem.Value = Convert.ToUInt32(item.Value);
+                        }
+                        catch
+                        {
+                            throw new Exception("Could not convert value \"" + item.Value + "\" to a number for item: " + item.DispName);
+                        }
                     }
+                
                     if (item.Slots.Count > 0 && moddedItem.BodyTemplate != null) // if not defined in config file, keep the original item's slots
                     {
                         moddedItem.BodyTemplate.FirstPersonFlags = new BipedObjectFlag();

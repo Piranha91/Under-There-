@@ -5,40 +5,15 @@ using Mutagen.Bethesda;
 using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Skyrim;
 using System.IO;
+using Mutagen.Bethesda.FormKeys.SkyrimSE;
+using UnderThere.Settings;
+using System.Linq;
 
 
 namespace UnderThere
 {
     class Auxil
     {
-        public static List<IFormLink<IRaceGetter>> getRaceFormLinksFromEDID(List<string> EDIDs, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
-        {
-            List<IFormLink<IRaceGetter>> raceFormLinks = new List<IFormLink<IRaceGetter>>();
-            List<string> matchedEDIDs = new List<string>();
-
-            bool bMatched = false;
-            foreach (string EDID in EDIDs)
-            {
-                bMatched = false;
-
-                foreach (var race in state.LoadOrder.PriorityOrder.WinningOverrides<IRaceGetter>())
-                {
-                    if (race.EditorID == EDID)
-                    {
-                        raceFormLinks.Add(race);
-                        bMatched = true;
-                        break;
-                    }
-                }
-                if (bMatched == false)
-                {
-                    throw new Exception("Could not find Race \"" + EDID + "\" in your load order.");
-                }
-            }
-
-            return raceFormLinks;
-        }
-
         public static bool isNonHumanoid(INpcGetter npc, IRaceGetter npcRace, ILinkCache lk)
         {
             List<string> nonHumanoidFactions = new List<string> { "CreatureFaction", "PreyFaction", "DragonFaction", "DwarvenAutomatonFaction", "DLC2ExpSpiderFriendFaction" };
@@ -97,15 +72,13 @@ namespace UnderThere
             return false;
         }
 
-        public static List<BipedObjectFlag> getItemSetARMAslots(List<UTSet> sets, ILinkCache lk)
+        public static List<BipedObjectFlag> getItemSetARMAslots(IEnumerable<UTSet> sets, ILinkCache lk)
         {
             List<BipedObjectFlag> usedSlots = new List<BipedObjectFlag>();
 
             foreach (UTSet set in sets)
             {
-                getContainedSlots(set.Items_Mutual, usedSlots, lk);
-                getContainedSlots(set.Items_Male, usedSlots, lk);
-                getContainedSlots(set.Items_Female, usedSlots, lk);
+                getContainedSlots(set.Items, usedSlots, lk);
             }
 
             return usedSlots;
@@ -263,7 +236,7 @@ namespace UnderThere
             }
         }
 
-        public static void LogDefaultNPCs(List<string> failedNPClookups, List<string> failedGroupLookups, string extraSettingsPath)
+        public static void LogDefaultNPCs(List<string> failedNPClookups, HashSet<IFormLink> failedGroupLookups, string extraSettingsPath, string fallBackQuality)
         {
             string logPath = Path.Combine(extraSettingsPath, "failedAssignmentLog.txt");
             List<string> logLines = new List<string>();
@@ -271,7 +244,7 @@ namespace UnderThere
             Console.WriteLine("");
             if (failedNPClookups.Count > 0)
             {
-                Console.WriteLine(failedNPClookups.Count + " NPCs were assigned to the Default group because their definitions could not be matched to any custom groups.");
+                Console.WriteLine(failedNPClookups.Count + " NPCs were assigned to the " + fallBackQuality + " group because their definitions could not be matched to any custom groups.");
                 logLines.Add("The following NPCs were assigned to the Default group:");
                 logLines.AddRange(failedNPClookups);
                 logLines.Add("=================================================================================================");
@@ -280,7 +253,7 @@ namespace UnderThere
             {
                 Console.WriteLine(failedGroupLookups.Count + " classifiers could not be matched to any group definitions defined in the settings file.");
                 logLines.Add("The following classifiers could not be matched to any group definitions within the settings file.");
-                logLines.AddRange(failedGroupLookups);
+                logLines.AddRange(failedGroupLookups.Select(x => x.ToString() ?? string.Empty));
             }
             if (failedGroupLookups.Count > 0 || failedNPClookups.Count > 0)
             {
