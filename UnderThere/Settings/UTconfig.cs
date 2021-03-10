@@ -571,6 +571,10 @@ namespace UnderThere.Settings
         #endregion
 
         [SynthesisOrder]
+        [SynthesisTooltip("List of factions blocked from underwear assignment (still applies even if Assignment Mode is not \"Faction\".")]
+        public HashSet<FormLink<IFactionGetter>> BlockedFactions { get; set; } = new HashSet<FormLink<IFactionGetter>>();
+
+        [SynthesisOrder]
         [SynthesisTooltip("Default underwear set. Used if Assignment Mode is set to Default, or if no class/faction group could be assigned for the given NPC and no Quality for no Assignment was set.")]
         public UTSet DefaultSet = new UTSet()
         #region Defaults

@@ -267,5 +267,21 @@ namespace UnderThere
                 throw new Exception("Could not write " + logPath);
             }
         }
+
+        public static bool hasBlockedFaction(INpcGetter npc, HashSet<FormLink<IFactionGetter>> BlockedFactions)
+        {
+            if (npc.EditorID == "BrelynaMaryon")
+            {
+                int i = 0;
+            }
+            foreach (var fact in npc.Factions)
+            {
+                if (BlockedFactions.Contains(fact.Faction) && fact.Rank != 255) // 255 shows up as -1 in SSEedit
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }

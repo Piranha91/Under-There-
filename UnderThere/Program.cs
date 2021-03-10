@@ -164,7 +164,8 @@ namespace UnderThere
                     (!settings.PatchGhosts && isGhost) ||
                     currentRace.EditorID.Contains("Child", StringComparison.OrdinalIgnoreCase) ||
                     (!settings.PatchableRaces.Contains(currentRace) && !isInventoryTemplate) ||
-                    settings.BlockedNpcs.Contains(npc))
+                    settings.BlockedNpcs.Contains(npc) ||
+                    Auxil.hasBlockedFaction(npc, settings.BlockedFactions))
                 {
                     continue;
                 }
