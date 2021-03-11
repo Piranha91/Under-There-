@@ -42,7 +42,6 @@ namespace UnderThere
             // store the original source mod names to notify user that they can be disabled.
             UWsourcePlugins.Add(recordsToDup.Select(x => x.FormKey.ModKey));
 
-            //var deleteMeEventually = (ILinkCache<ISkyrimMod>)lk; // will be moved to lk directly in next Mutagen version.
             var duplicated = recordsToDup
                 .Select(toDup =>
                 {
