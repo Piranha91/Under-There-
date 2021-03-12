@@ -49,7 +49,7 @@ Under There! is a Synthesis patcher heavily inspired by Equipable Underwear for 
 
 - Spell Perk Item Distributor: hard requirement - to correctly edit gendered NPC inventory
 
-- Equipable Underwear for Everyone: soft requirement - the default settings expect to import EUfE underwear. You can edit the settings to import underwear from other mods instead, in which case those mods will become dependencies. **However**, after Synthesis is built, **these dependencies can be disabled** so you will not need those extra mods in your load order.
+- Equipable Underwear for Everyone: soft requirement - the default settings expect to import EUfE underwear. You can edit the settings to import underwear from other mods instead, in which case those mods will become dependencies. **However**, after Synthesis is built, **the source plugins for underwear can be disabled** so you will not need those extra esps in your load order.
 
 <h2>How to use</h2> 
 Install the patcher via Synthesis. Click “Git Repository” in the top left corner next to the + sign. If it is not visible in the Browse patcher list, click “Input” and paste in the patcher’s git repository URL: https://github.com/Piranha91/Under-There-. Wait a few seconds for it to find the patcher, click the bar under “Project” and select UnderThere\UnderThere.csproj. Wait another few seconds and click the checkbox that should turn blue in the bottom right corner. Then return to the main menu, click the circle next to Under-There- so that it turns into a checkbox, and click the Run (arrow) button at the bottom to run the patcher. It should only take a few seconds to complete. 
