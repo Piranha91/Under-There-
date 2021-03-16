@@ -23,6 +23,10 @@ namespace UnderThere.Settings
         public AssignmentMode AssignmentMode { get; set; } = AssignmentMode.Faction;
 
         [SynthesisOrder]
+        [SynthesisTooltip("SPID: patched outfits will be distributed via Spell Perk Item Distributor.\nPlugin: patched outfits will be added to NPCs via their plugin record.")]
+        public OutfitAssignmentMode OutfitAssignmentMode { get; set; } = OutfitAssignmentMode.SPID;
+
+        [SynthesisOrder]
         [SynthesisTooltip("If unchecked, male NPCs will not be patched. Note: this may lead to some leveled female NPCs not having underwear. Recommended to leave enabled.")]
         public bool PatchMales { get; set; } = true;
 

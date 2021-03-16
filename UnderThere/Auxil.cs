@@ -256,16 +256,17 @@ namespace UnderThere
             {
                 Console.WriteLine("See the log for details: " + logPath);
             }
-            
-            try
-            {
-                File.WriteAllLines(logPath, logLines);
-            }
 
-            catch
-            {
-                throw new Exception("Could not write " + logPath);
-            }
+            //try
+            //{
+            Directory.CreateDirectory(extraSettingsPath);
+            File.WriteAllLines(logPath, logLines);
+            //}
+
+            //catch
+            //{
+            //    throw new Exception("Could not write " + logPath);
+            //}
         }
 
         public static bool hasBlockedFaction(INpcGetter npc, HashSet<FormLink<IFactionGetter>> BlockedFactions)

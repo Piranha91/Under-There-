@@ -1,9 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-      <OutputType>Exe</OutputType>
-      <TargetFramework>net5.0</TargetFramework>
-      <TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
-    </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Data\source\UnderThereGenderedItemFix.psc" />
+    <None Remove="Data\UnderThereGenderedItemFix.pex" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Data\source\UnderThereGenderedItemFix.psc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Data\UnderThereGenderedItemFix.pex">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Mutagen.Bethesda" Version="0.27.4" />

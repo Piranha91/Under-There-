@@ -146,6 +146,8 @@ namespace UnderThere
             underwearOnly.EditorID = "No_Clothes";
             underwearOnly.Items = new ExtendedList<IFormLink<IOutfitTargetGetter>>();
 
+            List<string> spidOutfitAssignments = new List<string>();
+
             foreach (var npc in state.LoadOrder.PriorityOrder.WinningOverrides<INpcGetter>())
             {
                 NPCassignment specificAssignment = NPCassignment.getSpecificNPC(npc.FormKey, settings.SpecificNpcs);
@@ -293,7 +295,11 @@ namespace UnderThere
                     OutfitMap[currentOutfitKey][npcGroup] = newOutfit;
                 }
 
-                NPCoverride.DefaultOutfit = OutfitMap[currentOutfitKey][npcGroup]; // assign the correct outfit to the current NPC
+                switch(settings.OutfitAssignmentMode)
+                {
+                    case OutfitAssignmentMode.SPID: AssignOutfitViaSPID(npc, OutfitMap[currentOutfitKey][npcGroup].FormKey, spidOutfitAssignments); break;
+                    case OutfitAssignmentMode.Record: NPCoverride.DefaultOutfit.SetTo(OutfitMap[currentOutfitKey][npcGroup]); break;
+                }               
             }
 
             //report failed lookups
@@ -301,9 +307,49 @@ namespace UnderThere
             {
                 Auxil.LogDefaultNPCs(NPClookupFailures, GroupLookupFailures, state.ExtraSettingsDataPath, Settings.Value.QualityForNoAssignment);
             }
+            
+            if (settings.OutfitAssignmentMode == OutfitAssignmentMode.SPID)
+            {
+                WriteSPIDOutfitAssignments(spidOutfitAssignments, state);
+            }
         }
 
-        public static string getWealthGroupByFactions(INpcGetter npc, Dictionary<string, HashSet<FormLink<IFactionGetter>>> factionDefinitions, Dictionary<string, HashSet<FormLink<IFactionGetter>>> fallbackFactionDefinitions, HashSet<FormLink<IFactionGetter>> ignoredFactions, HashSet<IFormLink> GroupLookupFailures)
+        public static void AssignOutfitViaSPID(INpcGetter npc, FormKey outfitFormKey, List<string> assignments)
+        {
+            string startString = "Outfit = " + GetSPIDstring(outfitFormKey) + "|NONE|";
+
+            var existingAssignmentIndex = assignments.FindIndex(x => x.StartsWith(startString));
+            if (existingAssignmentIndex >= 0)
+            {
+                assignments[existingAssignmentIndex] += "," + GetSPIDstring(npc.FormKey);
+            }
+            else
+            {
+                string newAssignment = startString + GetSPIDstring(npc.FormKey);
+                assignments.Add(newAssignment);
+            } 
+        }
+
+        public static string GetSPIDstring(FormKey fk)
+        {
+            return "0x" + fk.IDString().TrimStart('0') + "~" + fk.ModKey.ToString();
+        }
+
+        public static void WriteSPIDOutfitAssignments(List<string> assignments, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            string destPath = Path.Combine(state.DataFolderPath, "UnderThereOutfits_DISTR.ini");
+            try
+            {
+                File.WriteAllLines(destPath, assignments);
+            }
+
+            catch
+            {
+                throw new Exception("Could not write " + destPath);
+            }
+        }
+
+        public static string getWealthGroupByFactions(INpcGetter npc, Dictionary<string, HashSet<IFormLinkGetter<IFactionGetter>>> factionDefinitions, Dictionary<string, HashSet<IFormLinkGetter<IFactionGetter>>> fallbackFactionDefinitions, HashSet<IFormLinkGetter<IFactionGetter>> ignoredFactions, HashSet<IFormLinkGetter> GroupLookupFailures)
         {
             Dictionary<string, int> wealthCounts = new Dictionary<string, int>();
             Dictionary<string, int> fallBackwealthCounts = new Dictionary<string, int>();
