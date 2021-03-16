@@ -69,6 +69,13 @@ namespace UnderThere
             copyUTScript(state);
             createInventoryFixSpell(settings.AllSets, state);
 
+            //remap dependencies
+            foreach (var mk in UWsourcePlugins)
+            {
+                state.PatchMod.DuplicateFromOnlyReferenced(state.LinkCache, mk, typeof(Armor));
+                //DuplicateFromMixInB.DuplicateFromOnlyReferencedB(state.PatchMod, state.LinkCache, mk, typeof(Armor));
+            }
+
             // message user
             reportARMAslots(usedSlots, bSOS);
             reportDeactivatablePlugins(UWsourcePlugins);
