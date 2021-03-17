@@ -15,7 +15,7 @@ namespace UnderThere.Settings
     {
         [SynthesisOrder]
         [SynthesisTooltip("Armor record to be imported as underwear.")]
-        public FormLink<IArmorGetter> Record { get; set; } = FormLink<IArmorGetter>.Null;
+        public IFormLinkGetter<IArmorGetter> Record { get; set; } = FormLink<IArmorGetter>.Null;
 
         [SynthesisOrder]
         [SynthesisTooltip("Gender to which this underwear is to be assigned.")]

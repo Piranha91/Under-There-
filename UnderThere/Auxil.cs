@@ -47,7 +47,7 @@ namespace UnderThere
             if (npc.ActorEffect == null) return false;
             foreach (var ability in npc.ActorEffect)
             {
-                if (ability.FormKey == Skyrim.ASpell.GhostAbility)
+                if (ability.FormKey == Skyrim.Spell.GhostAbility)
                 {
                     return true;
                 }
@@ -233,7 +233,7 @@ namespace UnderThere
             }
         }
 
-        public static void LogDefaultNPCs(List<string> failedNPClookups, HashSet<IFormLink> failedGroupLookups, string extraSettingsPath, string fallBackQuality)
+        public static void LogDefaultNPCs(List<string> failedNPClookups, HashSet<IFormLinkGetter> failedGroupLookups, string extraSettingsPath, string fallBackQuality)
         {
             string logPath = Path.Combine(extraSettingsPath, "failedAssignmentLog.txt");
             List<string> logLines = new List<string>();
@@ -268,7 +268,7 @@ namespace UnderThere
             }
         }
 
-        public static bool hasBlockedFaction(INpcGetter npc, HashSet<FormLink<IFactionGetter>> BlockedFactions)
+        public static bool hasBlockedFaction(INpcGetter npc, HashSet<IFormLinkGetter<IFactionGetter>> BlockedFactions)
         {
             if (npc.EditorID == "BrelynaMaryon")
             {

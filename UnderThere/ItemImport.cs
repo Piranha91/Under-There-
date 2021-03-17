@@ -99,7 +99,7 @@ namespace UnderThere
 
                     LeveledItemEntry entry = new LeveledItemEntry();
                     LeveledItemEntryData data = new LeveledItemEntryData();
-                    data.Reference = moddedItem.FormKey;
+                    data.Reference.SetTo(moddedItem);
                     data.Level = 1;
                     data.Count = 1;
                     entry.Data = data;

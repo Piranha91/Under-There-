@@ -99,10 +99,12 @@ namespace UnderThere.Settings
 
         [SynthesisOrder]
         [SynthesisTooltip("Category:Class dictionary to determine which underwear sets go to which NPC Classes.")]
-        public Dictionary<string, HashSet<FormLink<IClassGetter>>> ClassDefinitions { get; set; } = new()
+        public Dictionary<string, HashSet<IFormLinkGetter<IClassGetter>>> ClassDefinitions { get; set; } = new()
         #region Defaults
         {
-            { Poor, new HashSet<FormLink<IClassGetter>>()
+            {
+                Poor,
+                new HashSet<IFormLinkGetter<IClassGetter>>()
             {
                 Skyrim.Class.CombatThief,
                 Skyrim.Class.Prisoner,
@@ -116,7 +118,9 @@ namespace UnderThere.Settings
                 Skyrim.Class.MQAncientNord
             }
             },
-            { Medium, new HashSet<FormLink<IClassGetter>>()
+            {
+                Medium,
+                new HashSet<IFormLinkGetter<IClassGetter>>()
             {
                 Skyrim.Class.CombatWarrior1H,
                 Skyrim.Class.CombatSpellsword,
@@ -176,7 +180,9 @@ namespace UnderThere.Settings
                 Skyrim.Class.AAAPlayerSpellswordClass,
             }
             },
-            { Rich, new HashSet<FormLink<IClassGetter>>()
+            {
+                Rich,
+                new HashSet<IFormLinkGetter<IClassGetter>>()
             {
                 Skyrim.Class.CombatSorcerer,
                 Skyrim.Class.VendorSpells,
@@ -247,10 +253,12 @@ namespace UnderThere.Settings
 
         [SynthesisOrder]
         [SynthesisTooltip("Category:Faction dictionary to determine which underwear sets go to which NPC Factions.")]
-        public Dictionary<string, HashSet<FormLink<IFactionGetter>>> FactionDefinitions { get; set; } = new()
+        public Dictionary<string, HashSet<IFormLinkGetter<IFactionGetter>>> FactionDefinitions { get; set; } = new()
         #region Defaults
         {
-            { Poor, new HashSet<FormLink<IFactionGetter>>()
+            {
+                Poor,
+                new HashSet<IFormLinkGetter<IFactionGetter>>()
             {
                 Skyrim.Faction.BanditFaction,
                 Skyrim.Faction.DunAnsilvundBanditFaction,
@@ -286,7 +294,9 @@ namespace UnderThere.Settings
                 Skyrim.Faction.RiftenRatwayFactionEnemy
             }
             },
-            { Medium, new HashSet<FormLink<IFactionGetter>>()
+            {
+                Medium,
+                new HashSet<IFormLinkGetter<IFactionGetter>>()
             {
                 Skyrim.Faction.JobTrainerFaction,
                 Skyrim.Faction.JobBardFaction,
@@ -332,7 +342,9 @@ namespace UnderThere.Settings
                 Skyrim.Faction.HirelingJenassaCrimeFaction,
             }
             },
-            { Rich, new HashSet<FormLink<IFactionGetter>>()
+            {
+                Rich,
+                new HashSet<IFormLinkGetter<IFactionGetter>>()
             {
                 Skyrim.Faction.JobCourtWizardFaction,
                 Skyrim.Faction.JobMerchantFaction,
@@ -376,10 +388,12 @@ namespace UnderThere.Settings
 
         [SynthesisOrder]
         [SynthesisTooltip("Additional faction definitions that are only used if the NPC belongs to none of the factions in Faction Definitions.")]
-        public Dictionary<string, HashSet<FormLink<IFactionGetter>>> FallBackFactionDefinitions { get; set; } = new()
+        public Dictionary<string, HashSet<IFormLinkGetter<IFactionGetter>>> FallBackFactionDefinitions { get; set; } = new()
         #region Defaults
         {
-            { Poor, new HashSet<FormLink<IFactionGetter>>()
+            {
+                Poor,
+                new HashSet<IFormLinkGetter<IFactionGetter>>()
             {
                 Skyrim.Faction.CrimeFactionCidhnaMine,
                 Dawnguard.Faction.DLC1VampireFeedNoCrimeFaction,
@@ -396,7 +410,9 @@ namespace UnderThere.Settings
                 Skyrim.Faction.DA11CannibalFaction
             }
             },
-            { Medium, new HashSet<FormLink<IFactionGetter>>()
+            {
+                Medium,
+                new HashSet<IFormLinkGetter<IFactionGetter>>()
             {
                 Skyrim.Faction.TownAngasMillFaction,
                 Skyrim.Faction.TownBarleydarkFarmFaction,
@@ -508,7 +524,9 @@ namespace UnderThere.Settings
                 Skyrim.Faction.PotentialFollowerFaction,
             }
             },
-            { Rich, new HashSet<FormLink<IFactionGetter>>()
+            {
+                Rich,
+                new HashSet<IFormLinkGetter<IFactionGetter>>()
             {
                 Skyrim.Faction.TownGoldenglowEstateFaction,
                 Skyrim.Faction.TownMarkarthFaction,
@@ -541,7 +559,7 @@ namespace UnderThere.Settings
 
         [SynthesisOrder]
         [SynthesisTooltip("These factions will be ignored when assigning NPCs to a faction category, and no warning will be generated when Under There fails to match them.")]
-        public HashSet<FormLink<IFactionGetter>> IgnoreFactionsWhenScoring { get; set; } = new HashSet<FormLink<IFactionGetter>>()
+        public HashSet<IFormLinkGetter<IFactionGetter>> IgnoreFactionsWhenScoring { get; set; } = new HashSet<IFormLinkGetter<IFactionGetter>>()
         #region Defaults
         {
             Skyrim.Faction.PotentialMarriageFaction,
@@ -563,7 +581,7 @@ namespace UnderThere.Settings
 
         [SynthesisOrder]
         [SynthesisTooltip("List of NPCs blocked from underwear assignment.")]
-        public HashSet<FormLink<INpcGetter>> BlockedNpcs { get; set; } = new HashSet<FormLink<INpcGetter>>()
+        public HashSet<IFormLinkGetter<INpcGetter>> BlockedNpcs { get; set; } = new HashSet<IFormLinkGetter<INpcGetter>>()
         #region Defaults
         {
             Skyrim.Npc.DA09Meridia
@@ -572,7 +590,7 @@ namespace UnderThere.Settings
 
         [SynthesisOrder]
         [SynthesisTooltip("List of factions blocked from underwear assignment (still applies even if Assignment Mode is not \"Faction\".")]
-        public HashSet<FormLink<IFactionGetter>> BlockedFactions { get; set; } = new HashSet<FormLink<IFactionGetter>>();
+        public HashSet<IFormLinkGetter<IFactionGetter>> BlockedFactions { get; set; } = new HashSet<IFormLinkGetter<IFactionGetter>>();
 
         [SynthesisOrder]
         [SynthesisTooltip("Default underwear set. Used if Assignment Mode is set to Default, or if no class/faction group could be assigned for the given NPC and no Quality for no Assignment was set.")]
@@ -589,7 +607,7 @@ namespace UnderThere.Settings
                      Weight = "",
                      Value = "",
                      Gender = GenderTarget.Mutual,
-                     Record = underwearforeveryone.Armor.UFE_UnderwearBottom
+                     Record = underwearforeveryone.Armor.UFE_UnderwearBottom.AsLink<IArmorGetter>()
                 },
                 new UTitem()
                 {
@@ -597,7 +615,7 @@ namespace UnderThere.Settings
                     Weight = "",
                     Value = "",
                     Gender = GenderTarget.Female,
-                    Record = underwearforeveryone.Armor.UFE_UnderwearTop
+                    Record = underwearforeveryone.Armor.UFE_UnderwearTop.AsLink<IArmorGetter>()
                 }
             }
         };
@@ -619,14 +637,14 @@ namespace UnderThere.Settings
                         DispName = "Cheap Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_0,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_0.AsLink<IArmorGetter>(),
                     },
                     new UTitem()
                     {
                         DispName = "Cheap Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_0,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_0.AsLink<IArmorGetter>(),
                     },
                 },
             },
@@ -641,14 +659,14 @@ namespace UnderThere.Settings
                         DispName = "Cheap Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_1,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_1.AsLink<IArmorGetter>(),
                     },
                     new UTitem()
                     {
                         DispName = "Cheap Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_1,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_1.AsLink<IArmorGetter>(),
                     },
                 },
             },
@@ -663,14 +681,14 @@ namespace UnderThere.Settings
                         DispName = "Cheap Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_2,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_2.AsLink<IArmorGetter>(),
                     },
                     new UTitem()
                     {
                         DispName = "Cheap Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_2,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_2.AsLink<IArmorGetter>(),
                     },
                 },
             },
@@ -685,14 +703,14 @@ namespace UnderThere.Settings
                         DispName = "Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_3,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_3.AsLink<IArmorGetter>(),
                     },
                     new UTitem()
                     {
                         DispName = "Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_3,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_3.AsLink<IArmorGetter>(),
                     },
                 },
             },
@@ -707,14 +725,14 @@ namespace UnderThere.Settings
                         DispName = "Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_4,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_4.AsLink<IArmorGetter>(),
                     },
                     new UTitem()
                     {
                         DispName = "Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_4,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_4.AsLink<IArmorGetter>(),
                     },
                 },
             },
@@ -729,14 +747,14 @@ namespace UnderThere.Settings
                         DispName = "Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_5,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_5.AsLink<IArmorGetter>(),
                     },
                     new UTitem()
                     {
                         DispName = "Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_5,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_5.AsLink<IArmorGetter>(),
                     },
                 },
             },
@@ -751,14 +769,14 @@ namespace UnderThere.Settings
                         DispName = "Fine Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_6,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_6.AsLink<IArmorGetter>(),
                     },
                     new UTitem()
                     {
                         DispName = "Fine Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_6,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_6.AsLink<IArmorGetter>(),
                     },
                 },
             },
@@ -773,14 +791,14 @@ namespace UnderThere.Settings
                         DispName = "Fine Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_7,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_7.AsLink<IArmorGetter>(),
                     },
                     new UTitem()
                     {
                         DispName = "Fine Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_7,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_7.AsLink<IArmorGetter>(),
                     },
                 },
             },
@@ -795,14 +813,14 @@ namespace UnderThere.Settings
                         DispName = "Fine Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_8,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_8.AsLink<IArmorGetter>(),
                     },
                     new UTitem()
                     {
                         DispName = "Fine Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_8,
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_8.AsLink<IArmorGetter>(),
                     },
                 },
             },
