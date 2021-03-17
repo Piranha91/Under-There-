@@ -47,8 +47,8 @@ namespace UnderThere
             ItemImport.createItems(settings, UWsourcePlugins, state);
 
             // created leveled item lists (to be added to outfits)
-            FormLink<ILeveledItemGetter> UT_LeveledItemsAll = createLeveledList_AllItems(settings.AllSets, state.LinkCache, state.PatchMod);
-            Dictionary<string, FormLink<ILeveledItemGetter>> UT_LeveledItemsByWealth = createLeveledList_ByWealth(settings.AllSets, state.PatchMod);
+            IFormLinkGetter<ILeveledItemGetter> UT_LeveledItemsAll = createLeveledList_AllItems(settings.AllSets, state.LinkCache, state.PatchMod);
+            Dictionary<string, IFormLinkGetter<ILeveledItemGetter>> UT_LeveledItemsByWealth = createLeveledList_ByWealth(settings.AllSets, state.PatchMod);
 
             // modify NPC outfits
             assignOutfits(settings, settings.DefaultSet.LeveledList, UT_LeveledItemsByWealth, UT_LeveledItemsAll, state);
@@ -67,8 +67,7 @@ namespace UnderThere
             //remap dependencies
             foreach (var mk in UWsourcePlugins)
             {
-                state.PatchMod.DuplicateFromOnlyReferenced(state.LinkCache, mk, typeof(Armor));
-                //DuplicateFromMixInB.DuplicateFromOnlyReferencedB(state.PatchMod, state.LinkCache, mk, typeof(Armor));
+                state.PatchMod.DuplicateFromOnlyReferenced(state.LinkCache, mk, out var _, typeof(Armor));
             }
 
             // message user
@@ -79,7 +78,7 @@ namespace UnderThere
             Console.WriteLine("\nEnjoy the underwear. Goodbye.");
         }
 
-        public static FormLink<ILeveledItemGetter> createLeveledList_AllItems(IEnumerable<UTSet> sets, ILinkCache lk, ISkyrimMod PatchMod)
+        public static IFormLinkGetter<ILeveledItemGetter> createLeveledList_AllItems(IEnumerable<UTSet> sets, ILinkCache lk, ISkyrimMod PatchMod)
         {
             var allItems = PatchMod.LeveledItems.AddNew();
             allItems.EditorID = "UnderThereAllItems";
@@ -98,16 +97,16 @@ namespace UnderThere
             return allItems.AsLink();
         }
 
-        public static Dictionary<string, FormLink<ILeveledItemGetter>> createLeveledList_ByWealth(IEnumerable<UTSet> sets, ISkyrimMod PatchMod)
+        public static Dictionary<string, IFormLinkGetter<ILeveledItemGetter>> createLeveledList_ByWealth(IEnumerable<UTSet> sets, ISkyrimMod PatchMod)
         {
-            var itemsByWealth = new Dictionary<string, FormLink<ILeveledItemGetter>>()
+            var itemsByWealth = new Dictionary<string, IFormLinkGetter<ILeveledItemGetter>>()
             {
                 { Default, Settings.Value.DefaultSet.LeveledList }
             };
 
             foreach (var group in sets.WhereCastable<UTSet, UTCategorySet>().GroupBy(s => s.Category))
             {
-                itemsByWealth[group.Key] = CreateLList(group.Key, group, PatchMod);
+                itemsByWealth[group.Key] = CreateLList(group.Key, group, PatchMod).AsLink();
             }
 
             return itemsByWealth;
@@ -133,18 +132,18 @@ namespace UnderThere
             return currentItems;
         }
 
-        public static void assignOutfits(UTconfig settings, FormLink<ILeveledItemGetter> UT_DefaultItem, Dictionary<string, FormLink<ILeveledItemGetter>> UT_LeveledItemsByWealth, FormLink<ILeveledItemGetter> UT_LeveledItemsAll, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void assignOutfits(UTconfig settings, IFormLinkGetter<ILeveledItemGetter> UT_DefaultItem, Dictionary<string, IFormLinkGetter<ILeveledItemGetter>> UT_LeveledItemsByWealth, IFormLinkGetter<ILeveledItemGetter> UT_LeveledItemsAll, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             string npcGroup = "";
             FormKey currentOutfitKey = FormKey.Null;
-            FormLink<ILeveledItemGetter> currentUW = FormKey.Null;
-            var GroupLookupFailures = new HashSet<IFormLink>();
+            IFormLinkGetter<ILeveledItemGetter> currentUW = FormLink<ILeveledItemGetter>.Null;
+            var GroupLookupFailures = new HashSet<IFormLinkGetter>();
             List<string> NPClookupFailures = new List<string>();
             Dictionary<FormKey, Dictionary<string, Outfit>> OutfitMap = new Dictionary<FormKey, Dictionary<string, Outfit>>();
 
             Outfit underwearOnly = state.PatchMod.Outfits.AddNew();
             underwearOnly.EditorID = "No_Clothes";
-            underwearOnly.Items = new ExtendedList<IFormLink<IOutfitTargetGetter>>();
+            underwearOnly.Items = new ExtendedList<IFormLinkGetter<IOutfitTargetGetter>>();
 
             List<string> spidOutfitAssignments = new List<string>();
 
@@ -440,7 +439,7 @@ namespace UnderThere
             return bestMatches[Random.Value.Next(bestMatches.Count)];
         }
 
-        public static string getWealthGroup<T>(FormLink<T> link, Dictionary<string, HashSet<FormLink<T>>> Definitions, HashSet<IFormLink> GroupLookupFailures)
+        public static string getWealthGroup<T>(IFormLinkGetter<T> link, Dictionary<string, HashSet<IFormLinkGetter<T>>> Definitions, HashSet<IFormLinkGetter> GroupLookupFailures)
             where T : class, IMajorRecordCommonGetter
         {
             foreach (var Def in Definitions)
@@ -515,13 +514,13 @@ namespace UnderThere
             ScriptObjectProperty mProp = new ScriptObjectProperty();
             mProp.Name = "maleItems";
             mProp.Flags |= ScriptProperty.Flag.Edited;
-            mProp.Object = maleItems;
+            mProp.Object.SetTo(maleItems);
             UTinventoryFixScript.Properties.Add(mProp);
 
             ScriptObjectProperty fProp = new ScriptObjectProperty();
             fProp.Name = "femaleItems";
             fProp.Flags |= ScriptProperty.Flag.Edited;
-            fProp.Object = femaleItems;
+            fProp.Object.SetTo(femaleItems);
             UTinventoryFixScript.Properties.Add(fProp);
 
             utItemFixEffect.VirtualMachineAdapter.Scripts.Add(UTinventoryFixScript);
@@ -533,9 +532,9 @@ namespace UnderThere
             utItemFixSpell.CastType = CastType.ConstantEffect;
             utItemFixSpell.TargetType = TargetType.Self;
             utItemFixSpell.Type = SpellType.Ability;
-            utItemFixSpell.EquipmentType = Skyrim.EquipType.EitherHand;
+            utItemFixSpell.EquipmentType.SetTo(Skyrim.EquipType.EitherHand);
             Effect utItemFixShellEffect = new Effect();
-            utItemFixShellEffect.BaseEffect = utItemFixEffect;
+            utItemFixShellEffect.BaseEffect.SetTo(utItemFixEffect);
             utItemFixShellEffect.Data = new EffectData();
             utItemFixSpell.Effects.Add(utItemFixShellEffect);
 
@@ -553,10 +552,10 @@ namespace UnderThere
             }
         }
 
-        public static (HashSet<FormLink<IArmorGetter>> Male, HashSet<FormLink<IArmorGetter>> Female) getGenderedItems(IEnumerable<UTSet> sets)
+        public static (HashSet<IFormLinkGetter<IArmorGetter>> Male, HashSet<IFormLinkGetter<IArmorGetter>> Female) getGenderedItems(IEnumerable<UTSet> sets)
         {
-            var male = new HashSet<FormLink<IArmorGetter>>();
-            var female = new HashSet<FormLink<IArmorGetter>>();
+            var male = new HashSet<IFormLinkGetter<IArmorGetter>>();
+            var female = new HashSet<IFormLinkGetter<IArmorGetter>>();
 
             foreach (UTSet set in sets)
             {

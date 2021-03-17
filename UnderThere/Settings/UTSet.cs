@@ -21,7 +21,7 @@ namespace UnderThere.Settings
         public List<UTitem> Items { get; set; } = new List<UTitem>();
 
         [SynthesisIgnoreSetting]
-        public FormLink<ILeveledItemGetter> LeveledList { get; set; }
+        public FormLink<ILeveledItemGetter> LeveledList { get; set; } = new FormLink<ILeveledItemGetter>();
     }
 
     [SynthesisObjectNameMember(nameof(Category))]
