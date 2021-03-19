@@ -611,7 +611,7 @@ namespace UnderThere.Settings
                      Weight = "",
                      Value = "",
                      Gender = GenderTarget.Mutual,
-                     Record = underwearforeveryone.Armor.UFE_UnderwearBottom.AsLink<IArmorGetter>()
+                     Record = underwearforeveryone.Armor.UFE_UnderwearBottom
                 },
                 new UTitem()
                 {
@@ -619,7 +619,7 @@ namespace UnderThere.Settings
                     Weight = "",
                     Value = "",
                     Gender = GenderTarget.Female,
-                    Record = underwearforeveryone.Armor.UFE_UnderwearTop.AsLink<IArmorGetter>()
+                    Record = underwearforeveryone.Armor.UFE_UnderwearTop
                 }
             }
         };
@@ -641,14 +641,14 @@ namespace UnderThere.Settings
                         DispName = "Cheap Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_0.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_0,
                     },
                     new UTitem()
                     {
                         DispName = "Cheap Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_0.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_0,
                     },
                 },
             },
@@ -663,14 +663,14 @@ namespace UnderThere.Settings
                         DispName = "Cheap Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_1.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_1,
                     },
                     new UTitem()
                     {
                         DispName = "Cheap Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_1.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_1,
                     },
                 },
             },
@@ -685,14 +685,14 @@ namespace UnderThere.Settings
                         DispName = "Cheap Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_2.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_2,
                     },
                     new UTitem()
                     {
                         DispName = "Cheap Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_2.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_2,
                     },
                 },
             },
@@ -707,14 +707,14 @@ namespace UnderThere.Settings
                         DispName = "Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_3.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_3,
                     },
                     new UTitem()
                     {
                         DispName = "Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_3.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_3,
                     },
                 },
             },
@@ -729,14 +729,14 @@ namespace UnderThere.Settings
                         DispName = "Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_4.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_4,
                     },
                     new UTitem()
                     {
                         DispName = "Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_4.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_4,
                     },
                 },
             },
@@ -751,14 +751,14 @@ namespace UnderThere.Settings
                         DispName = "Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_5.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_5,
                     },
                     new UTitem()
                     {
                         DispName = "Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_5.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_5,
                     },
                 },
             },
@@ -773,14 +773,14 @@ namespace UnderThere.Settings
                         DispName = "Fine Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_6.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_6,
                     },
                     new UTitem()
                     {
                         DispName = "Fine Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_6.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_6,
                     },
                 },
             },
@@ -795,14 +795,14 @@ namespace UnderThere.Settings
                         DispName = "Fine Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_7.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_7,
                     },
                     new UTitem()
                     {
                         DispName = "Fine Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_7.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_7,
                     },
                 },
             },
@@ -817,14 +817,14 @@ namespace UnderThere.Settings
                         DispName = "Fine Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_8.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_8,
                     },
                     new UTitem()
                     {
                         DispName = "Fine Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_8.AsLink<IArmorGetter>(),
+                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_8,
                     },
                 },
             },
