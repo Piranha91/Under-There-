@@ -26,6 +26,7 @@ namespace UnderThere
                     nickname: "Settings",
                     path: "settings.json",
                     out Settings)
+                .AddPatch<ISkyrimMod, ISkyrimModGetter>(RunPatch)
                 .SetTypicalOpen(GameRelease.SkyrimSE, "UnderThere.esp")
                 .Run(args);
         }
@@ -154,9 +155,9 @@ namespace UnderThere
                 // check if NPC race should be patched
                 bool isInventoryTemplate = !npc.DefaultOutfit.IsNull && !npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Inventory);
                 bool isGhost = npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.IsGhost)
-                    || npc.Voice == Skyrim.VoiceType.FemaleUniqueGhost
-                    || npc.Voice == Skyrim.VoiceType.MaleUniqueGhost
-                    || Auxil.hasGhostAbility(npc) 
+                    || npc.Voice.Equals(Skyrim.VoiceType.FemaleUniqueGhost)
+                    || npc.Voice.Equals(Skyrim.VoiceType.MaleUniqueGhost)
+                    || Auxil.hasGhostAbility(npc)
                     || Auxil.hasGhostScript(npc);
 
                 if (!state.LinkCache.TryResolve<IRaceGetter>(npc.Race.FormKey, out var currentRace) ||
@@ -190,7 +191,7 @@ namespace UnderThere
                 }
 
                 // check if NPC is player
-                if (npc == Skyrim.Npc.Player  || npc == Skyrim.Npc.PlayerInventory)
+                if (npc.Equals(Skyrim.Npc.Player) || npc.Equals(Skyrim.Npc.PlayerInventory))
                 {
                     continue;
                 }
@@ -248,7 +249,7 @@ namespace UnderThere
                             npcGroup = Default;
                             currentUW = UT_DefaultItem; break;
                         case AssignmentMode.Class:
-                            if (npc == Skyrim.Npc.Hroki)
+                            if (npc.Equals(Skyrim.Npc.Hroki))
                             {
                                 npcGroup = Default; // hardcoded due to a particular idiosyncratic issue caused by Bethesda's weird choice of Class for Hroki.
                                 break;
@@ -591,7 +592,7 @@ namespace UnderThere
                     continue;
                 }
 
-                if (arma.Race == Skyrim.Race.DefaultRace || patchableRaces.Contains(armaRace.AsLink()))
+                if (arma.Race.Equals(Skyrim.Race.DefaultRace) || patchableRaces.Contains(armaRace.AsLink()))
                 {
                     if (arma.BodyTemplate != null && arma.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Body))
                     {
