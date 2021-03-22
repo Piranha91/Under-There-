@@ -26,18 +26,13 @@ namespace UnderThere
                     path: "settings.json",
                     out Settings)
                 .AddPatch<ISkyrimMod, ISkyrimModGetter>(RunPatch)
-                .Run(args, new RunPreferences()
-                {
-                    ActionsForEmptyArgs = new RunDefaultPatcher()
-                    {
-                        TargetRelease = GameRelease.SkyrimSE
-                    }
-                });
+                .SetTypicalOpen(GameRelease.SkyrimSE, "UnderThere.esp")
+                .Run(args);
         }
 
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            string SPIDpath = Path.Combine(state.Settings.DataFolderPath, "skse\\plugins\\po3_SpellPerkItemDistributor.dll");
+            string SPIDpath = Path.Combine(state.DataFolderPath, "skse\\plugins\\po3_SpellPerkItemDistributor.dll");
             if (!File.Exists(SPIDpath)) //SPIDtest (dual-level pun - whoa!)
             {
                 throw new Exception("Spell Perk Item Distributor was not detected at " + SPIDpath + "\nAborting patch");
@@ -157,8 +152,8 @@ namespace UnderThere
                 // check if NPC race should be patched
                 bool isInventoryTemplate = !npc.DefaultOutfit.IsNull && !npc.Configuration.TemplateFlags.HasFlag(NpcConfiguration.TemplateFlag.Inventory);
                 bool isGhost = npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.IsGhost)
-                    || npc.Voice.FormKey == Skyrim.VoiceType.FemaleUniqueGhost
-                    || npc.Voice.FormKey == Skyrim.VoiceType.MaleUniqueGhost
+                    || npc.Voice.Equals(Skyrim.VoiceType.FemaleUniqueGhost)
+                    || npc.Voice.Equals(Skyrim.VoiceType.MaleUniqueGhost)
                     || Auxil.hasGhostAbility(npc)
                     || Auxil.hasGhostScript(npc);
 
@@ -193,7 +188,7 @@ namespace UnderThere
                 }
 
                 // check if NPC is player
-                if (npc.FormKey == Skyrim.Npc.Player || npc.FormKey == Skyrim.Npc.PlayerInventory)
+                if (npc.Equals(Skyrim.Npc.Player) || npc.Equals(Skyrim.Npc.PlayerInventory))
                 {
                     continue;
                 }
@@ -251,7 +246,7 @@ namespace UnderThere
                             npcGroup = Default;
                             currentUW = UT_DefaultItem; break;
                         case AssignmentMode.Class:
-                            if (npc.FormKey == Skyrim.Npc.Hroki)
+                            if (npc.Equals(Skyrim.Npc.Hroki))
                             {
                                 npcGroup = Default; // hardcoded due to a particular idiosyncratic issue caused by Bethesda's weird choice of Class for Hroki.
                                 break;
@@ -423,7 +418,7 @@ namespace UnderThere
             }
             else
             {
-                string destPath = Path.Combine(state.Settings.DataFolderPath, "Scripts\\UnderThereGenderedItemFix.pex");
+                string destPath = Path.Combine(state.DataFolderPath, "Scripts\\UnderThereGenderedItemFix.pex");
                 try
                 {
                     File.Copy(UTscriptPath, destPath, true);
@@ -499,7 +494,7 @@ namespace UnderThere
 
             // distribute spell via SPID
             string distr = "Spell = " + utItemFixSpell.FormKey.IDString() + " - " + utItemFixSpell.FormKey.ModKey.ToString() + " | ActorTypeNPC | NONE | NONE | NONE";
-            string destPath = Path.Combine(state.Settings.DataFolderPath, "UnderThereGenderedItemFix_DISTR.ini");
+            string destPath = Path.Combine(state.DataFolderPath, "UnderThereGenderedItemFix_DISTR.ini");
             try
             {
                 File.WriteAllLines(destPath, new List<string> { distr });
@@ -550,7 +545,7 @@ namespace UnderThere
                     continue;
                 }
 
-                if (arma.Race.FormKey == Skyrim.Race.DefaultRace || patchableRaces.Contains(armaRace.AsLink()))
+                if (arma.Race.Equals(Skyrim.Race.DefaultRace) || patchableRaces.Contains(armaRace.AsLink()))
                 {
                     if (arma.BodyTemplate != null && arma.BodyTemplate.FirstPersonFlags.HasFlag(BipedObjectFlag.Body))
                     {

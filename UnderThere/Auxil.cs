@@ -47,7 +47,7 @@ namespace UnderThere
             if (npc.ActorEffect == null) return false;
             foreach (var ability in npc.ActorEffect)
             {
-                if (ability.FormKey == Skyrim.Spell.GhostAbility)
+                if (ability.Equals(Skyrim.Spell.GhostAbility))
                 {
                     return true;
                 }
