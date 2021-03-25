@@ -17,7 +17,7 @@ namespace UnderThere.Settings
 
         [SynthesisOrder]
         [SynthesisTooltip("The NPC to whom specific underwear should be assigned.")]
-        public FormLink<INpcGetter> Record { get; set; }
+        public IFormLinkGetter<INpcGetter> Record { get; set; } = FormLink<INpcGetter>.Null;
 
         [SynthesisOrder]
         [SynthesisTooltip("Set: apply a specific underwear set to this NPC\nGroup: apply a specific underwear group to this NPC and choose a random underwear set from this group")]

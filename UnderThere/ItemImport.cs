@@ -14,7 +14,7 @@ namespace UnderThere
     {
         public static void createItems(UTconfig settings, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            deepCopyItems(settings.AllSets, UWsourcePlugins, state); // copy all armor records along with their linked subrecords into PatchMod to get rid of dependencies on the original plugins. Sets[i].FormKeyObject will now point to the new FormKey in PatchMod
+            getSourcePlugins(settings, UWsourcePlugins, state);
 
             // create a leveled list entry for each set
             foreach (var set in settings.AllSets)
@@ -30,68 +30,21 @@ namespace UnderThere
             }
         }
 
-        public static void deepCopyItems(IEnumerable<UTSet> Sets, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void getSourcePlugins(UTconfig settings, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            var recordsToDup = new HashSet<FormLinkInformation>();
-
-            foreach (var set in Sets)
+            foreach (UTSet set in settings.Sets)
             {
-                getFormLinksToDuplicate(set.Items, recordsToDup, state.LinkCache);
-            }
-
-            // store the original source mod names to notify user that they can be disabled.
-            UWsourcePlugins.Add(recordsToDup.Select(x => x.FormKey.ModKey));
-
-            var duplicated = recordsToDup
-                .Select(toDup =>
+                foreach (UTitem item in set.Items)
                 {
-                    if (!state.LinkCache.TryResolveContext(toDup.FormKey, toDup.Type, out var existingContext))
+                    if (!item.Record.TryResolve(state.LinkCache, out var origItem))
                     {
-                        throw new ArgumentException($"Couldn't find {toDup.FormKey}?");
+                        throw new Exception("Could not find item with formKey " + item.Record.FormKey + ". Please make sure that " + item.Record.FormKey.ModKey.ToString() + " is active in your load order.");
                     }
-                    return (OldFormKey: toDup.FormKey, Duplicate: existingContext.DuplicateIntoAsNewRecord(state.PatchMod));
-                })
-                .ToList();
-
-            // Remap form links in each record to point to the duplicated versions
-            var remap = duplicated.ToDictionary(x => x.OldFormKey, x => x.Duplicate.FormKey);
-            foreach (var dup in duplicated)
-            {
-                dup.Duplicate.RemapLinks(remap);
-            }
-
-            // remap Set formlinks to the duplicated ones
-            foreach (UTSet set in Sets)
-            {
-                remapSetItemList(set.Items, remap);
-            }
-        }
-
-        public static void getFormLinksToDuplicate(List<UTitem> UTitemList, HashSet<FormLinkInformation> recordsToDup, ILinkCache lk)
-        {
-            foreach (var item in UTitemList)
-            {
-                if (!item.Record.TryResolve(lk, out var origItem))
-                {
-                    throw new Exception("Could not find item with formKey " + item.Record.FormKey + ". Please make sure that " + item.Record.FormKey.ModKey.ToString() + " is active in your load order.");
-                }
-
-                foreach (FormLinkInformation FLI in origItem.ContainedFormLinks)
-                {
-                    if (FLI.FormKey.ModKey == origItem.FormKey.ModKey) // only copy subrecord as new record if it comes from the same mod as the armor itself
+                    if (!UWsourcePlugins.Contains(origItem.FormKey.ModKey))
                     {
-                        recordsToDup.Add(FLI);
+                        UWsourcePlugins.Add(origItem.FormKey.ModKey);
                     }
                 }
-                recordsToDup.Add(origItem.ToFormLinkInformation());
-            }
-        }
-
-        public static void remapSetItemList(List<UTitem> UTitemList, Dictionary<FormKey, FormKey> remap)
-        {
-            foreach (var item in UTitemList)
-            {
-                item.Record = new FormLink<IArmorGetter>(remap[item.Record.FormKey]);
             }
         }
 
@@ -100,8 +53,9 @@ namespace UnderThere
             if (currentItems.Entries == null) return;
             foreach (UTitem item in items)
             {
-                if (item.Record.TryResolve<IArmor>(state.LinkCache, out var moddedItem))
+                if (state.LinkCache.TryResolve<IArmorGetter>(item.Record.FormKey, out var linkedItem))
                 {
+                    var moddedItem = state.PatchMod.Armors.GetOrAddAsOverride(linkedItem);
                     moddedItem.Name = item.DispName;
                     moddedItem.EditorID = "UT_" + moddedItem.EditorID;
                     if (item.Weight != "") // if not defined in config file, keep the original item's weight
@@ -145,11 +99,15 @@ namespace UnderThere
 
                     LeveledItemEntry entry = new LeveledItemEntry();
                     LeveledItemEntryData data = new LeveledItemEntryData();
-                    data.Reference = moddedItem.FormKey;
+                    data.Reference.SetTo(moddedItem);
                     data.Level = 1;
                     data.Count = 1;
                     entry.Data = data;
                     currentItems.Entries.Add(entry);
+                }
+                else
+                {
+                    throw new Exception("Could not resolve record " + item.Record.FormKey.ToString());
                 }
             }
         }
