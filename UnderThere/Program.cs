@@ -26,9 +26,26 @@ namespace UnderThere
                     nickname: "Settings",
                     path: "settings.json",
                     out Settings)
+                .AddRunnabilityCheck(CanRunPatch)
                 .AddPatch<ISkyrimMod, ISkyrimModGetter>(RunPatch)
                 .SetTypicalOpen(GameRelease.SkyrimSE, "UnderThere.esp")
                 .Run(args);
+        }
+
+        private static void CanRunPatch(IRunnabilityState state)
+        {
+            UTconfig settings = Settings.Value;
+            foreach (var set in settings.AllSets)
+            {
+                foreach (var item in set.Items)
+                {
+                    var mod = item.Record.FormKey.ModKey.ToString();
+                    if (state.LoadOrder.Contains(LoadOrderListing.FromString(mod, true)))
+                    {
+                        throw new Exception("Plugin " + mod + " expected by settings is not currently in your load order.");
+                    }
+                }
+            }
         }
 
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
