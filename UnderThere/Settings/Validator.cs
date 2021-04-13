@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using Mutagen.Bethesda.Skyrim;
 
 namespace UnderThere.Settings
 {
@@ -53,21 +54,59 @@ namespace UnderThere.Settings
                 }
             }
 
-            // Sets - make sure each set has at least one item for each patchable gender
-            foreach (var set in settings.AllSets)
+            // Sets - make sure the default set has at least one item for each patchable gender
+            if (settings.PatchMales && !settings.DefaultSet.Items.Any(i => i.Gender == GenderTarget.Male || i.Gender == GenderTarget.Mutual))
             {
-                if (settings.PatchMales)
+                throw new Exception("The Default Set must have at least one item in Items_Mutual or Items_Male if Patch Males is enabled.");
+            }
+            if (settings.PatchFemales && !settings.DefaultSet.Items.Any(i => i.Gender == GenderTarget.Female || i.Gender == GenderTarget.Mutual))
+            {
+                throw new Exception("The Default Set must have at least one item in Items_Mutual or Items_Female if Patch Females is enabled.");
+            }
+        }
+
+        public static void validateGenderedSets(UTconfig settings, Dictionary<GenderTarget, Dictionary<string, LeveledItem>> lItemsByGenderAndWealth)
+        {
+            if (settings.PatchMales)
+            {
+                if (lItemsByGenderAndWealth[GenderTarget.Male] != null)
                 {
-                    if (!set.Items.Any(i => i.Gender == GenderTarget.Male || i.Gender == GenderTarget.Mutual))
+                    foreach (var category in lItemsByGenderAndWealth[GenderTarget.Male].Keys)
                     {
-                        throw new Exception("Sets: set \"" + set.Name + "\" must have at least one item in Items_Mutual or Items_Male");
+                        if (lItemsByGenderAndWealth[GenderTarget.Male][category] == null)
+                        {
+                            throw new Exception("Patch Males is enabled but a male-specific leveled list could not be generated for category: " + category);
+                        }
+                        else
+                        {
+                            var currentEntries = lItemsByGenderAndWealth[GenderTarget.Male][category].Entries;
+                            if (currentEntries == null || !currentEntries.Any())
+                            {
+                                throw new Exception("Patch Males is enabled but no male undergarments were found for category: " + category);
+                            }
+                        }
                     }
                 }
-                if (settings.PatchFemales)
+            }
+
+            if (settings.PatchFemales)
+            {
+                if (lItemsByGenderAndWealth[GenderTarget.Female] != null)
                 {
-                    if (!set.Items.Any(i => i.Gender == GenderTarget.Female || i.Gender == GenderTarget.Mutual))
+                    foreach (var category in lItemsByGenderAndWealth[GenderTarget.Female].Keys)
                     {
-                        throw new Exception("Sets: set \"" + set.Name + "\" must have at least one item in Items_Mutual or Items_Female");
+                        if (lItemsByGenderAndWealth[GenderTarget.Female][category] == null)
+                        {
+                            throw new Exception("Patch Females is enabled but a female-specific leveled list could not be generated for category: " + category);
+                        }
+                        else
+                        {
+                            var currentEntries = lItemsByGenderAndWealth[GenderTarget.Female][category].Entries;
+                            if (currentEntries == null || !currentEntries.Any())
+                            {
+                                throw new Exception("Patch Females is enabled but no female undergarments were found for category: " + category);
+                            }
+                        }
                     }
                 }
             }

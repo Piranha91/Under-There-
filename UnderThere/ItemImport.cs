@@ -16,6 +16,8 @@ namespace UnderThere
         {
             getSourcePlugins(settings, UWsourcePlugins, state);
 
+            var lItemsByGenderAndWealth = initializeGenderedCategoryLeveledLists(settings, state);
+
             // create a leveled list entry for each set
             foreach (var set in settings.AllSets)
             {
@@ -23,11 +25,52 @@ namespace UnderThere
                 currentItems.EditorID = "LItems_" + set.Name;
                 currentItems.Flags |= LeveledItem.Flag.UseAll;
                 currentItems.Entries = new ExtendedList<LeveledItemEntry>();
-
-                editAndStoreUTitems(set.Items, currentItems, settings.MakeItemsEquippable, settings.PatchableRaces, state);
+                
+                editAndStoreUTitems(set, currentItems, settings.MakeItemsEquippable, settings.PatchableRaces, lItemsByGenderAndWealth, state);
 
                 set.LeveledList = currentItems.FormKey;
             }
+
+            Validator.validateGenderedSets(settings, lItemsByGenderAndWealth);
+        }
+
+        public static Dictionary<GenderTarget, Dictionary<string, LeveledItem>> initializeGenderedCategoryLeveledLists(UTconfig settings, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            var lItemsByGenderAndWealth = new Dictionary<GenderTarget, Dictionary<string, LeveledItem>>();
+            lItemsByGenderAndWealth[GenderTarget.Male] = new Dictionary<string, LeveledItem>();
+            lItemsByGenderAndWealth[GenderTarget.Female] = new Dictionary<string, LeveledItem>();
+
+            HashSet<string> categories = new HashSet<string>();
+            foreach (UTSet set in settings.AllSets)
+            {
+                //change with Noggog's optimized code later instead of Try Catch
+                string category = "default";
+                try
+                {
+                    category = ((UTCategorySet)set).Category;
+                    categories.Add(category);
+                }
+                catch
+                {
+                    categories.Add("default");
+                }
+                //
+            }
+
+            foreach (string cat in categories)
+            {
+                var catItemsM = state.PatchMod.LeveledItems.AddNew();
+                catItemsM.EditorID = "LItems_M_" + cat;
+                catItemsM.Entries = new ExtendedList<LeveledItemEntry>();
+                lItemsByGenderAndWealth[GenderTarget.Male].Add(cat, catItemsM);
+
+                var catItemsF = state.PatchMod.LeveledItems.AddNew();
+                catItemsF.EditorID = "LItems_F_" + cat;
+                catItemsF.Entries = new ExtendedList<LeveledItemEntry>();
+                lItemsByGenderAndWealth[GenderTarget.Female].Add(cat, catItemsF);
+            }
+
+            return lItemsByGenderAndWealth;
         }
 
         public static void getSourcePlugins(UTconfig settings, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
@@ -48,10 +91,26 @@ namespace UnderThere
             }
         }
 
-        public static void editAndStoreUTitems(List<UTitem> items, LeveledItem currentItems, bool bMakeItemsEquipable, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaceFormLinks, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void editAndStoreUTitems(UTSet set, LeveledItem currentItems, bool bMakeItemsEquipable, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaceFormLinks, Dictionary<GenderTarget, Dictionary<string, LeveledItem>> lItemsByGenderAndWealth,  IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             if (currentItems.Entries == null) return;
-            foreach (UTitem item in items)
+
+            //change with Noggog's optimized code later instead of Try Catch
+            string category = "default";
+            try
+            {
+                category = ((UTCategorySet)set).Category;
+            }
+            catch
+            {
+
+            }
+            //
+
+            HashSet<Armor?> maleSetItems = new HashSet<Armor?>();
+            HashSet<Armor?> femaleSetItems = new HashSet<Armor?>();
+
+            foreach (UTitem item in set.Items)
             {
                 if (state.LinkCache.TryResolve<IArmorGetter>(item.Record.FormKey, out var linkedItem))
                 {
@@ -104,11 +163,93 @@ namespace UnderThere
                     data.Count = 1;
                     entry.Data = data;
                     currentItems.Entries.Add(entry);
+
+                    // store gendered items
+                    switch (item.Gender)
+                    {
+                        case GenderTarget.Male:
+                            maleSetItems.Add(moddedItem);
+                            break;
+                        case GenderTarget.Female:
+                            femaleSetItems.Add(moddedItem);
+                            break;
+                        case GenderTarget.Mutual:
+                            maleSetItems.Add(moddedItem);
+                            femaleSetItems.Add(moddedItem);
+                            break;
+                    }
                 }
                 else
                 {
                     throw new Exception("Could not resolve record " + item.Record.FormKey.ToString());
                 }
+            }
+
+            // fill in missing gendered items
+
+            if (maleSetItems.Any())
+            {
+                createGenderedLeveledSet(GenderTarget.Male, category, set, maleSetItems, lItemsByGenderAndWealth, state);
+            }
+            else if (lItemsByGenderAndWealth[GenderTarget.Male][category] != null)
+            {
+                LeveledItemEntry entry = new LeveledItemEntry();
+                LeveledItemEntryData data = new LeveledItemEntryData();
+                data.Reference.SetTo(lItemsByGenderAndWealth[GenderTarget.Male][category]);
+                data.Level = 1;
+                data.Count = 1;
+                entry.Data = data;
+                currentItems.Entries.Add(entry);
+            }
+
+            if (femaleSetItems.Any())
+            {
+                createGenderedLeveledSet(GenderTarget.Female, category, set, femaleSetItems, lItemsByGenderAndWealth, state);
+            }
+            else if (lItemsByGenderAndWealth[GenderTarget.Female][category] != null)
+            {
+                LeveledItemEntry entry = new LeveledItemEntry();
+                LeveledItemEntryData data = new LeveledItemEntryData();
+                data.Reference.SetTo(lItemsByGenderAndWealth[GenderTarget.Female][category]);
+                data.Level = 1;
+                data.Count = 1;
+                entry.Data = data;
+                currentItems.Entries.Add(entry);
+            }
+        }
+
+        public static void createGenderedLeveledSet(GenderTarget gender, string category, UTSet set, HashSet<Armor?> genderedSetItems, Dictionary<GenderTarget, Dictionary<string, LeveledItem>> lItemsByGenderAndWealth, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            // create leveled list for the gendered items in the current set
+            LeveledItem currentItems_gender = state.PatchMod.LeveledItems.AddNew();
+            currentItems_gender.EditorID = "LItems_" + set.Name + "_" + gender.ToString();
+            currentItems_gender.Flags |= LeveledItem.Flag.UseAll;
+            currentItems_gender.Entries = new ExtendedList<LeveledItemEntry>();
+
+            // add the gendered items for the current set into the new leveled list
+            foreach (var item in genderedSetItems)
+            {
+                LeveledItemEntry entry_gender = new LeveledItemEntry();
+                LeveledItemEntryData data_gender = new LeveledItemEntryData();
+                data_gender.Reference.SetTo(item);
+                data_gender.Level = 1;
+                data_gender.Count = 1;
+                entry_gender.Data = data_gender;
+                currentItems_gender.Entries.Add(entry_gender);
+            }
+
+            // add the new leveled list into the existing leveled list containing all gendered outfits in this category
+            LeveledItemEntry entry = new LeveledItemEntry();
+            LeveledItemEntryData data = new LeveledItemEntryData();
+            data.Reference.SetTo(currentItems_gender);
+            data.Level = 1;
+            data.Count = 1;
+            entry.Data = data;
+
+            var currentLLentries = lItemsByGenderAndWealth[gender][category].Entries;
+            if (lItemsByGenderAndWealth != null && lItemsByGenderAndWealth[gender] != null && lItemsByGenderAndWealth[gender][category] != null && currentLLentries != null)
+            {
+                currentLLentries.Add(entry);
             }
         }
 
@@ -164,46 +305,5 @@ namespace UnderThere
                 moddedAA.AdditionalRaces.Add(additionalRace);
             }
         }
-
-        /*
-        public static void setAdditionalRaces(List<UTitem> items, IReadOnlyCollection<IFormLink<IRaceGetter>> patchableRaceFormLinks, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
-        {
-            foreach (UTitem item in items)
-            {
-                if (state.LinkCache.TryResolve<IArmorGetter>(item.formKey, out var moddedItem))
-                {
-                    foreach (var aa in moddedItem.Armature)
-                    {
-                        if (state.LinkCache.TryResolve<IArmorAddonGetter>(aa.FormKey, out var moddedAA))
-                        {
-                            var moddedAA_override = state.PatchMod.ArmorAddons.GetOrAddAsOverride(moddedAA);
-                            // get missing PatchableRaces
-                            List<IFormLink<IRaceGetter>> addedRaces = new List<IFormLink<IRaceGetter>>();
-                            foreach (var neededRace in patchableRaceFormLinks)
-                            {
-                                bool keyFound = false;
-                                foreach (var additionalRace in moddedAA.AdditionalRaces)
-                                {
-                                    if (additionalRace.FormKey == neededRace.FormKey)
-                                    {
-                                        keyFound = true;
-                                        break;
-                                    }
-                                }
-                                if (!keyFound)
-                                {
-                                    addedRaces.Add(neededRace);
-                                }
-                            }
-                            // add missing PatchableRaces
-                            foreach (var additionalRace in addedRaces)
-                            {
-                                moddedAA_override.AdditionalRaces.Add(additionalRace);
-                            }
-                        }
-                    }
-                }
-            }
-        }*/
     }
 }

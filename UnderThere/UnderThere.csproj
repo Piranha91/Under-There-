@@ -5,8 +5,9 @@
     <TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="Data\source\UnderThereGenderedItemFix.psc" />
-    <None Remove="Data\UnderThereGenderedItemFix.pex" />
+    <PackageReference Include="Mutagen.Bethesda" Version="0.28.0" />
+    <PackageReference Include="Mutagen.Bethesda.Synthesis" Version="0.17.5" />
+    <PackageReference Include="Mutagen.Bethesda.FormKeys.SkyrimSE" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Data\source\UnderThereGenderedItemFix.psc">
