@@ -14,7 +14,7 @@ namespace UnderThere
 {
     public class Program
     {
-        const string Default = "Default";
+        public const string Default = "Default";
         static Lazy<UTconfig> Settings = null!;
         static Lazy<Random> Random = new Lazy<Random>(() => new Random(Settings.Value.RandomSeed));
 
