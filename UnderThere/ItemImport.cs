@@ -44,17 +44,8 @@ namespace UnderThere
             foreach (UTSet set in settings.AllSets)
             {
                 //change with Noggog's optimized code later instead of Try Catch
-                string category = "default";
-                try
-                {
-                    category = ((UTCategorySet)set).Category;
-                    categories.Add(category);
-                }
-                catch
-                {
-                    categories.Add("default");
-                }
-                //
+                string category = set is UTCategorySet categorySet ? categorySet.Category : Program.Default;
+                categories.Add(category);
             }
 
             foreach (string cat in categories)
@@ -95,17 +86,7 @@ namespace UnderThere
         {
             if (currentItems.Entries == null) return;
 
-            //change with Noggog's optimized code later instead of Try Catch
-            string category = "default";
-            try
-            {
-                category = ((UTCategorySet)set).Category;
-            }
-            catch
-            {
-
-            }
-            //
+            string category = set is UTCategorySet categorySet ? categorySet.Category : Program.Default;
 
             HashSet<Armor?> maleSetItems = new HashSet<Armor?>();
             HashSet<Armor?> femaleSetItems = new HashSet<Armor?>();
