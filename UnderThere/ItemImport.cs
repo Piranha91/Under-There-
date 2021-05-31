@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Skyrim;
 using System.Linq;
+using Mutagen.Bethesda.Plugins;
 using Noggog;
 using UnderThere.Settings;
 

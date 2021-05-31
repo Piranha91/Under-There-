@@ -351,3 +351,5 @@ MigrationBackup/
 UnderThere/Properties/launchSettings.json
 
 UnderThere/Data/failedAssignmentLog.txt
+
+.idea/
