@@ -1,12 +1,7 @@
-﻿using Mutagen.Bethesda;
-using Mutagen.Bethesda.FormKeys.SkyrimSE;
+﻿using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using Mutagen.Bethesda.Skyrim;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Mutagen.Bethesda.FormKeys.SkyrimSE;
+using Mutagen.Bethesda.Plugins;
 using Noggog;
 using Mutagen.Bethesda.Synthesis.Settings;
 

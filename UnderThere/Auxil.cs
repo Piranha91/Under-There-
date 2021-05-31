@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using Mutagen.Bethesda;
-using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Skyrim;
 using System.IO;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
 using UnderThere.Settings;
 using System.Linq;
+using Mutagen.Bethesda;
+using Mutagen.Bethesda.Plugins;
+using Mutagen.Bethesda.Plugins.Cache;
+using Mutagen.Bethesda.Plugins.Internals;
+using Mutagen.Bethesda.Plugins.Records;
 
 namespace UnderThere
 {
@@ -271,10 +273,6 @@ namespace UnderThere
 
         public static bool hasBlockedFaction(INpcGetter npc, HashSet<IFormLinkGetter<IFactionGetter>> BlockedFactions)
         {
-            if (npc.EditorID == "BrelynaMaryon")
-            {
-                int i = 0;
-            }
             foreach (var fact in npc.Factions)
             {
                 if (BlockedFactions.Contains(fact.Faction) && fact.Rank != 255) // 255 shows up as -1 in SSEedit
@@ -355,10 +353,10 @@ namespace UnderThere
             }
 
             // Compile list of things to duplicate
-            HashSet<FormLinkInformation> identifiedLinks = new();
+            HashSet<IFormLinkGetter> identifiedLinks = new();
             HashSet<FormKey> passedLinks = new();
 
-            void AddAllLinks(FormLinkInformation link)
+            void AddAllLinks(IFormLinkGetter link)
             {
                 if (link.FormKey.IsNull || !passedLinks.Add(link.FormKey)) return;
 
