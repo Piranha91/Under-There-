@@ -7,6 +7,9 @@ using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.Skyrim;
 using System.IO;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
+using Mutagen.Bethesda.Plugins;
+using Mutagen.Bethesda.Plugins.Cache;
+using Mutagen.Bethesda.Plugins.Records;
 using Noggog;
 using UnderThere.Settings;
 
@@ -38,10 +41,9 @@ namespace UnderThere
             {
                 foreach (var item in set.Items)
                 {
-                    var mod = item.Record.FormKey.ModKey.ToString();
-                    if (state.LoadOrder.Contains(LoadOrderListing.FromString(mod, true)))
+                    if (state.LoadOrder.ContainsKey(item.Record.FormKey.ModKey))
                     {
-                        throw new Exception("Plugin " + mod + " expected by settings is not currently in your load order.");
+                        throw new Exception("Plugin " + item.Record.FormKey.ModKey + " expected by settings is not currently in your load order.");
                     }
                 }
             }
