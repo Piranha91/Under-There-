@@ -413,7 +413,7 @@ namespace UnderThere
         }
 
         public static string getWealthGroup<T>(IFormLinkGetter<T> link, Dictionary<string, HashSet<IFormLinkGetter<T>>> Definitions, HashSet<IFormLinkGetter> GroupLookupFailures)
-            where T : class, IMajorRecordCommonGetter
+            where T : class, IMajorRecordGetter
         {
             foreach (var Def in Definitions)
             {
