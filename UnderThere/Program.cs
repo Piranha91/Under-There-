@@ -12,6 +12,7 @@ using Mutagen.Bethesda.Plugins.Cache;
 using Mutagen.Bethesda.Plugins.Records;
 using Noggog;
 using UnderThere.Settings;
+using Mutagen.Bethesda.Plugins.Allocators;
 
 namespace UnderThere
 {
@@ -51,6 +52,10 @@ namespace UnderThere
 
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
+            var allocatorPath = Path.Combine(state.ExtraSettingsDataPath, "UTallocator.txt");
+            var allocator = new TextFileFormKeyAllocator(state.PatchMod, allocatorPath);
+            state.PatchMod.SetAllocator(allocator);
+
             string SPIDpath = Path.Combine(state.DataFolderPath, "skse\\plugins\\po3_SpellPerkItemDistributor.dll");
             if (!File.Exists(SPIDpath)) //SPIDtest (dual-level pun - whoa!)
             {
@@ -95,12 +100,15 @@ namespace UnderThere
 
             Console.WriteLine("\nDon't forget to install Spell Perk Item Distributor to properly manage gender-specific items.");
             Console.WriteLine("\nEnjoy the underwear. Goodbye.");
+
+            allocator.Commit(); // Or Dispose
         }
 
         public static IFormLinkGetter<ILeveledItemGetter> createLeveledList_AllItems(IEnumerable<UTSet> sets, ILinkCache lk, ISkyrimMod PatchMod)
         {
-            var allItems = PatchMod.LeveledItems.AddNew();
-            allItems.EditorID = "UnderThereAllItems";
+            var editorID = "UnderThereAllItems";
+            var allItems = PatchMod.LeveledItems.AddNew(editorID);
+            allItems.EditorID = editorID;
             allItems.Entries = new ExtendedList<LeveledItemEntry>();
             foreach (UTSet set in sets)
             {
@@ -133,8 +141,9 @@ namespace UnderThere
 
         public static LeveledItem CreateLList(string nickname, IEnumerable<UTSet> sets, ISkyrimMod PatchMod)
         {
-            var currentItems = PatchMod.LeveledItems.AddNew();
-            currentItems.EditorID = "UnderThereItems_" + nickname;
+            var editorID = "UnderThereItems_" + nickname;
+            var currentItems = PatchMod.LeveledItems.AddNew(editorID);
+            currentItems.EditorID = editorID;
             currentItems.Entries = new ExtendedList<LeveledItemEntry>();
 
             foreach (var set in sets)
@@ -160,8 +169,9 @@ namespace UnderThere
             List<string> NPClookupFailures = new List<string>();
             Dictionary<FormKey, Dictionary<string, Outfit>> OutfitMap = new Dictionary<FormKey, Dictionary<string, Outfit>>();
 
-            Outfit underwearOnly = state.PatchMod.Outfits.AddNew();
-            underwearOnly.EditorID = "No_Clothes";
+            var editorID = "No_Clothes";
+            Outfit underwearOnly = state.PatchMod.Outfits.AddNew(editorID);
+            underwearOnly.EditorID = editorID;
             underwearOnly.Items = new ExtendedList<IFormLinkGetter<IOutfitTargetGetter>>();
 
             List<string> spidOutfitAssignments = new List<string>();
@@ -296,12 +306,16 @@ namespace UnderThere
                 if (!OutfitMap.ContainsKey(currentOutfitKey) || !OutfitMap[currentOutfitKey].ContainsKey(npcGroup))
                 {
                     if (!state.LinkCache.TryResolve<IOutfitGetter>(currentOutfitKey, out var NPCoutfit) || NPCoutfit == null) { continue; }
-                    Outfit newOutfit = state.PatchMod.Outfits.AddNew();
-                    newOutfit.DeepCopyIn(NPCoutfit);
-                    if (newOutfit.EditorID != null)
+                    var outfitEditorID = "";
+                    if (NPCoutfit.EditorID != null)
                     {
-                        newOutfit.EditorID += "_" + npcGroup;
+                        outfitEditorID = NPCoutfit.EditorID + "_" + npcGroup;
                     }
+
+                    Outfit newOutfit = state.PatchMod.Outfits.AddNew(outfitEditorID);
+                    newOutfit.DeepCopyIn(NPCoutfit);
+                    newOutfit.EditorID = outfitEditorID;
+                    
                     if (newOutfit.Items != null)
                     {
                         newOutfit.Items.Add(currentUW);
@@ -501,15 +515,17 @@ namespace UnderThere
             var genderedItems = getGenderedItems(sets);
 
             // create gendered item FormLists
-            FormList maleItems = state.PatchMod.FormLists.AddNew();
-            maleItems.EditorID = "UT_FLST_MaleOnly";
+            var editorIDmale = "UT_FLST_MaleOnly";
+            FormList maleItems = state.PatchMod.FormLists.AddNew(editorIDmale);
+            maleItems.EditorID = editorIDmale;
             foreach (var fk in genderedItems.Male)
             {
                 maleItems.Items.Add(fk);
             }
 
-            FormList femaleItems = state.PatchMod.FormLists.AddNew();
-            femaleItems.EditorID = "UT_FLST_FemaleOnly";
+            var editorIDfemale = "UT_FLST_FemaleOnly";
+            FormList femaleItems = state.PatchMod.FormLists.AddNew(editorIDfemale);
+            femaleItems.EditorID = editorIDfemale;
             foreach (var fk in genderedItems.Female)
             {
                 femaleItems.Items.Add(fk);
@@ -517,8 +533,9 @@ namespace UnderThere
 
             // create spell for SPID distribution
             // create MGEF first
-            MagicEffect utItemFixEffect = state.PatchMod.MagicEffects.AddNew();
-            utItemFixEffect.EditorID = "UT_MGEF_GenderedInventoryFix";
+            var editorIDmgef = "UT_MGEF_GenderedInventoryFix";
+            MagicEffect utItemFixEffect = state.PatchMod.MagicEffects.AddNew(editorIDmgef);
+            utItemFixEffect.EditorID = editorIDmgef;
             utItemFixEffect.Name = "Removes female-only items from males and vice-versa";
             utItemFixEffect.Flags |= MagicEffect.Flag.HideInUI;
             utItemFixEffect.Flags |= MagicEffect.Flag.NoDeathDispel;
@@ -545,8 +562,9 @@ namespace UnderThere
             utItemFixEffect.VirtualMachineAdapter.Scripts.Add(UTinventoryFixScript);
 
             // create Spell
-            Spell utItemFixSpell = state.PatchMod.Spells.AddNew();
-            utItemFixSpell.EditorID = "UT_SPEL_GenderedInventoryFix";
+            var editorIDspell = "UT_SPEL_GenderedInventoryFix";
+            Spell utItemFixSpell = state.PatchMod.Spells.AddNew(editorIDspell);
+            utItemFixSpell.EditorID = editorIDspell;
             utItemFixSpell.Name = "Fixes gendered UnderThere inventory";
             utItemFixSpell.CastType = CastType.ConstantEffect;
             utItemFixSpell.TargetType = TargetType.Self;

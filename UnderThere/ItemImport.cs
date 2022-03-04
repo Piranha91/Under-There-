@@ -21,8 +21,9 @@ namespace UnderThere
             // create a leveled list entry for each set
             foreach (var set in settings.AllSets)
             {
-                var currentItems = state.PatchMod.LeveledItems.AddNew();
-                currentItems.EditorID = "LItems_" + set.Name;
+                var EditorID = "LItems_" + set.Name;
+                var currentItems = state.PatchMod.LeveledItems.AddNew(EditorID);
+                currentItems.EditorID = EditorID;
                 currentItems.Flags |= LeveledItem.Flag.UseAll;
                 currentItems.Entries = new ExtendedList<LeveledItemEntry>();
                 
@@ -50,13 +51,15 @@ namespace UnderThere
 
             foreach (string cat in categories)
             {
-                var catItemsM = state.PatchMod.LeveledItems.AddNew();
-                catItemsM.EditorID = "LItems_M_" + cat;
+                var editorID = "LItems_M_" + cat;
+                var catItemsM = state.PatchMod.LeveledItems.AddNew(editorID);
+                catItemsM.EditorID = editorID;
                 catItemsM.Entries = new ExtendedList<LeveledItemEntry>();
                 lItemsByGenderAndWealth[GenderTarget.Male].Add(cat, catItemsM);
 
-                var catItemsF = state.PatchMod.LeveledItems.AddNew();
-                catItemsF.EditorID = "LItems_F_" + cat;
+                editorID = "LItems_F_" + cat;
+                var catItemsF = state.PatchMod.LeveledItems.AddNew(editorID);
+                catItemsF.EditorID = editorID;
                 catItemsF.Entries = new ExtendedList<LeveledItemEntry>();
                 lItemsByGenderAndWealth[GenderTarget.Female].Add(cat, catItemsF);
             }
@@ -202,8 +205,9 @@ namespace UnderThere
         public static void createGenderedLeveledSet(GenderTarget gender, string category, UTSet set, HashSet<Armor?> genderedSetItems, Dictionary<GenderTarget, Dictionary<string, LeveledItem>> lItemsByGenderAndWealth, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             // create leveled list for the gendered items in the current set
-            LeveledItem currentItems_gender = state.PatchMod.LeveledItems.AddNew();
-            currentItems_gender.EditorID = "LItems_" + set.Name + "_" + gender.ToString();
+            var editorID = "LItems_" + set.Name + "_" + gender.ToString();
+            LeveledItem currentItems_gender = state.PatchMod.LeveledItems.AddNew(editorID);
+            currentItems_gender.EditorID = editorID;
             currentItems_gender.Flags |= LeveledItem.Flag.UseAll;
             currentItems_gender.Entries = new ExtendedList<LeveledItemEntry>();
 
