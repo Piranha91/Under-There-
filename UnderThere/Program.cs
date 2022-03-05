@@ -52,10 +52,6 @@ namespace UnderThere
 
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            var allocatorPath = Path.Combine(state.ExtraSettingsDataPath, "UTallocator.txt");
-            var allocator = new TextFileFormKeyAllocator(state.PatchMod, allocatorPath);
-            state.PatchMod.SetAllocator(allocator);
-
             string SPIDpath = Path.Combine(state.DataFolderPath, "skse\\plugins\\po3_SpellPerkItemDistributor.dll");
             if (!File.Exists(SPIDpath)) //SPIDtest (dual-level pun - whoa!)
             {
@@ -100,8 +96,6 @@ namespace UnderThere
 
             Console.WriteLine("\nDon't forget to install Spell Perk Item Distributor to properly manage gender-specific items.");
             Console.WriteLine("\nEnjoy the underwear. Goodbye.");
-
-            allocator.Commit(); // Or Dispose
         }
 
         public static IFormLinkGetter<ILeveledItemGetter> createLeveledList_AllItems(IEnumerable<UTSet> sets, ILinkCache lk, ISkyrimMod PatchMod)
@@ -344,6 +338,10 @@ namespace UnderThere
             {
                 WriteSPIDOutfitAssignments(spidOutfitAssignments, state);
             }
+            else
+            {
+                DeleteSPIDOutfitAssignments(state);
+            }
         }
 
         public static void AssignOutfitViaSPID(INpcGetter npc, FormKey outfitFormKey, List<string> assignments)
@@ -378,6 +376,23 @@ namespace UnderThere
             catch
             {
                 throw new Exception("Could not write " + destPath);
+            }
+        }
+
+        public static void DeleteSPIDOutfitAssignments(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        {
+            string destPath = Path.Combine(state.DataFolderPath, "UnderThereOutfits_DISTR.ini");
+            if (File.Exists(destPath))
+            {
+                try
+                {
+                    File.Delete(destPath);
+                }
+
+                catch
+                {
+                    throw new Exception("Could not delete " + destPath);
+                }
             }
         }
 
