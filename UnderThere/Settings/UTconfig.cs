@@ -592,6 +592,15 @@ namespace UnderThere.Settings
         public HashSet<IFormLinkGetter<IFactionGetter>> BlockedFactions { get; set; } = new HashSet<IFormLinkGetter<IFactionGetter>>();
 
         [SynthesisOrder]
+        [SynthesisTooltip("List of armature blocked from slot patching.")]
+        public HashSet<FormLink<IArmorAddonGetter>> BlockedArmature { get; set; } = new HashSet<FormLink<IArmorAddonGetter>>()
+        #region Defaults
+        {
+            Skyrim.ArmorAddon.DA09MeridiaBallofLightAA
+        };
+        #endregion
+
+        [SynthesisOrder]
         [SynthesisTooltip("Default underwear set. Used if Assignment Mode is set to Default, or if no class/faction group could be assigned for the given NPC and no Quality for no Assignment was set.")]
         public UTSet DefaultSet = new UTSet()
         #region Defaults

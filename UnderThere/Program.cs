@@ -75,7 +75,7 @@ namespace UnderThere
 
             // Add slots used by underwear items to clothes and armors with 32 - Body slot active
             List<BipedObjectFlag> usedSlots = Auxil.getItemSetARMAslots(settings.AllSets, state.LinkCache);
-            patchBodyARMAslots(usedSlots, settings.PatchableRaces, UWsourcePlugins, state, settings.VerboseMode);
+            patchBodyARMAslots(usedSlots, settings.PatchableRaces, settings.BlockedArmature, UWsourcePlugins, state, settings.VerboseMode);
 
             // set SOS compatibiilty if needed
             bool bSOS = addSOScompatibility(settings.AllSets, usedSlots, state);
@@ -634,11 +634,11 @@ namespace UnderThere
             return (male, female);
         }
 
-        public static void patchBodyARMAslots(List<BipedObjectFlag> usedSlots, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaces, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state, bool bVerboseMode)
+        public static void patchBodyARMAslots(List<BipedObjectFlag> usedSlots, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaces, IReadOnlyCollection<FormLink<IArmorAddonGetter>> excludedArmature, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state, bool bVerboseMode)
         {
             foreach (var arma in state.LoadOrder.PriorityOrder.WinningOverrides<IArmorAddonGetter>())
             {
-                if (!state.LinkCache.TryResolve<IRaceGetter>(arma.Race.FormKey, out var armaRace) || armaRace.EditorID == null || armaRace.EditorID.Contains("Child", StringComparison.OrdinalIgnoreCase) || UWsourcePlugins.Contains(arma.FormKey.ModKey)) // don't patch armor addons from a UWsourcePlugin because those are meant to be fully merged into synthesis.esp anyway (otherwise they will be added as masters)
+                if (!state.LinkCache.TryResolve<IRaceGetter>(arma.Race.FormKey, out var armaRace) || armaRace.EditorID == null || armaRace.EditorID.Contains("Child", StringComparison.OrdinalIgnoreCase) || UWsourcePlugins.Contains(arma.FormKey.ModKey) || excludedArmature.Contains(arma)) // don't patch armor addons from a UWsourcePlugin because those are meant to be fully merged into synthesis.esp anyway (otherwise they will be added as masters)
                 {
                     continue;
                 }
