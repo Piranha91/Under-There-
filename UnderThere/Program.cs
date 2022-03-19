@@ -634,7 +634,7 @@ namespace UnderThere
             return (male, female);
         }
 
-        public static void patchBodyARMAslots(List<BipedObjectFlag> usedSlots, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaces, IReadOnlyCollection<FormLink<IArmorAddonGetter>> excludedArmature, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state, bool bVerboseMode)
+        public static void patchBodyARMAslots(List<BipedObjectFlag> usedSlots, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaces, IReadOnlyCollection<IFormLinkGetter<IArmorAddonGetter>> excludedArmature, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state, bool bVerboseMode)
         {
             foreach (var arma in state.LoadOrder.PriorityOrder.WinningOverrides<IArmorAddonGetter>())
             {

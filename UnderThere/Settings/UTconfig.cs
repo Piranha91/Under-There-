@@ -593,7 +593,7 @@ namespace UnderThere.Settings
 
         [SynthesisOrder]
         [SynthesisTooltip("List of armature blocked from slot patching.")]
-        public HashSet<FormLink<IArmorAddonGetter>> BlockedArmature { get; set; } = new HashSet<FormLink<IArmorAddonGetter>>()
+        public HashSet<IFormLinkGetter<IArmorAddonGetter>> BlockedArmature { get; set; } = new HashSet<IFormLinkGetter<IArmorAddonGetter>>()
         #region Defaults
         {
             Skyrim.ArmorAddon.DA09MeridiaBallofLightAA
