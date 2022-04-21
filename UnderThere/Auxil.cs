@@ -15,7 +15,7 @@ namespace UnderThere
 {
     class Auxil
     {
-        public static bool isNonHumanoid(INpcGetter npc, IRaceGetter npcRace, ILinkCache lk)
+        public static bool IsNonHumanoid(INpcGetter npc, IRaceGetter npcRace, ILinkCache lk)
         {
             List<string> nonHumanoidFactions = new List<string> { "CreatureFaction", "PreyFaction", "DragonFaction", "DwarvenAutomatonFaction", "DLC2ExpSpiderFriendFaction" };
             List<string> nonHumanoidAttackRaces = new List<string> { "DwarvenSphereRace", "DwarvenSpiderRace" };
@@ -44,7 +44,7 @@ namespace UnderThere
             return false;
         }
 
-        public static bool hasGhostAbility(INpcGetter npc)
+        public static bool HasGhostAbility(INpcGetter npc)
         {
             if (npc.ActorEffect == null) return false;
             foreach (var ability in npc.ActorEffect)
@@ -58,7 +58,7 @@ namespace UnderThere
             return false;
         }
 
-        public static bool hasGhostScript(INpcGetter npc)
+        public static bool HasGhostScript(INpcGetter npc)
         {
             if (npc.VirtualMachineAdapter == null) return false;
             foreach (var script in npc.VirtualMachineAdapter.Scripts)
@@ -71,19 +71,19 @@ namespace UnderThere
             return false;
         }
 
-        public static List<BipedObjectFlag> getItemSetARMAslots(IEnumerable<UTSet> sets, ILinkCache lk)
+        public static List<BipedObjectFlag> GetItemSetARMAslots(IEnumerable<UTSet> sets, ILinkCache lk)
         {
             List<BipedObjectFlag> usedSlots = new List<BipedObjectFlag>();
 
             foreach (UTSet set in sets)
             {
-                getContainedSlots(set.Items, usedSlots, lk);
+                GetContainedSlots(set.Items, usedSlots, lk);
             }
 
             return usedSlots;
         }
 
-        public static void getContainedSlots(List<UTitem> items, List<BipedObjectFlag> usedSlots, ILinkCache lk)
+        public static void GetContainedSlots(List<UTitem> items, List<BipedObjectFlag> usedSlots, ILinkCache lk)
         {
             foreach (UTitem item in items)
             {
@@ -99,7 +99,7 @@ namespace UnderThere
                         continue;
                     }
 
-                    List<BipedObjectFlag> currentUsedSlots = getARMAslots(ARMAobj.BodyTemplate);
+                    List<BipedObjectFlag> currentUsedSlots = GetARMAslots(ARMAobj.BodyTemplate);
                     foreach (var usedFlag in currentUsedSlots)
                     {
                         if (!usedSlots.Contains(usedFlag))
@@ -111,7 +111,7 @@ namespace UnderThere
             }
         }
 
-        public static List<BipedObjectFlag> getARMAslots(BodyTemplate bodyTemplate)
+        public static List<BipedObjectFlag> GetARMAslots(BodyTemplate bodyTemplate)
         {
             List<BipedObjectFlag> usedSlots = new List<BipedObjectFlag>();
             List<BipedObjectFlag> possibleSlots = new List<BipedObjectFlag>
@@ -159,7 +159,7 @@ namespace UnderThere
             return usedSlots;
         }
 
-        public static BipedObjectFlag mapIntToSlot(int iFlag)
+        public static BipedObjectFlag MapIntToSlot(int iFlag)
         {
             switch (iFlag)
             {
@@ -197,7 +197,7 @@ namespace UnderThere
             }
         }
 
-        public static int mapSlotToInt(BipedObjectFlag oFlag)
+        public static int MapSlotToInt(BipedObjectFlag oFlag)
         {
             switch (oFlag)
             {
@@ -271,7 +271,7 @@ namespace UnderThere
             //}
         }
 
-        public static bool hasBlockedFaction(INpcGetter npc, HashSet<IFormLinkGetter<IFactionGetter>> BlockedFactions)
+        public static bool HasBlockedFaction(INpcGetter npc, HashSet<IFormLinkGetter<IFactionGetter>> BlockedFactions)
         {
             foreach (var fact in npc.Factions)
             {
