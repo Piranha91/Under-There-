@@ -78,7 +78,7 @@ namespace UnderThere
             PatchBodyARMAslots(usedSlots, settings.PatchableRaces, settings.BlockedArmature, UWsourcePlugins, state, settings.VerboseMode);
 
             // set SOS compatibiilty if needed
-            bool bSOS = AddSOScompatibility(settings.AllSets, usedSlots, state);
+            bool bSOS = AddSOScompatibility(settings.AllSets, usedSlots, state, settings.SOSSupport);
 
             // create and distribute gendered item inventory spell 
             CopyUTScript(state);
@@ -728,9 +728,10 @@ namespace UnderThere
             }
         }
 
-        public static bool AddSOScompatibility(IEnumerable<UTSet> sets, List<BipedObjectFlag> usedSlots, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static bool AddSOScompatibility(IEnumerable<UTSet> sets, List<BipedObjectFlag> usedSlots, IPatcherState<ISkyrimMod, ISkyrimModGetter> state, SOSmode sosMode)
         {
             bool bSOSdetected = false;
+
             foreach (var mod in state.LoadOrder)
             {
                 if (mod.Key.FileName == "Schlongs of Skyrim - Core.esm")
@@ -739,8 +740,15 @@ namespace UnderThere
                     break;
                 }
             }
-            if (!bSOSdetected)
+
+            if (sosMode == SOSmode.ForceOn) {  bSOSdetected = true; }
+
+            if (!bSOSdetected || sosMode == SOSmode.ForceOff)
             {
+                if (bSOSdetected)
+                {
+                    Console.WriteLine("Warning: SOS was detected but your SOS mode is set to Force OFF. Expect visual conflicts.");
+                }
                 return false;
             }
 
