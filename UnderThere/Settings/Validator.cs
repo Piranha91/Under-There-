@@ -65,7 +65,7 @@ namespace UnderThere.Settings
             }
         }
 
-        public static void validateGenderedSets(UTconfig settings, Dictionary<GenderTarget, Dictionary<string, LeveledItem>> lItemsByGenderAndWealth)
+        public static void ValidateGenderedSets(UTconfig settings, Dictionary<GenderTarget, Dictionary<string, LeveledItem>> lItemsByGenderAndWealth)
         {
             if (settings.PatchMales)
             {

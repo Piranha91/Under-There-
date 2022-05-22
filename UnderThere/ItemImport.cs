@@ -12,29 +12,30 @@ namespace UnderThere
 {
     class ItemImport
     {
-        public static void createItems(UTconfig settings, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void CreateItems(UTconfig settings, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            getSourcePlugins(settings, UWsourcePlugins, state);
+            GetSourcePlugins(settings, UWsourcePlugins, state);
 
-            var lItemsByGenderAndWealth = initializeGenderedCategoryLeveledLists(settings, state);
+            var lItemsByGenderAndWealth = InitializeGenderedCategoryLeveledLists(settings, state);
 
             // create a leveled list entry for each set
             foreach (var set in settings.AllSets)
             {
-                var currentItems = state.PatchMod.LeveledItems.AddNew();
-                currentItems.EditorID = "LItems_" + set.Name;
+                var EditorID = "LItems_" + set.Name;
+                var currentItems = state.PatchMod.LeveledItems.AddNew(EditorID);
+                currentItems.EditorID = EditorID;
                 currentItems.Flags |= LeveledItem.Flag.UseAll;
                 currentItems.Entries = new ExtendedList<LeveledItemEntry>();
                 
-                editAndStoreUTitems(set, currentItems, settings.MakeItemsEquippable, settings.PatchableRaces, lItemsByGenderAndWealth, state);
+                EditAndStoreUTitems(set, currentItems, settings.MakeItemsEquippable, settings.PatchableRaces, lItemsByGenderAndWealth, state);
 
                 set.LeveledList = currentItems.FormKey;
             }
 
-            Validator.validateGenderedSets(settings, lItemsByGenderAndWealth);
+            Validator.ValidateGenderedSets(settings, lItemsByGenderAndWealth);
         }
 
-        public static Dictionary<GenderTarget, Dictionary<string, LeveledItem>> initializeGenderedCategoryLeveledLists(UTconfig settings, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static Dictionary<GenderTarget, Dictionary<string, LeveledItem>> InitializeGenderedCategoryLeveledLists(UTconfig settings, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             var lItemsByGenderAndWealth = new Dictionary<GenderTarget, Dictionary<string, LeveledItem>>();
             lItemsByGenderAndWealth[GenderTarget.Male] = new Dictionary<string, LeveledItem>();
@@ -50,13 +51,15 @@ namespace UnderThere
 
             foreach (string cat in categories)
             {
-                var catItemsM = state.PatchMod.LeveledItems.AddNew();
-                catItemsM.EditorID = "LItems_M_" + cat;
+                var editorID = "LItems_M_" + cat;
+                var catItemsM = state.PatchMod.LeveledItems.AddNew(editorID);
+                catItemsM.EditorID = editorID;
                 catItemsM.Entries = new ExtendedList<LeveledItemEntry>();
                 lItemsByGenderAndWealth[GenderTarget.Male].Add(cat, catItemsM);
 
-                var catItemsF = state.PatchMod.LeveledItems.AddNew();
-                catItemsF.EditorID = "LItems_F_" + cat;
+                editorID = "LItems_F_" + cat;
+                var catItemsF = state.PatchMod.LeveledItems.AddNew(editorID);
+                catItemsF.EditorID = editorID;
                 catItemsF.Entries = new ExtendedList<LeveledItemEntry>();
                 lItemsByGenderAndWealth[GenderTarget.Female].Add(cat, catItemsF);
             }
@@ -64,7 +67,7 @@ namespace UnderThere
             return lItemsByGenderAndWealth;
         }
 
-        public static void getSourcePlugins(UTconfig settings, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void GetSourcePlugins(UTconfig settings, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             foreach (UTSet set in settings.Sets)
             {
@@ -82,7 +85,7 @@ namespace UnderThere
             }
         }
 
-        public static void editAndStoreUTitems(UTSet set, LeveledItem currentItems, bool bMakeItemsEquipable, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaceFormLinks, Dictionary<GenderTarget, Dictionary<string, LeveledItem>> lItemsByGenderAndWealth,  IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void EditAndStoreUTitems(UTSet set, LeveledItem currentItems, bool bMakeItemsEquipable, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaceFormLinks, Dictionary<GenderTarget, Dictionary<string, LeveledItem>> lItemsByGenderAndWealth,  IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             if (currentItems.Entries == null) return;
 
@@ -126,7 +129,7 @@ namespace UnderThere
                         moddedItem.BodyTemplate.FirstPersonFlags = new BipedObjectFlag();
                         foreach (int modSlot in item.Slots)
                         {
-                            moddedItem.BodyTemplate.FirstPersonFlags |= Auxil.mapIntToSlot(modSlot);
+                            moddedItem.BodyTemplate.FirstPersonFlags |= Auxil.MapIntToSlot(modSlot);
                         }
                     }
                     switch (bMakeItemsEquipable)
@@ -135,7 +138,7 @@ namespace UnderThere
                         case false: moddedItem.MajorFlags |= Armor.MajorFlag.NonPlayable; break;
                     }
 
-                    modifyArmature(moddedItem, item.Slots, patchableRaceFormLinks, state); // sets slots and additional races for armature if necessary
+                    ModifyArmature(moddedItem, item.Slots, patchableRaceFormLinks, state); // sets slots and additional races for armature if necessary
 
                     LeveledItemEntry entry = new LeveledItemEntry();
                     LeveledItemEntryData data = new LeveledItemEntryData();
@@ -170,7 +173,7 @@ namespace UnderThere
 
             if (maleSetItems.Any())
             {
-                createGenderedLeveledSet(GenderTarget.Male, category, set, maleSetItems, lItemsByGenderAndWealth, state);
+                CreateGenderedLeveledSet(GenderTarget.Male, category, set, maleSetItems, lItemsByGenderAndWealth, state);
             }
             else if (lItemsByGenderAndWealth[GenderTarget.Male][category] != null)
             {
@@ -185,7 +188,7 @@ namespace UnderThere
 
             if (femaleSetItems.Any())
             {
-                createGenderedLeveledSet(GenderTarget.Female, category, set, femaleSetItems, lItemsByGenderAndWealth, state);
+                CreateGenderedLeveledSet(GenderTarget.Female, category, set, femaleSetItems, lItemsByGenderAndWealth, state);
             }
             else if (lItemsByGenderAndWealth[GenderTarget.Female][category] != null)
             {
@@ -199,11 +202,12 @@ namespace UnderThere
             }
         }
 
-        public static void createGenderedLeveledSet(GenderTarget gender, string category, UTSet set, HashSet<Armor?> genderedSetItems, Dictionary<GenderTarget, Dictionary<string, LeveledItem>> lItemsByGenderAndWealth, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void CreateGenderedLeveledSet(GenderTarget gender, string category, UTSet set, HashSet<Armor?> genderedSetItems, Dictionary<GenderTarget, Dictionary<string, LeveledItem>> lItemsByGenderAndWealth, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             // create leveled list for the gendered items in the current set
-            LeveledItem currentItems_gender = state.PatchMod.LeveledItems.AddNew();
-            currentItems_gender.EditorID = "LItems_" + set.Name + "_" + gender.ToString();
+            var editorID = "LItems_" + set.Name + "_" + gender.ToString();
+            LeveledItem currentItems_gender = state.PatchMod.LeveledItems.AddNew(editorID);
+            currentItems_gender.EditorID = editorID;
             currentItems_gender.Flags |= LeveledItem.Flag.UseAll;
             currentItems_gender.Entries = new ExtendedList<LeveledItemEntry>();
 
@@ -234,7 +238,7 @@ namespace UnderThere
             }
         }
 
-        public static void modifyArmature (IArmor moddedItem, List<int> slots, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaceFormLinks, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void ModifyArmature (IArmor moddedItem, List<int> slots, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaceFormLinks, IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             foreach (var aa in moddedItem.Armature)
             {
@@ -242,25 +246,25 @@ namespace UnderThere
                 {
                     var moddedAA_override = state.PatchMod.ArmorAddons.GetOrAddAsOverride(moddedAA);
 
-                    setAdditionalRaces(moddedAA_override, patchableRaceFormLinks);
-                    editARMAslots(moddedAA_override, slots);
+                    SetAdditionalRaces(moddedAA_override, patchableRaceFormLinks);
+                    EditARMAslots(moddedAA_override, slots);
                 }
             }
         }
 
-        public static void editARMAslots(IArmorAddon moddedAA, List<int> slots)
+        public static void EditARMAslots(IArmorAddon moddedAA, List<int> slots)
         {
             if (slots.Count > 0 && moddedAA.BodyTemplate != null)
             {
                 moddedAA.BodyTemplate.FirstPersonFlags = new BipedObjectFlag();
                 foreach (int modSlot in slots)
                 {
-                    moddedAA.BodyTemplate.FirstPersonFlags |= Auxil.mapIntToSlot(modSlot);
+                    moddedAA.BodyTemplate.FirstPersonFlags |= Auxil.MapIntToSlot(modSlot);
                 }
             }
         }
 
-        public static void setAdditionalRaces(IArmorAddon moddedAA, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaceFormLinks)
+        public static void SetAdditionalRaces(IArmorAddon moddedAA, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaceFormLinks)
         {
             // get missing PatchableRaces
             List<IFormLink<IRaceGetter>> addedRaces = new List<IFormLink<IRaceGetter>>();

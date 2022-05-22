@@ -18,6 +18,10 @@ namespace UnderThere.Settings
         public AssignmentMode AssignmentMode { get; set; } = AssignmentMode.Faction;
 
         [SynthesisOrder]
+        [SynthesisTooltip("SPID: patched outfits will be distributed via Spell Perk Item Distributor.\nPlugin: patched outfits will be added to NPCs via their plugin record.")]
+        public OutfitAssignmentMode OutfitAssignmentMode { get; set; } = OutfitAssignmentMode.Record;
+
+        [SynthesisOrder]
         [SynthesisTooltip("If unchecked, male NPCs will not be patched. Note: this may lead to some leveled female NPCs not having underwear. Recommended to leave enabled.")]
         public bool PatchMales { get; set; } = true;
 
@@ -586,6 +590,19 @@ namespace UnderThere.Settings
         [SynthesisOrder]
         [SynthesisTooltip("List of factions blocked from underwear assignment (still applies even if Assignment Mode is not \"Faction\".")]
         public HashSet<IFormLinkGetter<IFactionGetter>> BlockedFactions { get; set; } = new HashSet<IFormLinkGetter<IFactionGetter>>();
+
+        [SynthesisOrder]
+        [SynthesisTooltip("List of armature blocked from slot patching.")]
+        public HashSet<IFormLinkGetter<IArmorAddonGetter>> BlockedArmature { get; set; } = new HashSet<IFormLinkGetter<IArmorAddonGetter>>()
+        #region Defaults
+        {
+            Skyrim.ArmorAddon.DA09MeridiaBallofLightAA
+        };
+        #endregion
+
+        [SynthesisOrder]
+        [SynthesisTooltip("SOS support\nAuto = Auto-detect\nForce On = Always On\nForce Off = Always off")]
+        public SOSmode SOSSupport { get; set; } = SOSmode.Auto;
 
         [SynthesisOrder]
         [SynthesisTooltip("Default underwear set. Used if Assignment Mode is set to Default, or if no class/faction group could be assigned for the given NPC and no Quality for no Assignment was set.")]
