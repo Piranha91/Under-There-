@@ -51,10 +51,10 @@ namespace UnderThere
             foreach (var set in settings.AllSets)
             {
                 foreach (var item in set.Items)
-                {
+                { 
                     if (!state.LoadOrder.ContainsKey(item.Record.FormKey.ModKey))
                     {
-                        //throw new Exception("Plugin " + item.Record.FormKey.ModKey + " expected by settings is not currently in your load order.");
+                        throw new Exception("Plugin " + item.Record.FormKey.ModKey + " expected by Set " + set.Name + "from item " + item.DispName + " (" + item.Record.FormKey + ") is not currently in your load order.");
                     }
                 }
             }
