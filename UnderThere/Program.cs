@@ -39,14 +39,7 @@ namespace UnderThere
         {
             UTconfig settings = Settings.Value;
 
-            Console.WriteLine("Debug: Runnability Check:");
-            foreach (var set in settings.AllSets)
-            {
-                foreach (var item in set.Items)
-                {
-                    Console.WriteLine(item.Record.FormKey.ToString());
-                }
-            }
+            settings.AllSets = settings.Sets.And(settings.DefaultSet).ToHashSet();
 
             foreach (var set in settings.AllSets)
             {

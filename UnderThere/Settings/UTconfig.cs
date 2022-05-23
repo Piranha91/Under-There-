@@ -838,7 +838,7 @@ namespace UnderThere.Settings
             },
         };
         #endregion
-        public IEnumerable<UTSet> AllSets => Sets.And(DefaultSet);
+        public HashSet<UTSet> AllSets { get; set; } = new();
 
 
         [SynthesisOrder]
