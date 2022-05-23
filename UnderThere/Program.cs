@@ -38,13 +38,23 @@ namespace UnderThere
         private static void CanRunPatch(IRunnabilityState state)
         {
             UTconfig settings = Settings.Value;
+
+            Console.WriteLine("Debug: Runnability Check:");
+            foreach (var set in settings.AllSets)
+            {
+                foreach (var item in set.Items)
+                {
+                    Console.WriteLine(item.Record.FormKey.ToString());
+                }
+            }
+
             foreach (var set in settings.AllSets)
             {
                 foreach (var item in set.Items)
                 {
                     if (!state.LoadOrder.ContainsKey(item.Record.FormKey.ModKey))
                     {
-                        throw new Exception("Plugin " + item.Record.FormKey.ModKey + " expected by settings is not currently in your load order.");
+                        //throw new Exception("Plugin " + item.Record.FormKey.ModKey + " expected by settings is not currently in your load order.");
                     }
                 }
             }
