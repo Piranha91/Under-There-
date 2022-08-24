@@ -838,6 +838,7 @@ namespace UnderThere.Settings
             },
         };
         #endregion
+        [SynthesisIgnoreSetting]
         public HashSet<UTSet> AllSets { get; set; } = new();
 
 
