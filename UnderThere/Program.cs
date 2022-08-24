@@ -54,6 +54,10 @@ namespace UnderThere
             }
 
             var envState = state.GetEnvironmentState<ISkyrimMod, ISkyrimModGetter>();
+            if (envState == null)
+            {
+                throw new Exception("Could not create environment state");
+            }
             if (envState!= null && UserHasSOS(state))
             {
                 CheckSettingsPermitSOS(envState.LinkCache, settings.AllSets);
