@@ -71,9 +71,9 @@ namespace UnderThere
             return false;
         }
 
-        public static List<BipedObjectFlag> GetItemSetARMAslots(IEnumerable<UTSet> sets, ILinkCache lk)
+        public static Dictionary<IArmorGetter, List<BipedObjectFlag>> GetItemSetARMAslotsSorted(IEnumerable<UTSet> sets, ILinkCache lk)
         {
-            List<BipedObjectFlag> usedSlots = new List<BipedObjectFlag>();
+            Dictionary<IArmorGetter, List<BipedObjectFlag>> usedSlots = new();
 
             foreach (UTSet set in sets)
             {
@@ -83,13 +83,34 @@ namespace UnderThere
             return usedSlots;
         }
 
-        public static void GetContainedSlots(List<UTitem> items, List<BipedObjectFlag> usedSlots, ILinkCache lk)
+        public static HashSet<BipedObjectFlag> GetItemSetARMAslotsAll(Dictionary<IArmorGetter, List<BipedObjectFlag>> sortedUsedSlots)
+        {
+            HashSet<BipedObjectFlag> usedSlots = new();
+            foreach (var slotsInSet in sortedUsedSlots.Values)
+            {
+                foreach (var slot in slotsInSet)
+                {
+                    if(!usedSlots.Contains(slot))
+                    {
+                        usedSlots.Add(slot);
+                    }
+                }
+            }
+            return usedSlots;
+        }
+
+        public static void GetContainedSlots(List<UTitem> items, Dictionary<IArmorGetter, List<BipedObjectFlag>> usedSlots, ILinkCache lk)
         {
             foreach (UTitem item in items)
             {
                 if (!item.Record.TryResolve(lk, out var itemObj))
                 {
                     continue;
+                }
+
+                if (!usedSlots.ContainsKey(itemObj))
+                {
+                    usedSlots.Add(itemObj, new List<BipedObjectFlag>());
                 }
 
                 foreach (IFormLink<IArmorAddonGetter> AAgetter in itemObj.Armature)
@@ -102,9 +123,9 @@ namespace UnderThere
                     List<BipedObjectFlag> currentUsedSlots = GetARMAslots(ARMAobj.BodyTemplate);
                     foreach (var usedFlag in currentUsedSlots)
                     {
-                        if (!usedSlots.Contains(usedFlag))
+                        if (!usedSlots[itemObj].Contains(usedFlag))
                         {
-                            usedSlots.Add(usedFlag);
+                            usedSlots[itemObj].Add(usedFlag);
                         }
                     }
                 }
