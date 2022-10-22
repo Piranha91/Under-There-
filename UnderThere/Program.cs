@@ -13,6 +13,7 @@ using Mutagen.Bethesda.Plugins.Records;
 using Noggog;
 using UnderThere.Settings;
 using Mutagen.Bethesda.Plugins.Allocators;
+using Mutagen.Bethesda.Plugins.Order;
 
 namespace UnderThere
 {
@@ -38,15 +39,30 @@ namespace UnderThere
         private static void CanRunPatch(IRunnabilityState state)
         {
             UTconfig settings = Settings.Value;
+
+            settings.AllSets = settings.Sets.And(settings.DefaultSet).ToHashSet();
+
             foreach (var set in settings.AllSets)
             {
                 foreach (var item in set.Items)
-                {
+                { 
                     if (!state.LoadOrder.ContainsKey(item.Record.FormKey.ModKey))
                     {
-                        throw new Exception("Plugin " + item.Record.FormKey.ModKey + " expected by settings is not currently in your load order.");
+                        string exceptionStr = "Plugin " + item.Record.FormKey.ModKey + " expected by Set " + set.Name + "from item " + item.DispName + " (" + item.Record.FormKey + ") is not currently in your load order.";
+                        exceptionStr += Environment.NewLine + "Current Load Order:" + Environment.NewLine + string.Join(Environment.NewLine, state.LoadOrder.Select(x => x.Value.FileName));
+                        throw new Exception(exceptionStr);
                     }
                 }
+            }
+
+            var envState = state.GetEnvironmentState<ISkyrimMod, ISkyrimModGetter>();
+            if (envState == null)
+            {
+                throw new Exception("Could not create environment state");
+            }
+            if (envState!= null && UserHasSOS(state))
+            {
+                CheckSettingsPermitSOS(envState.LinkCache, settings.AllSets);
             }
         }
 
@@ -74,11 +90,11 @@ namespace UnderThere
             AssignOutfits(settings, settings.DefaultSet.LeveledList, UT_LeveledItemsByWealth, UT_LeveledItemsAll, state);
 
             // Add slots used by underwear items to clothes and armors with 32 - Body slot active
-            List<BipedObjectFlag> usedSlots = Auxil.GetItemSetARMAslots(settings.AllSets, state.LinkCache);
+            Dictionary<IArmorGetter, List<BipedObjectFlag>> usedSlots = Auxil.GetItemSetARMAslotsSorted(settings.AllSets, state.LinkCache);
             PatchBodyARMAslots(usedSlots, settings.PatchableRaces, settings.BlockedArmature, UWsourcePlugins, state, settings.VerboseMode);
 
             // set SOS compatibiilty if needed
-            bool bSOS = AddSOScompatibility(settings.AllSets, usedSlots, state, settings.SOSSupport);
+            bool bSOS = AddSOScompatibility(settings.AllSets, state, settings.SOSSupport);
 
             // create and distribute gendered item inventory spell 
             CopyUTScript(state);
@@ -667,8 +683,20 @@ namespace UnderThere
             return (male, female);
         }
 
-        public static void PatchBodyARMAslots(List<BipedObjectFlag> usedSlots, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaces, IReadOnlyCollection<IFormLinkGetter<IArmorAddonGetter>> excludedArmature, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state, bool bVerboseMode)
+        public static void PatchBodyARMAslots(Dictionary<IArmorGetter, List<BipedObjectFlag>> usedSlots, IReadOnlyCollection<FormLink<IRaceGetter>> patchableRaces, IReadOnlyCollection<IFormLinkGetter<IArmorAddonGetter>> excludedArmature, HashSet<ModKey> UWsourcePlugins, IPatcherState<ISkyrimMod, ISkyrimModGetter> state, bool bVerboseMode)
         {
+            var allUsedSlots = new HashSet<BipedObjectFlag>();
+            foreach(var slotsPerArmor in usedSlots.Values)
+            {
+                foreach(var slot in slotsPerArmor)
+                {
+                    if (!allUsedSlots.Contains(slot))
+                    {
+                        allUsedSlots.Add(slot);
+                    }
+                }
+            }
+
             foreach (var arma in state.LoadOrder.PriorityOrder.WinningOverrides<IArmorAddonGetter>())
             {
                 if (!state.LinkCache.TryResolve<IRaceGetter>(arma.Race.FormKey, out var armaRace) || armaRace.EditorID == null || armaRace.EditorID.Contains("Child", StringComparison.OrdinalIgnoreCase) || UWsourcePlugins.Contains(arma.FormKey.ModKey) || excludedArmature.Contains(arma)) // don't patch armor addons from a UWsourcePlugin because those are meant to be fully merged into synthesis.esp anyway (otherwise they will be added as masters)
@@ -686,7 +714,7 @@ namespace UnderThere
                         }
                         var patchedAA = state.PatchMod.ArmorAddons.GetOrAddAsOverride(arma);
                         if (patchedAA.BodyTemplate == null) continue;
-                        foreach (var uwSlot in usedSlots)
+                        foreach (var uwSlot in allUsedSlots)
                         {
                             try
                             {
@@ -706,10 +734,11 @@ namespace UnderThere
             }
         }
 
-        public static void ReportARMAslots(List<BipedObjectFlag> usedSlots, bool bSOS)
+        public static void ReportARMAslots(Dictionary<IArmorGetter, List<BipedObjectFlag>> usedSlots, bool bSOS)
         {
+            var allSlots = Auxil.GetItemSetARMAslotsAll(usedSlots);
             Console.WriteLine("\nThe following slots are being used by underwear. Please make sure they don't conflict with any other modded armors.");
-            foreach (var slot in usedSlots)
+            foreach (var slot in allSlots)
             {
                 Console.WriteLine(Auxil.MapSlotToInt(slot));
             }
@@ -728,20 +757,61 @@ namespace UnderThere
             }
         }
 
-        public static bool AddSOScompatibility(IEnumerable<UTSet> sets, List<BipedObjectFlag> usedSlots, IPatcherState<ISkyrimMod, ISkyrimModGetter> state, SOSmode sosMode)
+        public static bool UserHasSOS(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            bool bSOSdetected = false;
-
             foreach (var mod in state.LoadOrder)
             {
                 if (mod.Key.FileName == "Schlongs of Skyrim - Core.esm")
                 {
-                    bSOSdetected = true;
-                    break;
+                    return true;
                 }
             }
+            return false;
+        }
 
+        public static bool UserHasSOS(IRunnabilityState state)
+        {
+            foreach (var mod in state.LoadOrder)
+            {
+                if (mod.Key.FileName == "Schlongs of Skyrim - Core.esm")
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static void CheckSettingsPermitSOS(ILinkCache linkCache, IEnumerable<UTSet> sets)
+        {
+            var usedSlots = Auxil.GetItemSetARMAslotsSorted(sets, linkCache);
+
+            // check to make sure no current armor addons use slot 52
+            foreach (var slotsPerArmor in usedSlots)
+            {
+                foreach (var slot in slotsPerArmor.Value)
+                {
+                    if (Auxil.MapSlotToInt(slot) == 52)
+                    {
+                        var offendingItem = slotsPerArmor.Key;
+                        var itemString = offendingItem.FormKey.ToString();
+                        if (offendingItem.EditorID != null)
+                        {
+                            itemString += " (" + offendingItem.EditorID + ")";
+                        }
+                        throw new Exception("Schlongs of Skyrim has been detected, and one of your imported underwear items is slot 52: " + itemString + "). This will cause a clothing conflict in-game where SoS will remove all clothes from NPCs wearing this item. Please edit the offending item, changing both the Armor Addon AND the nif file to a slot other than 52 (49 is recommended).");
+                    }
+                }
+            }
+        }
+
+        public static bool AddSOScompatibility(IEnumerable<UTSet> sets, IPatcherState<ISkyrimMod, ISkyrimModGetter> state, SOSmode sosMode)
+        {
+            bool bSOSdetected;
             if (sosMode == SOSmode.ForceOn) {  bSOSdetected = true; }
+            else
+            {
+                bSOSdetected = UserHasSOS(state);
+            }
 
             if (!bSOSdetected || sosMode == SOSmode.ForceOff)
             {
@@ -750,15 +820,6 @@ namespace UnderThere
                     Console.WriteLine("Warning: SOS was detected but your SOS mode is set to Force OFF. Expect visual conflicts.");
                 }
                 return false;
-            }
-
-            // check to make sure no current armor addons use slot 52
-            foreach (var slot in usedSlots)
-            {
-                if (Auxil.MapSlotToInt(slot) == 52)
-                {
-                    throw new Exception("Schlongs of Skyrim has been detected, and one of your imported underwear items is slot 52. This will cause a clothing conflict in-game. Please edit the offending item, changing both the armor addon AND the nif file to a slot other than 52 (49 is recommended).");
-                }
             }
 
             // patch all bottoms to use slot 52
