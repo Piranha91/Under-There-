@@ -370,7 +370,7 @@ namespace UnderThere
                     throw new KeyNotFoundException($"Could not locate record to make self contained: {link.FormKey} of type: {link.Type}");
                 }
 
-                foreach (var containedLink in linkRec.ContainedFormLinks)
+                foreach (var containedLink in linkRec.EnumerateFormLinks())
                 {
                     AddAllLinks(containedLink);
                 }
