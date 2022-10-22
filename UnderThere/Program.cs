@@ -48,7 +48,9 @@ namespace UnderThere
                 { 
                     if (!state.LoadOrder.ContainsKey(item.Record.FormKey.ModKey))
                     {
-                        throw new Exception("Plugin " + item.Record.FormKey.ModKey + " expected by Set " + set.Name + "from item " + item.DispName + " (" + item.Record.FormKey + ") is not currently in your load order.");
+                        string exceptionStr = "Plugin " + item.Record.FormKey.ModKey + " expected by Set " + set.Name + "from item " + item.DispName + " (" + item.Record.FormKey + ") is not currently in your load order.";
+                        exceptionStr += Environment.NewLine + "Current Load Order:" + Environment.NewLine + string.Join(Environment.NewLine, state.LoadOrder.Select(x => x.Value.FileName));
+                        throw new Exception(exceptionStr);
                     }
                 }
             }
