@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Mutagen.Bethesda" Version="45.1" />
+    <PackageReference Include="Mutagen.Bethesda" Version="0.45.1" />
     <PackageReference Include="Mutagen.Bethesda.Synthesis" Version="0.29" />
     <PackageReference Include="Mutagen.Bethesda.FormKeys.SkyrimSE" Version="3.0.0" />
     <PackageReference Include="niflysharp" Version="1.3.0" />
