@@ -5,7 +5,7 @@ using Mutagen.Bethesda.Skyrim;
 
 namespace Mutagen.Bethesda.FormKeys.SkyrimSE
 {
-    public static partial class underwearforeveryone
+    public static partial class UnderwearForEveryone
     {
         public static class MagicEffect
         {
