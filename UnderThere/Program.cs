@@ -68,7 +68,7 @@ namespace UnderThere
 
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            string SPIDpath = Path.Combine(state.DataFolderPath, "skse\\plugins\\po3_SpellPerkItemDistributor.dll");
+            string SPIDpath = Path.Combine(state.DataFolderPath, "SKSE", "Plugins", "po3_SpellPerkItemDistributor.dll");
             if (!File.Exists(SPIDpath)) //SPIDtest (dual-level pun - whoa!)
             {
                 throw new Exception("Spell Perk Item Distributor was not detected at " + SPIDpath + "\nAborting patch");
@@ -325,7 +325,7 @@ namespace UnderThere
             //report failed lookups
             if (groupLookupFailures.Count > 0 || NPClookupFailures.Count > 0)
             {
-                Auxil.LogDefaultNPCs(NPClookupFailures, groupLookupFailures, state.ExtraSettingsDataPath, Settings.Value.QualityForNoAssignment);
+                Auxil.LogDefaultNPCs(NPClookupFailures, groupLookupFailures, state.ExtraSettingsDataPath.GetValueOrDefault(), Settings.Value.QualityForNoAssignment);
             }
             
             if (settings.OutfitAssignmentMode == OutfitAssignmentMode.SPID)
@@ -553,7 +553,7 @@ namespace UnderThere
 
         public static void CopyUTScript(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            string UTscriptPath = Path.Combine(state.ExtraSettingsDataPath, "UnderThereGenderedItemFix.pex");
+            string UTscriptPath = Path.Combine(state.ExtraSettingsDataPath.GetValueOrDefault(), "UnderThereGenderedItemFix.pex");
 
             if (!File.Exists(UTscriptPath))
             {
@@ -561,7 +561,7 @@ namespace UnderThere
             }
             else
             {
-                string destPath = Path.Combine(state.DataFolderPath, "Scripts\\UnderThereGenderedItemFix.pex");
+                string destPath = Path.Combine(state.DataFolderPath, "Scripts", "UnderThereGenderedItemFix.pex");
                 try
                 {
                     File.Copy(UTscriptPath, destPath, true);
@@ -603,7 +603,10 @@ namespace UnderThere
             utItemFixEffect.Name = "Removes female-only items from males and vice-versa";
             utItemFixEffect.Flags |= MagicEffect.Flag.HideInUI;
             utItemFixEffect.Flags |= MagicEffect.Flag.NoDeathDispel;
-            utItemFixEffect.Archetype.Type = MagicEffectArchetype.TypeEnum.Script;
+            utItemFixEffect.Archetype = new MagicEffectArchetype()
+            {
+                Type = MagicEffectArchetype.TypeEnum.Script
+            };
             utItemFixEffect.TargetType = TargetType.Self;
             utItemFixEffect.CastType = CastType.ConstantEffect;
             utItemFixEffect.VirtualMachineAdapter = new VirtualMachineAdapter();

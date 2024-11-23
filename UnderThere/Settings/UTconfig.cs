@@ -619,7 +619,7 @@ namespace UnderThere.Settings
                      Weight = "",
                      Value = "",
                      Gender = GenderTarget.Mutual,
-                     Record = underwearforeveryone.Armor.UFE_UnderwearBottom
+                     Record = UnderwearForEveryone.Armor.UFE_UnderwearBottom
                 },
                 new UTitem()
                 {
@@ -627,7 +627,7 @@ namespace UnderThere.Settings
                     Weight = "",
                     Value = "",
                     Gender = GenderTarget.Female,
-                    Record = underwearforeveryone.Armor.UFE_UnderwearTop
+                    Record = UnderwearForEveryone.Armor.UFE_UnderwearTop
                 }
             }
         };
@@ -649,14 +649,14 @@ namespace UnderThere.Settings
                         DispName = "Cheap Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_0,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearBottom_0,
                     },
                     new UTitem()
                     {
                         DispName = "Cheap Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_0,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearTop_0,
                     },
                 },
             },
@@ -671,14 +671,14 @@ namespace UnderThere.Settings
                         DispName = "Cheap Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_1,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearBottom_1,
                     },
                     new UTitem()
                     {
                         DispName = "Cheap Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_1,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearTop_1,
                     },
                 },
             },
@@ -693,14 +693,14 @@ namespace UnderThere.Settings
                         DispName = "Cheap Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_2,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearBottom_2,
                     },
                     new UTitem()
                     {
                         DispName = "Cheap Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_2,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearTop_2,
                     },
                 },
             },
@@ -715,14 +715,14 @@ namespace UnderThere.Settings
                         DispName = "Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_3,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearBottom_3,
                     },
                     new UTitem()
                     {
                         DispName = "Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_3,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearTop_3,
                     },
                 },
             },
@@ -737,14 +737,14 @@ namespace UnderThere.Settings
                         DispName = "Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_4,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearBottom_4,
                     },
                     new UTitem()
                     {
                         DispName = "Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_4,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearTop_4,
                     },
                 },
             },
@@ -759,14 +759,14 @@ namespace UnderThere.Settings
                         DispName = "Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_5,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearBottom_5,
                     },
                     new UTitem()
                     {
                         DispName = "Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_5,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearTop_5,
                     },
                 },
             },
@@ -781,14 +781,14 @@ namespace UnderThere.Settings
                         DispName = "Fine Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_6,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearBottom_6,
                     },
                     new UTitem()
                     {
                         DispName = "Fine Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_6,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearTop_6,
                     },
                 },
             },
@@ -803,14 +803,14 @@ namespace UnderThere.Settings
                         DispName = "Fine Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_7,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearBottom_7,
                     },
                     new UTitem()
                     {
                         DispName = "Fine Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_7,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearTop_7,
                     },
                 },
             },
@@ -825,14 +825,14 @@ namespace UnderThere.Settings
                         DispName = "Fine Undergarment",
                         IsBottom = true,
                         Gender = GenderTarget.Mutual,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearBottom_8,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearBottom_8,
                     },
                     new UTitem()
                     {
                         DispName = "Fine Undergarment",
                         IsBottom = false,
                         Gender = GenderTarget.Female,
-                        Record = underwearforeveryone.Armor.UFE_UnderwearTop_8,
+                        Record = UnderwearForEveryone.Armor.UFE_UnderwearTop_8,
                     },
                 },
             },
